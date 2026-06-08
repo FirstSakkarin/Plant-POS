@@ -319,6 +319,7 @@ html,body{height:100%;background:#111;font-family:'Sarabun',sans-serif}
 <script>
 // ── CONFIG ────────────────────────────────────────────────
 const SHEET_ID = "1c_t89oC0p5setOKKu2vuPbkVb_NXPCJ8jh_O9pP4s-o";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz66FGof0-0IhtUh7XsPdCJPDWmwWDvc_aW4EB8VOz8hsgtohztsEE-MX1GVshLCceABw/exec";
 const API_KEY  = "AIzaSyCRWFx2hsgTIN9PbS7cbbfadt8BgiiXJQc";
 const BASE     = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values`;
 const EMOJIS   = ["🌿","🪴","🌳","🌹","🌺","🌸","🌼","🌻","🌵","🍃","💐","🌱","🌾","🍀","🎋","🎍","🌲","🍁","🍂","🌴","🌊","🌙","⭐","🦋"];
@@ -336,22 +337,16 @@ async function sheetGet(range){
   if(!r.ok)throw new Error(r.status);
   return (await r.json()).values||[];
 }
-async function sheetAppend(range,values){
-  const r=await fetch(`${BASE}/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS&key=${API_KEY}`,
-    {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({values})});
-  if(!r.ok)throw new Error(r.status);
-  return r.json();
-}
-async function sheetUpdate(range,values){
-  const r=await fetch(`${BASE}/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED&key=${API_KEY}`,
-    {method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({values})});
-  if(!r.ok)throw new Error(r.status);
-  return r.json();
-}
-async function sheetClear(range){
-  const r=await fetch(`${BASE}/${encodeURIComponent(range)}:clear?key=${API_KEY}`,
-    {method:"POST",headers:{"Content-Type":"application/json"}});
-  if(!r.ok)throw new Error(r.status);
+async function scriptPost(data){
+  const r=await fetch(SCRIPT_URL,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain"},
+    body:JSON.stringify(data)
+  });
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  const j=await r.json();
+  if(!j.ok)throw new Error(j.error||"Script error");
+  return j;
 }
 
 // ── SYNC ──────────────────────────────────────────────────
@@ -523,10 +518,10 @@ async function confirmSale(){
   try{
     const itemStr=items.map(x=>`${x.name}×${x.qty}×${getItemPrice(x)}`).join(", ");
     const dateStr=`${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
-    await sheetAppend("Sales!A:E",[[dateStr,itemStr,sub,disc,total]]);
+    await scriptPost({action:"addSale",date:dateStr,items:itemStr,subtotal:sub,discount:disc,total});
     for(const x of items){
       const p=products.find(q=>q.row===x.row);
-      if(p){p.stock-=x.qty;await sheetUpdate(`Products!D${p.row}`,[[p.stock]]);}
+      if(p){p.stock-=x.qty;await scriptPost({action:"updateStock",row:p.row,stock:p.stock});}
     }
     sales.unshift({date:now,items:items.map(x=>({...x,price:getItemPrice(x)})),subtotal:sub,discount:disc,total,itemCount:items.reduce((s,x)=>s+x.qty,0)});
     cart={};document.getElementById("disc-val").value="0";
@@ -594,15 +589,13 @@ async function saveProduct(){
   btn.disabled=true;btn.textContent="กำลังบันทึก...";
   try{
     if(editingProductId!==null){
-      // Edit: update row in sheet
       const row=editingProductId;
-      await sheetUpdate(`Products!A${row}:E${row}`,[[name,cat,price,stock,emoji]]);
+      await scriptPost({action:"updateProduct",row,name,cat,price,stock,emoji});
       const idx=products.findIndex(p=>p.row===row);
       if(idx>=0)products[idx]={row,name,cat,price,stock,emoji};
     }else{
-      // New: append row
-      await sheetAppend("Products!A:E",[[name,cat,price,stock,emoji]]);
-      await loadProducts(); // reload to get correct row number
+      await scriptPost({action:"addProduct",name,cat,price,stock,emoji});
+      await loadProducts();
     }
     renderCats();renderProds();renderProdList();
     closeProdForm();
@@ -622,8 +615,7 @@ function closeDelModal(){document.getElementById("del-overlay").classList.remove
 async function confirmDelete(){
   const row=deletingProductId;
   try{
-    // Clear the row (set all cells to empty)
-    await sheetClear(`Products!A${row}:E${row}`);
+    await scriptPost({action:"deleteProduct",row});
     // Remove from local list
     products=products.filter(p=>p.row!==row);
     renderCats();renderProds();renderProdList();

@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
-<title>🌿 TreeSiri POS</title>
+<title>🌿 ร้านต้นไม้สวัสดี POS</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -170,6 +170,40 @@ html,body{height:100%;background:#111;font-family:'Sarabun',sans-serif}
 .empty-state p{font-size:13px}
 .spin-icon{animation:rotating 1s linear infinite}
 @keyframes rotating{to{transform:rotate(360deg)}}
+
+/* ── CUSTOMERS ── */
+.cust-wrap{padding:12px}
+.cust-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cust-search{display:flex;align-items:center;gap:7px;background:var(--bg2);border-radius:var(--rad);padding:0 10px;border:0.5px solid var(--bd);margin-bottom:10px}
+.cust-search i{font-size:15px;color:var(--faint)}
+.cust-search input{flex:1;border:none;background:none;font-size:13px;font-family:'Sarabun',sans-serif;color:var(--t);padding:8px 0;outline:none}
+.cust-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border:0.5px solid var(--bd);border-radius:var(--rad-lg);margin-bottom:8px;background:var(--bg)}
+.cust-avatar{width:38px;height:38px;border-radius:50%;background:var(--g1);color:var(--g8);font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cust-info{flex:1;min-width:0}
+.cust-name{font-size:13px;font-weight:600;color:var(--t)}
+.cust-meta{font-size:11px;color:var(--m);margin-top:2px}
+.cust-points{font-size:12px;font-weight:600;color:var(--a6);background:var(--a1);padding:3px 8px;border-radius:10px;white-space:nowrap}
+/* Customer selector on POS */
+.cust-sel-bar{display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:0.5px solid var(--bd);background:var(--bg);flex-shrink:0}
+.cust-sel-btn{flex:1;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--rad);border:0.5px solid var(--bd);background:var(--bg2);cursor:pointer;font-family:'Sarabun',sans-serif;font-size:12px;color:var(--m)}
+.cust-sel-btn.selected{border-color:var(--g3);background:var(--g1);color:var(--g8)}
+.cust-sel-btn i{font-size:16px}
+.cust-clear-btn{width:30px;height:30px;border-radius:50%;border:0.5px solid var(--bd);background:var(--bg2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--m)}
+/* Customer history sheet */
+.cust-hist-item{padding:8px 0;border-bottom:0.5px solid var(--bd)}
+.cust-hist-item:last-child{border-bottom:none}
+.cust-hist-date{font-size:11px;color:var(--m);margin-bottom:2px}
+.cust-hist-items{font-size:12px;color:var(--t)}
+.cust-hist-total{font-size:13px;font-weight:600;color:var(--g8);text-align:right;margin-top:2px}
+/* Date range picker */
+.date-range-wrap{display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.date-inp{flex:1;min-width:110px;padding:8px 10px;border-radius:var(--rad);border:0.5px solid var(--bd);background:var(--bg2);font-size:13px;font-family:'Sarabun',sans-serif;color:var(--t);outline:none}
+.date-inp:focus{border-color:var(--g7)}
+.date-sep{font-size:12px;color:var(--m);flex-shrink:0}
+.date-presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.preset-btn{padding:4px 11px;border-radius:20px;font-size:11px;font-family:'Sarabun',sans-serif;cursor:pointer;border:0.5px solid var(--bd);background:var(--bg);color:var(--m);white-space:nowrap}
+.preset-btn.active{background:var(--g1);color:var(--g8);border-color:var(--g3);font-weight:600}
+
 </style>
 </head>
 <body>
@@ -177,7 +211,7 @@ html,body{height:100%;background:#111;font-family:'Sarabun',sans-serif}
   <!-- Topbar -->
   <div class="topbar">
     <div class="topbar-row">
-      <div><div class="store-name">🌿 TreeSiri</div><div class="topbar-sub">POS · Dashboard · จัดการสินค้า</div></div>
+      <div><div class="store-name">🌿 ร้านต้นไม้สวัสดี</div><div class="topbar-sub">POS · Dashboard · จัดการสินค้า</div></div>
       <button class="sync-pill" onclick="syncAll()"><span class="sdot" id="sdot"></span><span id="slbl">Sync</span></button>
     </div>
   </div>
@@ -187,6 +221,7 @@ html,body{height:100%;background:#111;font-family:'Sarabun',sans-serif}
     <button class="tab" onclick="gotoScreen('dash',this)"><i class="ti ti-chart-bar"></i>สรุป</button>
     <button class="tab" onclick="gotoScreen('history',this)"><i class="ti ti-history"></i>ประวัติ</button>
     <button class="tab" onclick="gotoScreen('manage',this)"><i class="ti ti-plant"></i>สินค้า</button>
+    <button class="tab" onclick="gotoScreen('customers',this)"><i class="ti ti-users"></i>ลูกค้า</button>
   </div>
   <div class="screens">
     <!-- POS -->
@@ -194,6 +229,13 @@ html,body{height:100%;background:#111;font-family:'Sarabun',sans-serif}
       <div class="pos-wrap">
         <div class="search-row">
           <div class="sbox"><i class="ti ti-search"></i><input type="text" placeholder="ค้นหาต้นไม้..." id="s-input" oninput="renderProds()"></div>
+        </div>
+        <!-- Customer selector -->
+        <div class="cust-sel-bar">
+          <button class="cust-sel-btn" id="cust-sel-btn" onclick="openCustPicker()">
+            <i class="ti ti-user"></i><span id="cust-sel-label">เลือกลูกค้า (ไม่บังคับ)</span>
+          </button>
+          <div class="cust-clear-btn" id="cust-clear" onclick="clearSelectedCust()" style="display:none" title="ยกเลิก"><i class="ti ti-x" style="font-size:14px"></i></div>
         </div>
         <div class="cat-strip" id="cat-strip"></div>
         <div class="prod-area"><div class="prod-grid" id="prod-grid"></div></div>
@@ -227,9 +269,17 @@ html,body{height:100%;background:#111;font-family:'Sarabun',sans-serif}
     <!-- Dashboard -->
     <div id="screen-dash" class="screen">
       <div class="dash-wrap">
-        <div class="dash-hdr">
-          <span style="font-size:13px;color:var(--m)">เดือน</span>
-          <select id="month-sel" onchange="renderDash()"></select>
+        <div class="date-presets" id="date-presets">
+          <button class="preset-btn active" onclick="setPreset('today',this)">วันนี้</button>
+          <button class="preset-btn" onclick="setPreset('7d',this)">7 วัน</button>
+          <button class="preset-btn" onclick="setPreset('30d',this)">30 วัน</button>
+          <button class="preset-btn" onclick="setPreset('mtd',this)">เดือนนี้</button>
+          <button class="preset-btn" onclick="setPreset('custom',this)">กำหนดเอง</button>
+        </div>
+        <div class="date-range-wrap" id="custom-range" style="display:none">
+          <input class="date-inp" type="date" id="date-from" onchange="renderDash()">
+          <span class="date-sep">ถึง</span>
+          <input class="date-inp" type="date" id="date-to" onchange="renderDash()">
         </div>
         <div class="metric-grid" id="metric-grid"></div>
         <div class="section-lbl">ยอดขายรายวัน</div>
@@ -253,6 +303,20 @@ html,body{height:100%;background:#111;font-family:'Sarabun',sans-serif}
           <button class="add-btn" onclick="openProductForm()"><i class="ti ti-plus" style="font-size:15px"></i> เพิ่มสินค้า</button>
         </div>
         <div id="prod-list"></div>
+      </div>
+    </div>
+    <!-- Customers -->
+    <div id="screen-customers" class="screen">
+      <div class="cust-wrap">
+        <div class="cust-hdr">
+          <span class="manage-title">ลูกค้า</span>
+          <button class="add-btn" onclick="openCustForm()"><i class="ti ti-user-plus" style="font-size:15px"></i> เพิ่มลูกค้า</button>
+        </div>
+        <div class="cust-search">
+          <i class="ti ti-search"></i>
+          <input type="text" id="cust-search-inp" placeholder="ค้นหาชื่อ / เบอร์..." oninput="renderCustList()">
+        </div>
+        <div id="cust-list"></div>
       </div>
     </div>
   </div>
@@ -314,6 +378,60 @@ html,body{height:100%;background:#111;font-family:'Sarabun',sans-serif}
   </div>
 </div>
 
+<!-- Customer Form Modal -->
+<div class="overlay" id="cust-form-overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="cust-form-title">เพิ่มลูกค้าใหม่</div>
+    <div class="form-lbl">ชื่อ / ชื่อเล่น *</div>
+    <input class="form-inp" id="cf-name" type="text" placeholder="เช่น คุณสมชาย">
+    <div class="form-lbl">เบอร์โทรศัพท์</div>
+    <input class="form-inp" id="cf-phone" type="tel" placeholder="08x-xxx-xxxx" inputmode="tel">
+    <div class="form-lbl">แต้มสะสม</div>
+    <input class="form-inp" id="cf-points" type="number" placeholder="0" value="0" inputmode="numeric">
+    <div class="form-lbl">หมายเหตุ</div>
+    <input class="form-inp" id="cf-note" type="text" placeholder="เช่น ชอบต้นไม้ในร่ม">
+    <div class="sheet-btns">
+      <button class="btn-secondary" onclick="closeCustForm()">ยกเลิก</button>
+      <button class="btn-primary" id="cust-save-btn" onclick="saveCustomer()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Customer Picker Modal -->
+<div class="overlay" id="cust-picker-overlay">
+  <div class="sheet" style="max-height:80vh">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">เลือกลูกค้า</div>
+    <div class="cust-search" style="margin-bottom:10px"><i class="ti ti-search"></i><input type="text" id="picker-search" placeholder="ค้นหา..." oninput="renderPickerList()"></div>
+    <div id="picker-list" style="max-height:50vh;overflow-y:auto"></div>
+    <div class="sheet-btns" style="margin-top:12px">
+      <button class="btn-secondary" onclick="closeCustPicker()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Customer History Modal -->
+<div class="overlay" id="cust-hist-overlay">
+  <div class="sheet" style="max-height:85vh">
+    <div class="sheet-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div class="sheet-title" style="margin-bottom:2px" id="cust-hist-name">ประวัติการซื้อ</div>
+        <div style="font-size:12px;color:var(--m)" id="cust-hist-meta"></div>
+      </div>
+      <span id="cust-hist-points" class="cust-points"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px" id="cust-hist-stats"></div>
+    <div style="font-size:12px;font-weight:600;color:var(--m);margin-bottom:8px">ประวัติการสั่งซื้อ</div>
+    <div id="cust-hist-list" style="max-height:40vh;overflow-y:auto"></div>
+    <div class="sheet-btns" style="margin-top:12px">
+      <button class="btn-secondary" onclick="closeCustHist()">ปิด</button>
+      <button class="btn-primary" onclick="selectCustFromHist()">เลือกลูกค้านี้</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -357,7 +475,7 @@ function setSS(s){
 }
 async function syncAll(){
   setSS("loading");
-  try{await loadProducts();await loadSales();setSS("ok");toast("✅ Sync สำเร็จ");}
+  try{await loadProducts();await loadSales();await loadCustomers();setSS("ok");toast("✅ Sync สำเร็จ");}
   catch(e){setSS("error");toast("❌ "+e.message);}
 }
 async function loadProducts(){
@@ -518,12 +636,24 @@ async function confirmSale(){
   try{
     const itemStr=items.map(x=>`${x.name}×${x.qty}×${getItemPrice(x)}`).join(", ");
     const dateStr=`${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
-    await scriptPost({action:"addSale",date:dateStr,items:itemStr,subtotal:sub,discount:disc,total});
+    const custName=selectedCust?selectedCust.name:"";
+    await scriptPost({action:"addSale",date:dateStr,items:itemStr,subtotal:sub,discount:disc,total,custName});
     for(const x of items){
       const p=products.find(q=>q.row===x.row);
       if(p){p.stock-=x.qty;await scriptPost({action:"updateStock",row:p.row,stock:p.stock});}
     }
-    sales.unshift({date:now,items:items.map(x=>({...x,price:getItemPrice(x)})),subtotal:sub,discount:disc,total,itemCount:items.reduce((s,x)=>s+x.qty,0)});
+    const custRow=selectedCust?selectedCust.row:null;
+    sales.unshift({date:now,items:items.map(x=>({...x,price:getItemPrice(x)})),subtotal:sub,discount:disc,total,itemCount:items.reduce((s,x)=>s+x.qty,0),custRow});
+    // earn points: 1 point per 10 baht
+    if(selectedCust){
+      const earned=Math.floor(total/10);
+      const newPoints=selectedCust.points+earned;
+      const c=customers.find(q=>q.row===selectedCust.row);
+      if(c){c.points=newPoints;c.totalSpent=(c.totalSpent||0)+total;}
+      await scriptPost({action:"updateCustomer",row:selectedCust.row,name:selectedCust.name,phone:selectedCust.phone,points:newPoints,note:selectedCust.note||"",totalSpent:(selectedCust.totalSpent||0)+total});
+      if(earned>0)toast(`✅ บันทึกแล้ว · ${selectedCust.name} ได้ +${earned} แต้ม!`);
+    }
+    clearSelectedCust();
     cart={};document.getElementById("disc-val").value="0";
     renderCart();renderProds();renderProdList();closePay();
     toast("✅ บันทึกลง Google Sheets แล้ว!");
@@ -624,6 +754,40 @@ async function confirmDelete(){
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────
+// ── DATE RANGE ───────────────────────────────────────────
+let dashFrom=null, dashTo=null;
+function setPreset(preset,btn){
+  document.querySelectorAll(".preset-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  const now=new Date();
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  document.getElementById("custom-range").style.display=preset==="custom"?"flex":"none";
+  if(preset==="today"){dashFrom=dashTo=today;}
+  else if(preset==="7d"){dashFrom=new Date(today-6*864e5);dashTo=today;}
+  else if(preset==="30d"){dashFrom=new Date(today-29*864e5);dashTo=today;}
+  else if(preset==="mtd"){dashFrom=new Date(now.getFullYear(),now.getMonth(),1);dashTo=today;}
+  else if(preset==="custom"){
+    const f=document.getElementById("date-from").value;
+    const t=document.getElementById("date-to").value;
+    dashFrom=f?new Date(f):today;dashTo=t?new Date(t):today;
+    document.getElementById("date-from").value=fmt(dashFrom);
+    document.getElementById("date-to").value=fmt(dashTo);
+  }
+  if(preset!=="custom")renderDash();
+}
+function getDashRange(){
+  if(dashFrom&&dashTo)return{from:dashFrom,to:dashTo};
+  const today=new Date();today.setHours(0,0,0,0);
+  return{from:today,to:today};
+}
+function fmtRangeLabel(){
+  const{from,to}=getDashRange();
+  const fd=`${from.getDate()} ${MONTHS[from.getMonth()]}`;
+  const td=`${to.getDate()} ${MONTHS[to.getMonth()]} ${to.getFullYear()+543}`;
+  return from.getTime()===to.getTime()?`${fd} ${from.getFullYear()+543}`:`${fd} – ${td}`;
+}
+
 function buildMonthSel(){
   const sel=document.getElementById("month-sel"),now=new Date();sel.innerHTML="";
   for(let m=0;m<6;m++){
@@ -635,29 +799,44 @@ function buildMonthSel(){
   }
 }
 function renderDash(){
-  const[yr,mo]=document.getElementById("month-sel").value.split("-").map(Number);
-  const ms=sales.filter(s=>{const d=new Date(s.date);return d.getFullYear()===yr&&d.getMonth()===mo});
+  if(document.getElementById("custom-range").style.display==="flex"){
+    const f=document.getElementById("date-from").value;
+    const t=document.getElementById("date-to").value;
+    if(f)dashFrom=new Date(f);
+    if(t)dashTo=new Date(t);
+  }
+  const{from,to}=getDashRange();
+  const toEnd=new Date(to);toEnd.setHours(23,59,59,999);
+  const ms=sales.filter(s=>{const d=new Date(s.date);return d>=from&&d<=toEnd});
   const totalRev=ms.reduce((s,x)=>s+x.total,0);
   const bills=ms.length,avg=bills?Math.round(totalRev/bills):0;
   const totalDisc=ms.reduce((s,x)=>s+(x.discount||0),0);
   const totalItems=ms.reduce((s,x)=>s+x.itemCount,0);
-  const prev=new Date(yr,mo-1,1);
-  const ps=sales.filter(s=>{const d=new Date(s.date);return d.getFullYear()===prev.getFullYear()&&d.getMonth()===prev.getMonth()});
+  const rangeMs=toEnd-from;
+  const prevEnd=new Date(from-1);const prevStart=new Date(from-rangeMs-1);
+  const ps=sales.filter(s=>{const d=new Date(s.date);return d>=prevStart&&d<=prevEnd});
   const prevRev=ps.reduce((s,x)=>s+x.total,0);
   const pct=prevRev?Math.round((totalRev-prevRev)/prevRev*100):0;
-  const byDay={};ms.forEach(s=>{const d=new Date(s.date).getDate();byDay[d]=(byDay[d]||0)+s.total});
+  const byDay={};ms.forEach(s=>{const d=new Date(s.date);const k=`${d.getDate()}/${d.getMonth()+1}`;byDay[k]=(byDay[k]||0)+s.total});
   const best=Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0];
   document.getElementById("metric-grid").innerHTML=`
     <div class="metric"><div class="metric-lbl">ยอดรวม</div><div class="metric-val">฿${(totalRev/1000).toFixed(1)}k</div><div class="metric-sub ${pct>0?"up":pct<0?"down":"neu"}">${pct>0?"▲":pct<0?"▼":"–"} ${Math.abs(pct)}% จากเดือนก่อน</div></div>
     <div class="metric"><div class="metric-lbl">จำนวนบิล</div><div class="metric-val">${bills}</div><div class="metric-sub neu">เฉลี่ย ฿${avg.toLocaleString()}</div></div>
     <div class="metric"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
-    <div class="metric"><div class="metric-lbl">ส่วนลดรวม</div><div class="metric-val">฿${Math.round(totalDisc).toLocaleString()}</div><div class="metric-sub neu">วันขายดี ${best?best[0]+" "+MONTHS[mo]:"-"}</div></div>`;
-  const days=new Date(yr,mo+1,0).getDate();
-  const dayData=Array.from({length:days},(_,i)=>ms.filter(s=>new Date(s.date).getDate()===i+1).reduce((a,x)=>a+x.total,0));
+    <div class="metric"><div class="metric-lbl">ส่วนลดรวม</div><div class="metric-val">฿${Math.round(totalDisc).toLocaleString()}</div><div class="metric-sub neu">วันดี ${best?best[0]:"-"}</div></div>`;
+  // build daily labels for the range
+  const dayList=[];const cur=new Date(from);
+  while(cur<=toEnd){dayList.push(new Date(cur));cur.setDate(cur.getDate()+1);}
+  const dayData=dayList.map(day=>{
+    const next=new Date(day);next.setDate(next.getDate()+1);
+    return ms.filter(s=>{const d=new Date(s.date);return d>=day&&d<next}).reduce((a,x)=>a+x.total,0);
+  });
+  const days=dayList.length;
   if(barChart){barChart.destroy();barChart=null}
   const dark=window.matchMedia("(prefers-color-scheme:dark)").matches;
+  const barLabels=dayList.map(d=>d.getDate()+"/"+(d.getMonth()+1));
   barChart=new Chart(document.getElementById("bar-chart").getContext("2d"),{
-    type:"bar",data:{labels:Array.from({length:days},(_,i)=>i+1),datasets:[{data:dayData,backgroundColor:"#3d7a14",borderRadius:3,borderSkipped:false}]},
+    type:"bar",data:{labels:barLabels,datasets:[{data:dayData,backgroundColor:"#3d7a14",borderRadius:3,borderSkipped:false}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>"฿"+Math.round(v.raw).toLocaleString()}}},
       scales:{x:{ticks:{font:{size:9,family:"Sarabun"},color:dark?"#636366":"#999",autoSkip:true,maxTicksLimit:10},grid:{display:false},border:{display:false}},
         y:{ticks:{font:{size:9,family:"Sarabun"},color:dark?"#636366":"#999",callback:v=>v>=1000?"฿"+(v/1000).toFixed(0)+"k":"฿"+v},grid:{color:dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.05)"},border:{display:false}}}}
@@ -707,9 +886,10 @@ function gotoScreen(name,btn){
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   document.getElementById("screen-"+name).classList.add("active");
   btn.classList.add("active");
-  if(name==="dash"){buildMonthSel();renderDash();}
+  if(name==="dash"){setPreset("today",document.querySelector(".preset-btn"));renderDash();}
   if(name==="history")renderHistory();
   if(name==="manage")renderProdList();
+  if(name==="customers")renderCustList();
 }
 
 function toast(msg){
@@ -717,6 +897,147 @@ function toast(msg){
   t.textContent=msg;t.classList.add("show");
   clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),2800);
 }
+
+
+// ── CUSTOMERS ─────────────────────────────────────────────
+let customers=[], selectedCust=null, editingCustId=null, viewingCustId=null;
+
+async function loadCustomers(){
+  const rows=await sheetGet("Customers!A2:E");
+  customers=rows.map((r,i)=>({row:i+2,name:r[0]||"",phone:r[1]||"",points:parseInt(r[2])||0,note:r[3]||"",totalSpent:parseFloat(r[4])||0})).filter(c=>c.name);
+}
+
+function renderCustList(){
+  const q=(document.getElementById("cust-search-inp")?.value||"").toLowerCase();
+  const el=document.getElementById("cust-list");
+  if(!el)return;
+  const f=customers.filter(c=>!q||c.name.toLowerCase().includes(q)||c.phone.includes(q));
+  if(!f.length){el.innerHTML=`<div class="empty-state"><i class="ti ti-users"></i><p>${customers.length?"ไม่พบลูกค้า":"ยังไม่มีลูกค้า กด + เพิ่มลูกค้า"}</p></div>`;return}
+  el.innerHTML=f.map(c=>`
+    <div class="cust-card">
+      <div class="cust-avatar">${c.name.charAt(0)}</div>
+      <div class="cust-info">
+        <div class="cust-name">${c.name}</div>
+        <div class="cust-meta">${c.phone||"ไม่มีเบอร์"}${c.note?" · "+c.note:""}</div>
+      </div>
+      <span class="cust-points">${c.points} แต้ม</span>
+      <div style="display:flex;gap:5px;margin-left:4px">
+        <button class="pli-btn" onclick="openCustHist(${c.row})" title="ประวัติ"><i class="ti ti-history"></i></button>
+        <button class="pli-btn" onclick="openCustForm(${c.row})" title="แก้ไข"><i class="ti ti-edit"></i></button>
+      </div>
+    </div>`).join("");
+}
+
+function openCustForm(rowId=null){
+  editingCustId=rowId;
+  const c=rowId?customers.find(x=>x.row===rowId):null;
+  document.getElementById("cust-form-title").textContent=rowId?"แก้ไขลูกค้า":"เพิ่มลูกค้าใหม่";
+  document.getElementById("cf-name").value=c?.name||"";
+  document.getElementById("cf-phone").value=c?.phone||"";
+  document.getElementById("cf-points").value=c?.points||0;
+  document.getElementById("cf-note").value=c?.note||"";
+  document.getElementById("cust-form-overlay").classList.add("show");
+  setTimeout(()=>document.getElementById("cf-name").focus(),200);
+}
+function closeCustForm(){document.getElementById("cust-form-overlay").classList.remove("show")}
+
+async function saveCustomer(){
+  const name=document.getElementById("cf-name").value.trim();
+  const phone=document.getElementById("cf-phone").value.trim();
+  const points=parseInt(document.getElementById("cf-points").value)||0;
+  const note=document.getElementById("cf-note").value.trim();
+  if(!name){toast("❌ กรุณากรอกชื่อลูกค้า");return;}
+  const btn=document.getElementById("cust-save-btn");
+  btn.disabled=true;btn.textContent="กำลังบันทึก...";
+  try{
+    if(editingCustId){
+      const c=customers.find(x=>x.row===editingCustId);
+      await scriptPost({action:"updateCustomer",row:editingCustId,name,phone,points,note,totalSpent:c?.totalSpent||0});
+      const idx=customers.findIndex(x=>x.row===editingCustId);
+      if(idx>=0)customers[idx]={...customers[idx],name,phone,points,note};
+    }else{
+      await scriptPost({action:"addCustomer",name,phone,points,note,totalSpent:0});
+      await loadCustomers();
+    }
+    renderCustList();closeCustForm();
+    toast(editingCustId?"✅ แก้ไขลูกค้าแล้ว":"✅ เพิ่มลูกค้าแล้ว");
+  }catch(e){toast("❌ "+e.message);}
+  finally{btn.disabled=false;btn.textContent="บันทึก";}
+}
+
+// Customer picker on POS
+function openCustPicker(){
+  document.getElementById("picker-search").value="";
+  renderPickerList();
+  document.getElementById("cust-picker-overlay").classList.add("show");
+}
+function closeCustPicker(){document.getElementById("cust-picker-overlay").classList.remove("show")}
+function renderPickerList(){
+  const q=(document.getElementById("picker-search")?.value||"").toLowerCase();
+  const f=customers.filter(c=>!q||c.name.toLowerCase().includes(q)||c.phone.includes(q));
+  const el=document.getElementById("picker-list");
+  if(!f.length){el.innerHTML=`<div style="text-align:center;color:var(--faint);font-size:13px;padding:16px">ไม่พบลูกค้า</div>`;return}
+  el.innerHTML=f.map(c=>`
+    <div class="cust-card" style="cursor:pointer" onclick="selectCust(${c.row})">
+      <div class="cust-avatar">${c.name.charAt(0)}</div>
+      <div class="cust-info">
+        <div class="cust-name">${c.name}</div>
+        <div class="cust-meta">${c.phone||"ไม่มีเบอร์"}</div>
+      </div>
+      <span class="cust-points">${c.points} แต้ม</span>
+    </div>`).join("");
+}
+function selectCust(rowId){
+  selectedCust=customers.find(c=>c.row===rowId);
+  const btn=document.getElementById("cust-sel-btn");
+  const clr=document.getElementById("cust-clear");
+  btn.className="cust-sel-btn selected";
+  btn.innerHTML=`<i class="ti ti-user-check"></i><span>${selectedCust.name}${selectedCust.phone?" · "+selectedCust.phone:""}</span>`;
+  clr.style.display="flex";
+  closeCustPicker();
+  toast(`👤 เลือกลูกค้า: ${selectedCust.name}`);
+}
+function clearSelectedCust(){
+  selectedCust=null;
+  document.getElementById("cust-sel-btn").className="cust-sel-btn";
+  document.getElementById("cust-sel-btn").innerHTML=`<i class="ti ti-user"></i><span>เลือกลูกค้า (ไม่บังคับ)</span>`;
+  document.getElementById("cust-clear").style.display="none";
+}
+function selectCustFromHist(){
+  if(viewingCustId){selectCust(viewingCustId);closeCustHist();}
+}
+
+// Customer history
+function openCustHist(rowId){
+  viewingCustId=rowId;
+  const c=customers.find(x=>x.row===rowId);
+  if(!c)return;
+  const custSales=sales.filter(s=>s.custRow===rowId);
+  document.getElementById("cust-hist-name").textContent=c.name;
+  document.getElementById("cust-hist-meta").textContent=c.phone||"";
+  document.getElementById("cust-hist-points").textContent=c.points+" แต้ม";
+  const totalSpent=custSales.reduce((s,x)=>s+x.total,0);
+  const visits=custSales.length;
+  const avg=visits?Math.round(totalSpent/visits):0;
+  document.getElementById("cust-hist-stats").innerHTML=`
+    <div class="metric"><div class="metric-lbl">ยอดรวม</div><div class="metric-val" style="font-size:16px">฿${Math.round(totalSpent).toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-lbl">ครั้ง</div><div class="metric-val" style="font-size:16px">${visits}</div></div>
+    <div class="metric"><div class="metric-lbl">เฉลี่ย/บิล</div><div class="metric-val" style="font-size:16px">฿${avg.toLocaleString()}</div></div>`;
+  const hl=document.getElementById("cust-hist-list");
+  if(!custSales.length){hl.innerHTML=`<div style="text-align:center;color:var(--faint);font-size:13px;padding:16px">ยังไม่มีประวัติการซื้อ</div>`;
+  }else{
+    hl.innerHTML=custSales.slice(0,20).map(s=>{
+      const d=new Date(s.date);
+      const ds=`${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()+543}`;
+      return`<div class="cust-hist-item">
+        <div class="cust-hist-date">${ds}</div>
+        <div class="cust-hist-items">${s.items.map(x=>`${x.emoji||"🌿"}${x.name}×${x.qty}`).join(" · ")}</div>
+        <div class="cust-hist-total">฿${Math.round(s.total).toLocaleString()}</div>
+      </div>`}).join("");
+  }
+  document.getElementById("cust-hist-overlay").classList.add("show");
+}
+function closeCustHist(){document.getElementById("cust-hist-overlay").classList.remove("show")}
 
 // ── INIT ──────────────────────────────────────────────────
 (async()=>{renderProds();await syncAll();})();

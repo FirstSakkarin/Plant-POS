@@ -328,6 +328,13 @@ html,body{height:100%;background:#111;font-family:'Sarabun',sans-serif}
     <div class="sheet-handle"></div>
     <div class="sheet-title">ชำระเงิน</div>
     <div id="pay-summary" style="font-size:12px;color:var(--m);margin-bottom:8px;line-height:1.6"></div>
+    <!-- Customer selector inside modal -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <button class="cust-sel-btn" id="modal-cust-btn" onclick="openCustPickerFromModal()" style="flex:1">
+        <i class="ti ti-user"></i><span id="modal-cust-label">เลือกลูกค้า (ไม่บังคับ)</span>
+      </button>
+      <div class="cust-clear-btn" id="modal-cust-clear" onclick="clearSelectedCust()" style="display:none" title="ยกเลิก"><i class="ti ti-x" style="font-size:14px"></i></div>
+    </div>
     <div class="modal-total-box">
       <span class="modal-total-lbl">ยอดสุทธิ</span>
       <span class="modal-total-val" id="pay-total">฿0</span>
@@ -600,6 +607,26 @@ function openPriceEdit(rowId){
 }
 
 // ── PAYMENT ───────────────────────────────────────────────
+function syncModalCustBtn(){
+  const btn=document.getElementById("modal-cust-btn");
+  const clr=document.getElementById("modal-cust-clear");
+  const lbl=document.getElementById("modal-cust-label");
+  if(!btn)return;
+  if(selectedCust){
+    btn.className="cust-sel-btn selected";
+    lbl.textContent=selectedCust.name+(selectedCust.phone?" · "+selectedCust.phone:"");
+    clr.style.display="flex";
+  }else{
+    btn.className="cust-sel-btn";
+    lbl.textContent="เลือกลูกค้า (ไม่บังคับ)";
+    clr.style.display="none";
+  }
+}
+let _custPickerFromModal=false;
+function openCustPickerFromModal(){
+  _custPickerFromModal=true;
+  openCustPicker();
+}
 function openPay(){
   const items=Object.values(cart);
   const final=getFinalTotal();
@@ -612,6 +639,7 @@ function openPay(){
   document.getElementById("change-box").textContent="";
   document.getElementById("change-box").className="change-box";
   document.getElementById("pay-ok").disabled=true;
+  syncModalCustBtn();
   document.getElementById("pay-overlay").classList.add("show");
   setTimeout(()=>document.getElementById("recv-inp").focus(),200);
 }
@@ -995,13 +1023,24 @@ function selectCust(rowId){
   btn.innerHTML=`<i class="ti ti-user-check"></i><span>${selectedCust.name}${selectedCust.phone?" · "+selectedCust.phone:""}</span>`;
   clr.style.display="flex";
   closeCustPicker();
+  syncModalCustBtn();
+  // sync top POS bar too
+  const topBtn=document.getElementById("cust-sel-btn");
+  const topClr=document.getElementById("cust-clear");
+  if(topBtn){
+    topBtn.className="cust-sel-btn selected";
+    topBtn.innerHTML=`<i class="ti ti-user-check"></i><span>${selectedCust.name}${selectedCust.phone?" · "+selectedCust.phone:""}</span>`;
+    if(topClr)topClr.style.display="flex";
+  }
   toast(`👤 เลือกลูกค้า: ${selectedCust.name}`);
 }
 function clearSelectedCust(){
   selectedCust=null;
-  document.getElementById("cust-sel-btn").className="cust-sel-btn";
-  document.getElementById("cust-sel-btn").innerHTML=`<i class="ti ti-user"></i><span>เลือกลูกค้า (ไม่บังคับ)</span>`;
-  document.getElementById("cust-clear").style.display="none";
+  const topBtn=document.getElementById("cust-sel-btn");
+  const topClr=document.getElementById("cust-clear");
+  if(topBtn){topBtn.className="cust-sel-btn";topBtn.innerHTML=`<i class="ti ti-user"></i><span>เลือกลูกค้า (ไม่บังคับ)</span>`;}
+  if(topClr)topClr.style.display="none";
+  syncModalCustBtn();
 }
 function selectCustFromHist(){
   if(viewingCustId){selectCust(viewingCustId);closeCustHist();}

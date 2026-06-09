@@ -1397,985 +1397,1002 @@
     </style>
 </head>
 <body>
-<div class="app">
-  <!-- Topbar -->
-  <div class="topbar">
-    <div class="topbar-row">
-      <div><div class="store-name">TreeSiri</div><div class="topbar-sub">POS · Dashboard · จัดการสินค้า</div></div>
-      <button class="sync-pill" onclick="syncAll()"><span class="sdot" id="sdot"></span><span id="slbl">Sync</span></button>
-    </div>
-  </div>
-  <!-- Tabs -->
-  <div class="tab-bar">
-    <button class="tab active" onclick="gotoScreen('pos',this)"><i class="ti ti-basket"></i>ขาย</button>
-    <button class="tab" onclick="gotoScreen('dash',this)"><i class="ti ti-chart-bar"></i>สรุป</button>
-    <button class="tab" onclick="gotoScreen('history',this)"><i class="ti ti-history"></i>ประวัติ</button>
-    <button class="tab" onclick="gotoScreen('manage',this)"><i class="ti ti-plant"></i>สินค้า</button>
-    <button class="tab" onclick="gotoScreen('customers',this)"><i class="ti ti-users"></i>ลูกค้า</button>
-  </div>
-  <div class="screens">
-    <!-- POS -->
-    <div id="screen-pos" class="screen active">
-      <div class="pos-wrap">
-        <div class="search-row">
-          <div class="sbox"><i class="ti ti-search"></i><input type="text" placeholder="ค้นหาต้นไม้..." id="s-input" oninput="renderProds()"></div>
-        </div>
-        <!-- Customer selector -->
-        <div class="cust-sel-bar">
-          <button class="cust-sel-btn" id="cust-sel-btn" onclick="openCustPicker()">
-            <i class="ti ti-user"></i><span id="cust-sel-label">เลือกลูกค้า (ไม่บังคับ)</span>
-          </button>
-          <div class="cust-clear-btn" id="cust-clear" onclick="clearSelectedCust()" style="display:none" title="ยกเลิก"><i class="ti ti-x" style="font-size:14px"></i></div>
-        </div>
-        <div class="cat-strip" id="cat-strip"></div>
-        <div class="prod-area"><div class="prod-grid" id="prod-grid"></div></div>
-        <div class="cart-panel">
-          <div class="cart-hdr">
-            <span class="cart-title"><i class="ti ti-shopping-cart" style="font-size:14px;vertical-align:-2px"></i> ตะกร้า (<span id="cart-count">0</span>)</span>
-            <button class="clear-btn" onclick="clearCart()">ล้างทั้งหมด</button>
-          </div>
-          <div class="cart-scroll" id="cart-items"><div class="cart-empty">เลือกต้นไม้ด้านบน</div></div>
-          <!-- Discount row -->
-          <div class="disc-row">
-            <span class="disc-lbl">ส่วนลดบิลนี้</span>
-            <div class="disc-tabs">
-              <button class="disc-tab active" onclick="setDiscMode('baht',this)">฿</button>
-              <button class="disc-tab" onclick="setDiscMode('pct',this)">%</button>
+    <div class="app">
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-row">
+                <div><div class="store-name">TreeSiri</div><div class="topbar-sub">POS · Dashboard · จัดการสินค้า</div></div>
+                <button class="sync-pill" onclick="syncAll()"><span class="sdot" id="sdot"></span><span id="slbl">Sync</span></button>
             </div>
-            <input class="disc-input" type="number" id="disc-val" value="0" min="0" oninput="renderTotal()" placeholder="0">
-            <span id="disc-unit" style="font-size:12px;color:var(--m)">บาท</span>
-          </div>
-          <div class="total-row">
-            <span class="total-lbl">ยอดรวม</span>
-            <div class="total-right">
-              <div class="total-orig" id="total-orig"></div>
-              <div class="total-amt" id="total-amt">฿0</div>
+        </div>
+        <!-- Tabs -->
+        <div class="tab-bar">
+            <button class="tab active" onclick="gotoScreen('pos',this)"><i class="ti ti-basket"></i>ขาย</button>
+            <button class="tab" onclick="gotoScreen('dash',this)"><i class="ti ti-chart-bar"></i>สรุป</button>
+            <button class="tab" onclick="gotoScreen('history',this)"><i class="ti ti-history"></i>ประวัติ</button>
+            <button class="tab" onclick="gotoScreen('manage',this)"><i class="ti ti-plant"></i>สินค้า</button>
+            <button class="tab" onclick="gotoScreen('customers',this)"><i class="ti ti-users"></i>ลูกค้า</button>
+        </div>
+        <div class="screens">
+            <!-- POS -->
+            <div id="screen-pos" class="screen active">
+                <div class="pos-wrap">
+                    <div class="search-row">
+                        <div class="sbox"><i class="ti ti-search"></i><input type="text" placeholder="ค้นหาต้นไม้..." id="s-input" oninput="renderProds()"></div>
+                    </div>
+                    <!-- Customer selector -->
+                    <div class="cust-sel-bar">
+                        <button class="cust-sel-btn" id="cust-sel-btn" onclick="openCustPicker()">
+                            <i class="ti ti-user"></i><span id="cust-sel-label">เลือกลูกค้า (ไม่บังคับ)</span>
+                        </button>
+                        <div class="cust-clear-btn" id="cust-clear" onclick="clearSelectedCust()" style="display:none" title="ยกเลิก"><i class="ti ti-x" style="font-size:14px"></i></div>
+                    </div>
+                    <div class="cat-strip" id="cat-strip"></div>
+                    <div class="prod-area"><div class="prod-grid" id="prod-grid"></div></div>
+                    <div class="cart-panel">
+                        <div class="cart-hdr">
+                            <span class="cart-title"><i class="ti ti-shopping-cart" style="font-size:14px;vertical-align:-2px"></i> ตะกร้า (<span id="cart-count">0</span>)</span>
+                            <button class="clear-btn" onclick="clearCart()">ล้างทั้งหมด</button>
+                        </div>
+                        <div class="cart-scroll" id="cart-items"><div class="cart-empty">เลือกต้นไม้ด้านบน</div></div>
+                        <!-- Discount row -->
+                        <div class="disc-row">
+                            <span class="disc-lbl">ส่วนลดบิลนี้</span>
+                            <div class="disc-tabs">
+                                <button class="disc-tab active" onclick="setDiscMode('baht',this)">฿</button>
+                                <button class="disc-tab" onclick="setDiscMode('pct',this)">%</button>
+                            </div>
+                            <input class="disc-input" type="number" id="disc-val" value="0" min="0" oninput="renderTotal()" placeholder="0">
+                            <span id="disc-unit" style="font-size:12px;color:var(--m)">บาท</span>
+                        </div>
+                        <div class="total-row">
+                            <span class="total-lbl">ยอดรวม</span>
+                            <div class="total-right">
+                                <div class="total-orig" id="total-orig"></div>
+                                <div class="total-amt" id="total-amt">฿0</div>
+                            </div>
+                        </div>
+                        <button class="pay-btn" id="pay-btn" onclick="openPay()" disabled><i class="ti ti-cash" style="font-size:19px"></i> ชำระเงิน</button>
+                    </div>
+                </div>
             </div>
+            <!-- Dashboard -->
+            <div id="screen-dash" class="screen">
+                <div class="dash-wrap">
+                    <div class="date-presets" id="date-presets">
+                        <button class="preset-btn active" onclick="setPreset('today',this)">วันนี้</button>
+                        <button class="preset-btn" onclick="setPreset('7d',this)">7 วัน</button>
+                        <button class="preset-btn" onclick="setPreset('30d',this)">30 วัน</button>
+                        <button class="preset-btn" onclick="setPreset('mtd',this)">เดือนนี้</button>
+                        <button class="preset-btn" onclick="setPreset('custom',this)">กำหนดเอง</button>
+                    </div>
+                    <div class="date-range-wrap" id="custom-range" style="display:none">
+                        <input class="date-inp" type="date" id="date-from" onchange="renderDash()">
+                        <span class="date-sep">ถึง</span>
+                        <input class="date-inp" type="date" id="date-to" onchange="renderDash()">
+                    </div>
+                    <div class="metric-grid" id="metric-grid"></div>
+                    <div class="section-lbl">ยอดขายรายวัน</div>
+                    <div class="chart-wrap"><canvas id="bar-chart"></canvas></div>
+                    <div class="section-lbl">สินค้าขายดี Top 5</div>
+                    <div id="top-list"></div>
+                </div>
+            </div>
+            <!-- History -->
+            <div id="screen-history" class="screen">
+                <div class="hist-wrap">
+                    <div class="today-cards" id="today-cards"></div>
+                    <div id="hist-list"></div>
+                </div>
+            </div>
+            <!-- Manage -->
+            <div id="screen-manage" class="screen">
+                <div class="manage-wrap">
+                    <div class="manage-hdr">
+                        <span class="manage-title">จัดการสินค้า</span>
+                        <button class="add-btn" onclick="openProductForm()"><i class="ti ti-plus" style="font-size:15px"></i> เพิ่มสินค้า</button>
+                    </div>
+                    <div id="prod-list"></div>
+                </div>
+            </div>
+            <!-- Customers -->
+            <div id="screen-customers" class="screen">
+                <div class="cust-wrap">
+                    <div class="cust-hdr">
+                        <span class="manage-title">ลูกค้า</span>
+                        <button class="add-btn" onclick="openCustForm()"><i class="ti ti-user-plus" style="font-size:15px"></i> เพิ่มลูกค้า</button>
+                    </div>
+                    <div class="cust-search">
+                        <i class="ti ti-search"></i>
+                        <input type="text" id="cust-search-inp" placeholder="ค้นหาชื่อ / เบอร์..." oninput="renderCustList()">
+                    </div>
+                    <div id="cust-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pay Modal -->
+    <div class="overlay" id="pay-overlay">
+        <div class="sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-title">ชำระเงิน</div>
+            <div id="pay-summary" style="font-size:12px;color:var(--m);margin-bottom:8px;line-height:1.6"></div>
+            <!-- Customer selector inside modal -->
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                <button class="cust-sel-btn" id="modal-cust-btn" onclick="openCustPickerFromModal()" style="flex:1">
+                    <i class="ti ti-user"></i><span id="modal-cust-label">เลือกลูกค้า (ไม่บังคับ)</span>
+                </button>
+                <div class="cust-clear-btn" id="modal-cust-clear" onclick="clearSelectedCust()" style="display:none" title="ยกเลิก"><i class="ti ti-x" style="font-size:14px"></i></div>
+            </div>
+            <div class="pts-preview" id="pts-preview" style="display:none">
+                <i class="ti ti-star"></i>
+                <span id="pts-preview-text"></span>
+            </div>
+            <div class="modal-total-box">
+                <span class="modal-total-lbl">ยอดสุทธิ</span>
+                <span class="modal-total-val" id="pay-total">฿0</span>
+            </div>
+            <div class="form-lbl">รับเงิน (บาท)</div>
+            <input class="form-inp" type="number" id="recv-inp" placeholder="0.00" oninput="calcChange()" inputmode="decimal" style="font-size:18px;font-weight:600;margin-bottom:8px">
+            <div class="change-box" id="change-box"></div>
+            <div class="sheet-btns">
+                <button class="btn-secondary" onclick="closePay()">ยกเลิก</button>
+                <button class="btn-primary" id="pay-ok" onclick="confirmSale()" disabled>ยืนยันการขาย</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Form Modal -->
+    <div class="overlay" id="prod-overlay">
+        <div class="sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-title" id="prod-form-title">เพิ่มสินค้าใหม่</div>
+            <div class="form-lbl">ชื่อต้นไม้ *</div>
+            <input class="form-inp" id="f-name" type="text" placeholder="เช่น มอนสเตร่า">
+            <div class="form-lbl">Lot / แหล่งที่มา</div>
+            <input class="form-inp" id="f-lot" type="text" placeholder="เช่น Lot A, สวนอ.สมชาย, 15/1/68">
+            <div class="form-lbl">หมวดหมู่</div>
+            <input class="form-inp" id="f-cat" type="text" placeholder="เช่น ในร่ม, ดอกไม้, สมุนไพร">
+            <div class="form-lbl">ราคาปกติ (บาท) *</div>
+            <input class="form-inp" id="f-price" type="number" placeholder="0" inputmode="decimal">
+            <div class="form-lbl">จำนวนสต็อก</div>
+            <input class="form-inp" id="f-stock" type="number" placeholder="0" inputmode="numeric">
+            <div class="form-lbl">รูปภาพต้นไม้</div>
+            <div class="img-tabs">
+                <button class="img-tab active" onclick="setImgTab('upload',this)"><i class="ti ti-upload" style="font-size:13px"></i> อัปโหลด</button>
+                <button class="img-tab" onclick="setImgTab('url',this)"><i class="ti ti-link" style="font-size:13px"></i> URL รูป</button>
+            </div>
+            <div id="img-upload-area" class="img-upload-area" onclick="document.getElementById('f-img-file').click()">
+                <img id="img-preview" class="img-preview" style="display:none">
+                <div id="img-upload-hint"><i class="ti ti-photo" style="font-size:24px;color:var(--faint)"></i><div style="font-size:12px;color:var(--faint);margin-top:4px">แตะเพื่อเลือกรูป</div></div>
+                <input type="file" id="f-img-file" accept="image/*" style="display:none" onchange="handleImgUpload(event)">
+            </div>
+            <input class="form-inp" id="f-img-url" type="url" placeholder="https://..." style="display:none;margin-top:6px" oninput="previewImgUrl()">
+            <div class="form-lbl" style="margin-top:10px">Emoji (ไอคอนสำรอง)</div>
+            <div class="emoji-grid" id="emoji-grid"></div>
+            <input class="form-inp" id="f-emoji" type="text" placeholder="หรือพิมพ์ emoji เอง" style="margin-top:8px;font-size:18px" maxlength="4">
+            <div class="sheet-btns">
+                <button class="btn-secondary" onclick="closeProdForm()">ยกเลิก</button>
+                <button class="btn-primary" id="prod-save-btn" onclick="saveProduct()">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirm -->
+    <div class="overlay" id="del-overlay">
+        <div class="sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-title">ลบสินค้า</div>
+            <p style="font-size:14px;color:var(--m);margin-bottom:16px">ยืนยันลบ "<span id="del-name" style="color:var(--t);font-weight:600"></span>" ออกจากระบบและ Google Sheet?</p>
+            <div class="sheet-btns">
+                <button class="btn-secondary" onclick="closeDelModal()">ยกเลิก</button>
+                <button class="btn-primary" style="background:var(--r6)" onclick="confirmDelete()">ลบเลย</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Form Modal -->
+    <div class="overlay" id="cust-form-overlay">
+        <div class="sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-title" id="cust-form-title">เพิ่มลูกค้าใหม่</div>
+            <div class="form-lbl">ชื่อ / ชื่อเล่น *</div>
+            <input class="form-inp" id="cf-name" type="text" placeholder="เช่น คุณสมชาย">
+            <div class="form-lbl">เบอร์โทรศัพท์</div>
+            <input class="form-inp" id="cf-phone" type="tel" placeholder="08x-xxx-xxxx" inputmode="tel">
+            <div class="form-lbl">แต้มสะสม</div>
+            <input class="form-inp" id="cf-points" type="number" placeholder="0" value="0" inputmode="numeric">
+            <div class="form-lbl">หมายเหตุ</div>
+            <input class="form-inp" id="cf-note" type="text" placeholder="เช่น ชอบต้นไม้ในร่ม">
+            <div class="sheet-btns">
+                <button class="btn-secondary" onclick="closeCustForm()">ยกเลิก</button>
+                <button class="btn-primary" id="cust-save-btn" onclick="saveCustomer()">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Picker Modal -->
+    <div class="overlay" id="cust-picker-overlay">
+        <div class="sheet" style="max-height:80vh">
+            <div class="sheet-handle"></div>
+            <div class="sheet-title">เลือกลูกค้า</div>
+            <div class="cust-search" style="margin-bottom:10px"><i class="ti ti-search"></i><input type="text" id="picker-search" placeholder="ค้นหา..." oninput="renderPickerList()"></div>
+            <div id="picker-list" style="max-height:50vh;overflow-y:auto"></div>
+            <div class="sheet-btns" style="margin-top:12px">
+                <button class="btn-secondary" onclick="closeCustPicker()">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer History Modal -->
+    <div class="overlay" id="cust-hist-overlay">
+        <div class="sheet" style="max-height:85vh">
+            <div class="sheet-handle"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                <div>
+                    <div class="sheet-title" style="margin-bottom:2px" id="cust-hist-name">ประวัติการซื้อ</div>
+                    <div style="font-size:12px;color:var(--m)" id="cust-hist-meta"></div>
+                </div>
+                <span id="cust-hist-points" class="cust-points"></span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px" id="cust-hist-stats"></div>
+            <div style="font-size:12px;font-weight:600;color:var(--m);margin-bottom:8px">ประวัติการสั่งซื้อ</div>
+            <div id="cust-hist-list" style="max-height:40vh;overflow-y:auto"></div>
+            <div class="sheet-btns" style="margin-top:12px">
+                <button class="btn-secondary" onclick="closeCustHist()">ปิด</button>
+                <button class="btn-primary" onclick="selectCustFromHist()">เลือกลูกค้านี้</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>// ── CONFIG ────────────────────────────────────────────────
+        const SHEET_ID = "1c_t89oC0p5setOKKu2vuPbkVb_NXPCJ8jh_O9pP4s-o";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz66FGof0-0IhtUh7XsPdCJPDWmwWDvc_aW4EB8VOz8hsgtohztsEE-MX1GVshLCceABw/exec";
+        const API_KEY = "AIzaSyCRWFx2hsgTIN9PbS7cbbfadt8BgiiXJQc";
+        const BASE = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values`;
+        const EMOJIS = ["🌿", "🪴", "🌳", "🌹", "🌷", "🌺", "🌸", "🌼", "🌻", "🌵", "🍃", "💐", "🌱", "🌾", "🍀", "🎋", "🎍", "🌲", "🍁", "🍂", "🌴", "💮", "🌙", "⭐", "🏡"];
+        const MONTHS = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+
+        // ── STATE ─────────────────────────────────────────────────
+        let products = [], sales = [], customers = [], cart = {};
+        let activeCat = "ทั้งหมด", discMode = "baht";
+        let barChart = null;
+        let editingProductId = null, deletingProductId = null;
+        let selectedCust = null, viewingCustId = null;
+        let imgTabMode = "upload", imgBase64 = "", imgUrlValue = "";
+
+        // ── SHEETS API ────────────────────────────────────────────
+        async function sheetGet(range) {
+            const r = await fetch(`${BASE}/${encodeURIComponent(range)}?key=${API_KEY}`);
+            if (!r.ok) throw new Error(r.status);
+            return (await r.json()).values || [];
+        }
+        async function scriptPost(data) {
+            const r = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(data) });
+            if (!r.ok) throw new Error("HTTP " + r.status);
+            const j = await r.json();
+            if (!j.ok) throw new Error(j.error || "Script error");
+            return j;
+        }
+
+        // ── SYNC ──────────────────────────────────────────────────
+        function setSS(s) {
+            const d = document.getElementById("sdot"), l = document.getElementById("slbl");
+            d.className = "sdot" + (s === "loading" ? " spin" : s === "error" ? " err" : "");
+            l.textContent = s === "loading" ? "Syncing..." : s === "error" ? "Error" : "Sync";
+        }
+        async function syncAll() {
+            setSS("loading");
+
+            try {
+
+                await Promise.all([
+                    loadProducts(),
+                    loadSales(),
+                    loadCustomers()
+                ]);
+
+                setSS("ok");
+                toast("✅ Sync สำเร็จ");
+
+            } catch (e) {
+                Ï
+
+                setSS("error");
+                toast("❌ " + e.message);
+
+            }
+        }
+
+        // ── LOAD PRODUCTS (columns: name,cat,price,stock,emoji,lot,imgUrl) ──
+        async function loadProducts() {
+            const rows = await sheetGet("Products!A2:G");
+            products = rows.map((r, i) => ({
+                row: i + 2,
+                name: r[0] || "", lot: r[1] || "", cat: r[2] || "",
+                price: parseFloat(r[3]) || 0, stock: parseInt(r[4]) || 0,
+                emoji: r[5] || "🌿", imgUrl: r[6] || ""
+            })).filter(p => p.name);
+            renderCats(); renderProds(); renderProdList();
+        }
+
+        // ── LOAD SALES (columns: date,items,subtotal,discount,total,custName) ──
+        async function loadSales() {
+            const rows = await sheetGet("Sales!A2:F");
+            sales = rows.map(r => ({
+                date: new Date(r[0]),
+                itemsStr: r[1] || "",
+                items: (r[1] || "").split(",").map(s => { const p = s.trim().split("×"); return { name: p[0]?.trim() || "", emoji: "🌿", qty: parseInt(p[1]) || 1, price: parseFloat(p[2]) || 0 }; }),
+                subtotal: parseFloat(r[2]) || 0, discount: parseFloat(r[3]) || 0, total: parseFloat(r[4]) || 0,
+                custName: r[5] || "",
+                itemCount: (r[1] || "").split(",").reduce((a, s) => { const p = s.split("×"); return a + (parseInt(p[1]) || 1) }, 0)
+            })).filter(s => !isNaN(s.date.getTime())).reverse();
+        }
+
+        // ── LOAD CUSTOMERS ────────────────────────────────────────
+        async function loadCustomers() {
+            const rows = await sheetGet("Customers!A2:E");
+            customers = rows.map((r, i) => ({ row: i + 2, name: r[0] || "", phone: r[1] || "", points: parseInt(r[2]) || 0, note: r[3] || "", totalSpent: parseFloat(r[4]) || 0 })).filter(c => c.name);
+        }
+
+        // ── PRODUCTS UI ───────────────────────────────────────────
+        function getCats() { return ["ทั้งหมด", ...new Set(products.map(p => p.cat).filter(Boolean))] }
+        function renderCats() {
+            document.getElementById("cat-strip").innerHTML = getCats().map(c =>
+                `<button class="cat-btn${c === activeCat ? " active" : ""}" onclick="selCat('${c}')">${c}</button>`
+            ).join("");
+        }
+        function selCat(c) { activeCat = c; renderCats(); renderProds() }
+        function renderProds() {
+            const q = (document.getElementById("s-input").value || "").toLowerCase();
+            const f = products.filter(p => (activeCat === "ทั้งหมด" || p.cat === activeCat) && (!q || p.name.toLowerCase().includes(q) || (p.lot || "").toLowerCase().includes(q)));
+            const g = document.getElementById("prod-grid");
+            if (!products.length) { g.innerHTML = `<div style="grid-column:1/-1"><div class="empty-state"><i class="ti ti-refresh spin-icon"></i><p>กำลังโหลดจาก Google Sheets...</p></div></div>`; return }
+            if (!f.length) { g.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--faint);font-size:13px;padding:24px">ไม่พบสินค้า</div>`; return }
+
+            // Group by name — merge multi-lot into one card
+            const grouped = {};
+            f.forEach(p => {
+                if (!grouped[p.name]) grouped[p.name] = [];
+                grouped[p.name].push(p);
+            });
+
+            g.innerHTML = Object.values(grouped).map(lots => {
+                const rep = lots[0]; // representative (first lot)
+                const totalStock = lots.reduce((s, p) => s + p.stock, 0);
+                const hasMultiLot = lots.length > 1;
+                const imgHtml = rep.imgUrl
+                    ? `<div class="pcard-img-wrap"><img class="pcard-img" src="${rep.imgUrl}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="pcard-emoji" style="display:none">${rep.emoji}</span></div>`
+                    : `<div class="pcard-emoji">${rep.emoji}</div>`;
+
+                if (hasMultiLot) {
+                    // Multi-lot card: show lot chips to pick from
+                    const lotChips = lots.map(p => `
+            <div class="lot-chip${p.stock <= 0 ? " lot-chip-empty" : ""}" onclick="event.stopPropagation();${p.stock > 0 ? `addCart(${p.row})` : `toast('❌ Lot นี้หมดแล้ว')`}" title="${p.lot || 'ไม่มี Lot'} · ${p.stock} ต้น">
+              <span class="lot-chip-name">${p.lot || "–"}</span>
+              <span class="lot-chip-stock${p.stock <= 5 && p.stock > 0 ? " low" : p.stock <= 0 ? " out" : ""}">${p.stock <= 0 ? "หมด" : p.stock + " ต้น"}</span>
+            </div>`).join("");
+                    return `<div class="pcard pcard-multi">
+            ${imgHtml}
+            <div class="pcard-name">${rep.name}</div>
+            <div class="pcard-price">฿${rep.price.toLocaleString()} <span style="font-size:10px;color:var(--m)">รวม ${totalStock} ต้น</span></div>
+            <div class="lot-chips-row">${lotChips}</div>
+          </div>`;
+                } else {
+                    // Single lot card
+                    const lotHtml = rep.lot ? `<div class="lot-badge">${rep.lot}</div>` : "";
+                    return `<div class="pcard${totalStock <= 0 ? " pcard-empty" : ""}" onclick="${totalStock > 0 ? `addCart(${rep.row})` : 'toast("❌ สินค้าหมดแล้ว")'}">
+            ${imgHtml}
+            <div class="pcard-name">${rep.name}</div>
+            ${lotHtml}
+            <div class="pcard-price">฿${rep.price.toLocaleString()}</div>
+            <div class="pcard-stock${totalStock <= 5 ? " low" : ""}">${totalStock <= 0 ? "หมดแล้ว" : "คงเหลือ " + totalStock + " ต้น"}</div>
+          </div>`;
+                }
+            }).join("");
+        }
+
+        // ── CART ──────────────────────────────────────────────────
+        function addCart(rowId) {
+            const p = products.find(x => x.row === rowId);
+            if (!p || p.stock <= 0) return;
+            if (!cart[rowId]) cart[rowId] = { ...p, customPrice: null, qty: 0 };
+            if (cart[rowId].qty >= p.stock) return;
+            cart[rowId].qty++; renderCart();
+        }
+        function chgQty(rowId, d) {
+            if (!cart[rowId]) return;
+            cart[rowId].qty += d;
+            if (cart[rowId].qty <= 0) delete cart[rowId];
+            renderCart();
+        }
+        function clearCart() { cart = {}; document.getElementById("disc-val").value = "0"; renderCart(); }
+        function getItemPrice(item) { return item.customPrice !== null ? item.customPrice : item.price }
+        function getSubtotal() { return Object.values(cart).reduce((s, x) => s + getItemPrice(x) * x.qty, 0) }
+        function getDiscount() {
+            const v = parseFloat(document.getElementById("disc-val").value) || 0;
+            const sub = getSubtotal();
+            if (discMode === "pct") return Math.min(sub, sub * v / 100);
+            return Math.min(sub, v);
+        }
+        function getFinalTotal() { return Math.max(0, getSubtotal() - getDiscount()) }
+        function renderCart() {
+            const items = Object.values(cart);
+            const count = items.reduce((s, x) => s + x.qty, 0);
+            document.getElementById("cart-count").textContent = count;
+            document.getElementById("pay-btn").disabled = count === 0;
+            const el = document.getElementById("cart-items");
+            if (!items.length) { el.innerHTML = `<div class="cart-empty">เลือกต้นไม้ด้านบน</div>`; renderTotal(); return }
+            el.innerHTML = items.map(x => {
+                const cp = getItemPrice(x);
+                const isCustom = x.customPrice !== null && x.customPrice !== x.price;
+                const lotTag = x.lot ? `<span class="lot-badge" style="font-size:9px">${x.lot}</span> ` : "";
+                return `<div class="crow">
+          <span class="crow-emoji">${x.imgUrl ? `<img src="${x.imgUrl}" style="width:22px;height:22px;object-fit:cover;border-radius:4px">` : x.emoji}</span>
+          <span class="crow-name">${x.name}${x.lot ? `<br><span style="font-size:10px;color:var(--a6)">${x.lot}</span>` : ""}</span>
+          <div class="qty-ctrl">
+            <button class="qbtn" onclick="chgQty(${x.row},-1)">−</button>
+            <span class="qnum">${x.qty}</span>
+            <button class="qbtn" onclick="chgQty(${x.row},1)">+</button>
           </div>
-          <button class="pay-btn" id="pay-btn" onclick="openPay()" disabled><i class="ti ti-cash" style="font-size:19px"></i> ชำระเงิน</button>
-        </div>
-      </div>
-    </div>
-    <!-- Dashboard -->
-    <div id="screen-dash" class="screen">
-      <div class="dash-wrap">
-        <div class="date-presets" id="date-presets">
-          <button class="preset-btn active" onclick="setPreset('today',this)">วันนี้</button>
-          <button class="preset-btn" onclick="setPreset('7d',this)">7 วัน</button>
-          <button class="preset-btn" onclick="setPreset('30d',this)">30 วัน</button>
-          <button class="preset-btn" onclick="setPreset('mtd',this)">เดือนนี้</button>
-          <button class="preset-btn" onclick="setPreset('custom',this)">กำหนดเอง</button>
-        </div>
-        <div class="date-range-wrap" id="custom-range" style="display:none">
-          <input class="date-inp" type="date" id="date-from" onchange="renderDash()">
-          <span class="date-sep">ถึง</span>
-          <input class="date-inp" type="date" id="date-to" onchange="renderDash()">
-        </div>
-        <div class="metric-grid" id="metric-grid"></div>
-        <div class="section-lbl">ยอดขายรายวัน</div>
-        <div class="chart-wrap"><canvas id="bar-chart"></canvas></div>
-        <div class="section-lbl">สินค้าขายดี Top 5</div>
-        <div id="top-list"></div>
-      </div>
-    </div>
-    <!-- History -->
-    <div id="screen-history" class="screen">
-      <div class="hist-wrap">
-        <div class="today-cards" id="today-cards"></div>
-        <div id="hist-list"></div>
-      </div>
-    </div>
-    <!-- Manage -->
-    <div id="screen-manage" class="screen">
-      <div class="manage-wrap">
-        <div class="manage-hdr">
-          <span class="manage-title">จัดการสินค้า</span>
-          <button class="add-btn" onclick="openProductForm()"><i class="ti ti-plus" style="font-size:15px"></i> เพิ่มสินค้า</button>
-        </div>
-        <div id="prod-list"></div>
-      </div>
-    </div>
-    <!-- Customers -->
-    <div id="screen-customers" class="screen">
-      <div class="cust-wrap">
-        <div class="cust-hdr">
-          <span class="manage-title">ลูกค้า</span>
-          <button class="add-btn" onclick="openCustForm()"><i class="ti ti-user-plus" style="font-size:15px"></i> เพิ่มลูกค้า</button>
-        </div>
-        <div class="cust-search">
-          <i class="ti ti-search"></i>
-          <input type="text" id="cust-search-inp" placeholder="ค้นหาชื่อ / เบอร์..." oninput="renderCustList()">
-        </div>
-        <div id="cust-list"></div>
-      </div>
-    </div>
-  </div>
-</div>
+          <div class="crow-price-wrap" onclick="openPriceEdit(${x.row})" title="แตะเพื่อแก้ราคา">
+            <span class="crow-price">฿${(cp * x.qty).toLocaleString()}</span>
+            <span class="crow-disc" style="color:${isCustom ? "var(--a6)" : "var(--faint)"}">฿${cp.toLocaleString()} ✎</span>
+          </div>
+        </div>`}).join("");
+            renderTotal();
+        }
+        function renderTotal() {
+            const sub = getSubtotal(); const disc = getDiscount(); const final = getFinalTotal();
+            const orig = document.getElementById("total-orig"); const amt = document.getElementById("total-amt");
+            if (disc > 0) { orig.textContent = "฿" + sub.toLocaleString(); orig.style.display = ""; } else orig.style.display = "none";
+            amt.textContent = "฿" + final.toLocaleString();
+        }
+        function setDiscMode(mode, btn) {
+            discMode = mode;
+            document.querySelectorAll(".disc-tab").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            document.getElementById("disc-unit").textContent = mode === "pct" ? "%" : "บาท";
+            document.getElementById("disc-val").value = "0";
+            renderTotal();
+        }
 
-<!-- Pay Modal -->
-<div class="overlay" id="pay-overlay">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title">ชำระเงิน</div>
-    <div id="pay-summary" style="font-size:12px;color:var(--m);margin-bottom:8px;line-height:1.6"></div>
-    <!-- Customer selector inside modal -->
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-      <button class="cust-sel-btn" id="modal-cust-btn" onclick="openCustPickerFromModal()" style="flex:1">
-        <i class="ti ti-user"></i><span id="modal-cust-label">เลือกลูกค้า (ไม่บังคับ)</span>
-      </button>
-      <div class="cust-clear-btn" id="modal-cust-clear" onclick="clearSelectedCust()" style="display:none" title="ยกเลิก"><i class="ti ti-x" style="font-size:14px"></i></div>
-    </div>
-    <div class="pts-preview" id="pts-preview" style="display:none">
-      <i class="ti ti-star"></i>
-      <span id="pts-preview-text"></span>
-    </div>
-    <div class="modal-total-box">
-      <span class="modal-total-lbl">ยอดสุทธิ</span>
-      <span class="modal-total-val" id="pay-total">฿0</span>
-    </div>
-    <div class="form-lbl">รับเงิน (บาท)</div>
-    <input class="form-inp" type="number" id="recv-inp" placeholder="0.00" oninput="calcChange()" inputmode="decimal" style="font-size:18px;font-weight:600;margin-bottom:8px">
-    <div class="change-box" id="change-box"></div>
-    <div class="sheet-btns">
-      <button class="btn-secondary" onclick="closePay()">ยกเลิก</button>
-      <button class="btn-primary" id="pay-ok" onclick="confirmSale()" disabled>ยืนยันการขาย</button>
-    </div>
-  </div>
-</div>
+        // ── PRICE EDIT ────────────────────────────────────────────
+        function openPriceEdit(rowId) {
+            const item = cart[rowId]; if (!item) return;
+            const newPrice = prompt(`แก้ราคา "${item.name}"${item.lot ? " (" + item.lot + ")" : ""}\nราคาปกติ: ฿${item.price}\n\nกรอกราคาใหม่ (บาท/ต้น):`, item.customPrice !== null ? item.customPrice : item.price);
+            if (newPrice === null) return;
+            const p = parseFloat(newPrice);
+            if (isNaN(p) || p < 0) { toast("❌ ราคาไม่ถูกต้อง"); return; }
+            cart[rowId].customPrice = p; renderCart();
+        }
 
-<!-- Product Form Modal -->
-<div class="overlay" id="prod-overlay">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title" id="prod-form-title">เพิ่มสินค้าใหม่</div>
-    <div class="form-lbl">ชื่อต้นไม้ *</div>
-    <input class="form-inp" id="f-name" type="text" placeholder="เช่น มอนสเตร่า">
-    <div class="form-lbl">Lot / แหล่งที่มา</div>
-    <input class="form-inp" id="f-lot" type="text" placeholder="เช่น Lot A, สวนอ.สมชาย, 15/1/68">
-    <div class="form-lbl">หมวดหมู่</div>
-    <input class="form-inp" id="f-cat" type="text" placeholder="เช่น ในร่ม, ดอกไม้, สมุนไพร">
-    <div class="form-lbl">ราคาปกติ (บาท) *</div>
-    <input class="form-inp" id="f-price" type="number" placeholder="0" inputmode="decimal">
-    <div class="form-lbl">จำนวนสต็อก</div>
-    <input class="form-inp" id="f-stock" type="number" placeholder="0" inputmode="numeric">
-    <div class="form-lbl">รูปภาพต้นไม้</div>
-    <div class="img-tabs">
-      <button class="img-tab active" onclick="setImgTab('upload',this)"><i class="ti ti-upload" style="font-size:13px"></i> อัปโหลด</button>
-      <button class="img-tab" onclick="setImgTab('url',this)"><i class="ti ti-link" style="font-size:13px"></i> URL รูป</button>
-    </div>
-    <div id="img-upload-area" class="img-upload-area" onclick="document.getElementById('f-img-file').click()">
-      <img id="img-preview" class="img-preview" style="display:none">
-      <div id="img-upload-hint"><i class="ti ti-photo" style="font-size:24px;color:var(--faint)"></i><div style="font-size:12px;color:var(--faint);margin-top:4px">แตะเพื่อเลือกรูป</div></div>
-      <input type="file" id="f-img-file" accept="image/*" style="display:none" onchange="handleImgUpload(event)">
-    </div>
-    <input class="form-inp" id="f-img-url" type="url" placeholder="https://..." style="display:none;margin-top:6px" oninput="previewImgUrl()">
-    <div class="form-lbl" style="margin-top:10px">Emoji (ไอคอนสำรอง)</div>
-    <div class="emoji-grid" id="emoji-grid"></div>
-    <input class="form-inp" id="f-emoji" type="text" placeholder="หรือพิมพ์ emoji เอง" style="margin-top:8px;font-size:18px" maxlength="4">
-    <div class="sheet-btns">
-      <button class="btn-secondary" onclick="closeProdForm()">ยกเลิก</button>
-      <button class="btn-primary" id="prod-save-btn" onclick="saveProduct()">บันทึก</button>
-    </div>
-  </div>
-</div>
+        // ── CUSTOMER SELECTOR ─────────────────────────────────────
+        function syncModalCustBtn() {
+            const btn = document.getElementById("modal-cust-btn");
+            const clr = document.getElementById("modal-cust-clear");
+            const lbl = document.getElementById("modal-cust-label");
+            const pts = document.getElementById("pts-preview");
+            const ptsTxt = document.getElementById("pts-preview-text");
+            if (!btn) return;
+            if (selectedCust) {
+                btn.className = "cust-sel-btn selected";
+                lbl.textContent = selectedCust.name + (selectedCust.phone ? " · " + selectedCust.phone : "");
+                clr.style.display = "flex";
+                // Points preview
+                const earned = Math.floor(getFinalTotal() / 10);
+                const current = selectedCust.points || 0;
+                pts.style.display = "flex";
+                ptsTxt.textContent = `${selectedCust.name} มี ${current} แต้ม · บิลนี้ได้ +${earned} แต้ม → รวม ${current + earned} แต้ม`;
+            } else {
+                btn.className = "cust-sel-btn";
+                lbl.textContent = "เลือกลูกค้า (ไม่บังคับ)";
+                clr.style.display = "none";
+                pts.style.display = "none";
+            }
+        }
+        let _custPickerFromModal = false;
+        function openCustPickerFromModal() { _custPickerFromModal = true; openCustPicker(); }
 
-<!-- Delete Confirm -->
-<div class="overlay" id="del-overlay">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title">ลบสินค้า</div>
-    <p style="font-size:14px;color:var(--m);margin-bottom:16px">ยืนยันลบ "<span id="del-name" style="color:var(--t);font-weight:600"></span>" ออกจากระบบและ Google Sheet?</p>
-    <div class="sheet-btns">
-      <button class="btn-secondary" onclick="closeDelModal()">ยกเลิก</button>
-      <button class="btn-primary" style="background:var(--r6)" onclick="confirmDelete()">ลบเลย</button>
-    </div>
-  </div>
-</div>
+        // ── PAYMENT ───────────────────────────────────────────────
+        function openPay() {
+            const items = Object.values(cart);
+            const final = getFinalTotal(), disc = getDiscount();
+            document.getElementById("pay-total").textContent = "฿" + final.toLocaleString();
+            let summary = items.map(x => `${x.imgUrl ? `<img src="${x.imgUrl}" style="width:14px;height:14px;object-fit:cover;border-radius:3px;vertical-align:-2px">` : x.emoji} ${x.name}${x.lot ? " (" + x.lot + ")" : ""} ×${x.qty} = ฿${(getItemPrice(x) * x.qty).toLocaleString()}`).join("<br>");
+            if (disc > 0) summary += `<br>🏷 ส่วนลด −฿${disc.toLocaleString()}`;
+            document.getElementById("pay-summary").innerHTML = summary;
+            document.getElementById("recv-inp").value = "";
+            document.getElementById("change-box").textContent = "";
+            document.getElementById("change-box").className = "change-box";
+            document.getElementById("pay-ok").disabled = true;
+            syncModalCustBtn();
+            document.getElementById("pay-overlay").classList.add("show");
+            setTimeout(() => document.getElementById("recv-inp").focus(), 200);
+        }
+        function closePay() { document.getElementById("pay-overlay").classList.remove("show") }
+        function calcChange() {
+            const recv = parseFloat(document.getElementById("recv-inp").value) || 0;
+            const total = getFinalTotal();
+            const el = document.getElementById("change-box"); const btn = document.getElementById("pay-ok");
+            if (recv >= total) { el.textContent = "เงินทอน ฿" + (recv - total).toLocaleString(); el.className = "change-box change-ok"; btn.disabled = false; }
+            else if (recv > 0) { el.textContent = "ขาดอีก ฿" + (total - recv).toLocaleString(); el.className = "change-box change-err"; btn.disabled = true; }
+            else { el.textContent = ""; el.className = "change-box"; btn.disabled = true; }
+        }
+        async function confirmSale() {
+            const items = Object.values(cart);
+            const sub = getSubtotal(), disc = getDiscount(), total = getFinalTotal();
+            const now = new Date();
+            const btn = document.getElementById("pay-ok");
+            btn.disabled = true; btn.textContent = "กำลังบันทึก...";
+            try {
+                const itemStr = items.map(x => `${x.name}${x.lot ? "(" + x.lot + ")" : ""}×${x.qty}×${getItemPrice(x)}`).join(", ");
+                const dateStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+                const custName = selectedCust ? selectedCust.name : "";
+                await scriptPost({ action: "addSale", date: dateStr, items: itemStr, subtotal: sub, discount: disc, total, custName });
+                for (const x of items) {
+                    const p = products.find(q => q.row === x.row);
+                    if (p) { p.stock -= x.qty; await scriptPost({ action: "updateStock", row: p.row, stock: p.stock }); }
+                }
+                // Update customer points
+                if (selectedCust) {
+                    const earned = Math.floor(total / 10);
+                    const newPts = selectedCust.points + earned;
+                    const newSpent = (selectedCust.totalSpent || 0) + total;
+                    const c = customers.find(q => q.row === selectedCust.row);
+                    if (c) { c.points = newPts; c.totalSpent = newSpent; }
+                    await scriptPost({ action: "updateCustomer", row: selectedCust.row, name: selectedCust.name, phone: selectedCust.phone, points: newPts, note: selectedCust.note || "", totalSpent: newSpent });
+                }
+                sales.unshift({ date: now, items: items.map(x => ({ ...x, price: getItemPrice(x) })), subtotal: sub, discount: disc, total, itemCount: items.reduce((s, x) => s + x.qty, 0), custName });
+                const sc = selectedCust;
+                clearSelectedCust();
+                cart = {}; document.getElementById("disc-val").value = "0";
+                renderCart(); renderProds(); renderProdList(); closePay();
+                if (sc) {
+                    const earned = Math.floor(total / 10);
+                    toast(earned > 0 ? `✅ บันทึกแล้ว · ${sc.name} ได้ +${earned} แต้ม!` : "✅ บันทึกแล้ว!");
+                } else {
+                    toast("✅ บันทึกลง Google Sheets แล้ว!");
+                }
+            } catch (e) {
+                toast("❌ บันทึกไม่สำเร็จ: " + e.message);
+                btn.disabled = false; btn.textContent = "ยืนยันการขาย";
+            }
+        }
 
-<!-- Customer Form Modal -->
-<div class="overlay" id="cust-form-overlay">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title" id="cust-form-title">เพิ่มลูกค้าใหม่</div>
-    <div class="form-lbl">ชื่อ / ชื่อเล่น *</div>
-    <input class="form-inp" id="cf-name" type="text" placeholder="เช่น คุณสมชาย">
-    <div class="form-lbl">เบอร์โทรศัพท์</div>
-    <input class="form-inp" id="cf-phone" type="tel" placeholder="08x-xxx-xxxx" inputmode="tel">
-    <div class="form-lbl">แต้มสะสม</div>
-    <input class="form-inp" id="cf-points" type="number" placeholder="0" value="0" inputmode="numeric">
-    <div class="form-lbl">หมายเหตุ</div>
-    <input class="form-inp" id="cf-note" type="text" placeholder="เช่น ชอบต้นไม้ในร่ม">
-    <div class="sheet-btns">
-      <button class="btn-secondary" onclick="closeCustForm()">ยกเลิก</button>
-      <button class="btn-primary" id="cust-save-btn" onclick="saveCustomer()">บันทึก</button>
-    </div>
-  </div>
-</div>
+        // ── IMAGE HELPERS ─────────────────────────────────────────
+        function setImgTab(mode, btn) {
+            imgTabMode = mode;
+            document.querySelectorAll(".img-tab").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            document.getElementById("img-upload-area").style.display = mode === "upload" ? "block" : "none";
+            document.getElementById("f-img-url").style.display = mode === "url" ? "block" : "none";
+        }
+        function handleImgUpload(e) {
+            const file = e.target.files[0]; if (!file) return;
+            // Store as base64 for Apps Script upload, also preview
+            const reader = new FileReader();
+            reader.onload = ev => {
+                imgBase64 = ev.target.result; // data:image/...;base64,...
+                const preview = document.getElementById("img-preview");
+                const hint = document.getElementById("img-upload-hint");
+                preview.src = imgBase64; preview.style.display = "block"; hint.style.display = "none";
+            };
+            reader.readAsDataURL(file);
+        }
+        function previewImgUrl() {
+            const url = document.getElementById("f-img-url").value.trim();
+            imgUrlValue = url;
+        }
+        function getImgForSave() {
+            // Returns final image URL/base64 to store
+            if (imgTabMode === "url") return document.getElementById("f-img-url").value.trim();
+            return imgBase64; // base64 stored directly in sheet (or "" if none)
+        }
+        function resetImgFields() {
+            imgBase64 = ""; imgUrlValue = "";
+            const preview = document.getElementById("img-preview");
+            const hint = document.getElementById("img-upload-hint");
+            if (preview) { preview.src = ""; preview.style.display = "none"; }
+            if (hint) hint.style.display = "block";
+            const urlInp = document.getElementById("f-img-url");
+            if (urlInp) urlInp.value = "";
+            const fileInp = document.getElementById("f-img-file");
+            if (fileInp) fileInp.value = "";
+            setImgTab("upload", document.querySelector(".img-tab"));
+        }
 
-<!-- Customer Picker Modal -->
-<div class="overlay" id="cust-picker-overlay">
-  <div class="sheet" style="max-height:80vh">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title">เลือกลูกค้า</div>
-    <div class="cust-search" style="margin-bottom:10px"><i class="ti ti-search"></i><input type="text" id="picker-search" placeholder="ค้นหา..." oninput="renderPickerList()"></div>
-    <div id="picker-list" style="max-height:50vh;overflow-y:auto"></div>
-    <div class="sheet-btns" style="margin-top:12px">
-      <button class="btn-secondary" onclick="closeCustPicker()">ยกเลิก</button>
-    </div>
-  </div>
-</div>
+        // ── MANAGE PRODUCTS ───────────────────────────────────────
+        function renderProdList() {
+            const el = document.getElementById("prod-list");
+            if (!products.length) { el.innerHTML = `<div class="empty-state"><i class="ti ti-plant"></i><p>ยังไม่มีสินค้า กด "+ เพิ่มสินค้า"</p></div>`; return }
+            // Group by name to show lots together
+            const grouped = {};
+            products.forEach(p => {
+                if (!grouped[p.name]) grouped[p.name] = [];
+                grouped[p.name].push(p);
+            });
+            el.innerHTML = Object.entries(grouped).map(([name, lots]) => {
+                const totalStock = lots.reduce((s, p) => s + p.stock, 0);
+                const lotsHtml = lots.map(p => `
+          <div class="prod-list-item" style="margin-bottom:6px;background:var(--bg2)">
+            <span class="pli-emoji">${p.imgUrl ? `<img src="${p.imgUrl}" style="width:36px;height:36px;object-fit:cover;border-radius:8px" onerror="this.outerHTML='${p.emoji}'">` : `<span style="font-size:24px">${p.emoji}</span>`}</span>
+            <div class="pli-info">
+              <div class="pli-name" style="font-size:12px">${p.lot || "ไม่มี Lot"} <span style="color:${p.stock <= 0 ? "var(--r6)" : p.stock <= 5 ? "var(--a6)" : "var(--g7)"}">· ${p.stock} ต้น</span></div>
+              <div class="pli-meta">฿${p.price.toLocaleString()} · ${p.cat || "ไม่มีหมวด"}</div>
+            </div>
+            <div class="pli-actions">
+              <button class="pli-btn" onclick="openProductForm(${p.row})"><i class="ti ti-edit"></i></button>
+              <button class="pli-btn del" onclick="openDelModal(${p.row})"><i class="ti ti-trash"></i></button>
+            </div>
+          </div>`).join("");
+                return `<div style="margin-bottom:12px">
+          <div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+            ${name} <span style="font-size:11px;color:var(--m);font-weight:400">รวม ${totalStock} ต้น · ${lots.length} Lot</span>
+            <button class="add-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="openProductFormNewLot('${name}')">+ Lot ใหม่</button>
+          </div>
+          ${lotsHtml}
+        </div>`}).join("");
+        }
 
-<!-- Customer History Modal -->
-<div class="overlay" id="cust-hist-overlay">
-  <div class="sheet" style="max-height:85vh">
-    <div class="sheet-handle"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div>
-        <div class="sheet-title" style="margin-bottom:2px" id="cust-hist-name">ประวัติการซื้อ</div>
-        <div style="font-size:12px;color:var(--m)" id="cust-hist-meta"></div>
-      </div>
-      <span id="cust-hist-points" class="cust-points"></span>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px" id="cust-hist-stats"></div>
-    <div style="font-size:12px;font-weight:600;color:var(--m);margin-bottom:8px">ประวัติการสั่งซื้อ</div>
-    <div id="cust-hist-list" style="max-height:40vh;overflow-y:auto"></div>
-    <div class="sheet-btns" style="margin-top:12px">
-      <button class="btn-secondary" onclick="closeCustHist()">ปิด</button>
-      <button class="btn-primary" onclick="selectCustFromHist()">เลือกลูกค้านี้</button>
-    </div>
-  </div>
-</div>
+        function buildEmojiGrid(selected) {
+            document.getElementById("emoji-grid").innerHTML = EMOJIS.map(e =>
+                `<div class="emoji-opt${e === selected ? " selected" : ""}" onclick="pickEmoji('${e}')">${e}</div>`
+            ).join("");
+        }
+        function pickEmoji(e) { document.getElementById("f-emoji").value = e; buildEmojiGrid(e); }
 
-<div class="toast" id="toast"></div>
+        function openProductForm(rowId = null) {
+            editingProductId = rowId;
+            const isEdit = rowId !== null;
+            document.getElementById("prod-form-title").textContent = isEdit ? "แก้ไขสินค้า" : "เพิ่มสินค้าใหม่";
+            const p = isEdit ? products.find(x => x.row === rowId) : null;
+            document.getElementById("f-name").value = p?.name || "";
+            document.getElementById("f-lot").value = p?.lot || "";
+            document.getElementById("f-cat").value = p?.cat || "";
+            document.getElementById("f-price").value = p?.price || "";
+            document.getElementById("f-stock").value = p?.stock ?? "";
+            document.getElementById("f-emoji").value = p?.emoji || "🌿";
+            buildEmojiGrid(p?.emoji || "🌿");
+            resetImgFields();
+            if (p?.imgUrl) {
+                // show existing image
+                const preview = document.getElementById("img-preview");
+                const hint = document.getElementById("img-upload-hint");
+                if (p.imgUrl.startsWith("http")) {
+                    // URL mode
+                    setImgTab("url", document.querySelectorAll(".img-tab")[1]);
+                    document.getElementById("f-img-url").value = p.imgUrl; imgUrlValue = p.imgUrl;
+                } else if (p.imgUrl.startsWith("data:")) {
+                    imgBase64 = p.imgUrl; preview.src = p.imgUrl; preview.style.display = "block"; if (hint) hint.style.display = "none";
+                }
+            }
+            document.getElementById("prod-overlay").classList.add("show");
+            setTimeout(() => document.getElementById("f-name").focus(), 200);
+        }
+        function openProductFormNewLot(name) {
+            openProductForm(null);
+            document.getElementById("f-name").value = name;
+            document.getElementById("prod-form-title").textContent = "เพิ่ม Lot ใหม่: " + name;
+        }
+        function closeProdForm() { document.getElementById("prod-overlay").classList.remove("show") }
 
-<script>
-// ── CONFIG ────────────────────────────────────────────────
-const SHEET_ID   = "1c_t89oC0p5setOKKu2vuPbkVb_NXPCJ8jh_O9pP4s-o";
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz66FGof0-0IhtUh7XsPdCJPDWmwWDvc_aW4EB8VOz8hsgtohztsEE-MX1GVshLCceABw/exec";
-const API_KEY    = "AIzaSyCRWFx2hsgTIN9PbS7cbbfadt8BgiiXJQc";
-const BASE       = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values`;
-const EMOJIS     = ["🌿","🪴","🌳","🌹","🌺","🌸","🌼","🌻","🌵","🍃","💐","🌱","🌾","🍀","🎋","🎍","🌲","🍁","🍂","🌴","🌊","🌙","⭐","🦋"];
-const MONTHS     = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+        async function saveProduct() {
+            const name = document.getElementById("f-name").value.trim();
+            const lot = document.getElementById("f-lot").value.trim();
+            const cat = document.getElementById("f-cat").value.trim();
+            const price = parseFloat(document.getElementById("f-price").value) || 0;
+            const stock = parseInt(document.getElementById("f-stock").value) || 0;
+            const emoji = document.getElementById("f-emoji").value.trim() || "🌿";
+            const imgUrl = getImgForSave();
+            if (!name) { toast("❌ กรุณากรอกชื่อต้นไม้"); return; }
+            const btn = document.getElementById("prod-save-btn");
+            btn.disabled = true; btn.textContent = "กำลังบันทึก...";
+            try {
+                if (editingProductId !== null) {
+                    const row = editingProductId;
+                    await scriptPost({ action: "updateProduct", row, name, lot, cat, price, stock, emoji, imgUrl });
+                    const idx = products.findIndex(p => p.row === row);
+                    if (idx >= 0) products[idx] = { ...products[idx], name, lot, cat, price, stock, emoji, imgUrl };
+                } else {
+                    await scriptPost({ action: "addProduct", name, lot, cat, price, stock, emoji, imgUrl });
+                    await loadProducts();
+                }
+                renderCats(); renderProds(); renderProdList();
+                closeProdForm();
+                toast(editingProductId !== null ? "✅ แก้ไขสินค้าแล้ว" : "🏡 เพิ่มสินค้าแล้ว");
+            } catch (e) { toast("❌ " + e.message); }
+            finally { btn.disabled = false; btn.textContent = "บันทึก"; }
+        }
 
-// ── STATE ─────────────────────────────────────────────────
-let products=[], sales=[], customers=[], cart={};
-let activeCat="ทั้งหมด", discMode="baht";
-let barChart=null;
-let editingProductId=null, deletingProductId=null;
-let selectedCust=null, viewingCustId=null;
-let imgTabMode="upload", imgBase64="", imgUrlValue="";
+        // ── DELETE ────────────────────────────────────────────────
+        function openDelModal(rowId) {
+            deletingProductId = rowId;
+            const p = products.find(x => x.row === rowId);
+            document.getElementById("del-name").textContent = p ? `${p.emoji} ${p.name}${p.lot ? " (" + p.lot + ")" : ""}` : ""
+            document.getElementById("del-overlay").classList.add("show");
+        }
+        function closeDelModal() { document.getElementById("del-overlay").classList.remove("show") }
+        async function confirmDelete() {
+            const row = deletingProductId;
+            try {
+                await scriptPost({ action: "deleteProduct", row });
+                products = products.filter(p => p.row !== row);
+                renderCats(); renderProds(); renderProdList(); closeDelModal(); toast("🗑 ลบสินค้าแล้ว");
+            } catch (e) { toast("❌ " + e.message); }
+        }
 
-// ── SHEETS API ────────────────────────────────────────────
-async function sheetGet(range){
-  const r=await fetch(`${BASE}/${encodeURIComponent(range)}?key=${API_KEY}`);
-  if(!r.ok)throw new Error(r.status);
-  return (await r.json()).values||[];
-}
-async function scriptPost(data){
-  const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(data)});
-  if(!r.ok)throw new Error("HTTP "+r.status);
-  const j=await r.json();
-  if(!j.ok)throw new Error(j.error||"Script error");
-  return j;
-}
+        // ── DASHBOARD ─────────────────────────────────────────────
+        let dashFrom = null, dashTo = null;
+        function setPreset(preset, btn) {
+            document.querySelectorAll(".preset-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            const now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            if (preset === "today") { dashFrom = new Date(today); dashTo = new Date(today); dashTo.setHours(23, 59, 59); }
+            else if (preset === "7d") { dashFrom = new Date(today - 6 * 864e5); dashTo = new Date(today); dashTo.setHours(23, 59, 59); }
+            else if (preset === "30d") { dashFrom = new Date(today - 29 * 864e5); dashTo = new Date(today); dashTo.setHours(23, 59, 59); }
+            else if (preset === "month") { dashFrom = new Date(now.getFullYear(), now.getMonth(), 1); dashTo = new Date(today); dashTo.setHours(23, 59, 59); }
+            else if (preset === "custom") {
+                document.getElementById("custom-range").style.display = "flex"; return;
+            }
+            document.getElementById("custom-range").style.display = "none";
+            renderDash();
+        }
+        function applyCustomRange() {
+            const f = document.getElementById("date-from").value;
+            const t = document.getElementById("date-to").value;
+            if (!f || !t) { toast("❌ กรุณาเลือกวันที่"); return; }
+            dashFrom = new Date(f); dashTo = new Date(t); dashTo.setHours(23, 59, 59);
+            renderDash();
+        }
+        function renderDash() {
+            if (!dashFrom || !dashTo) return;
+            const ms = sales.filter(s => new Date(s.date) >= dashFrom && new Date(s.date) <= dashTo);
+            const totalRev = ms.reduce((s, x) => s + x.total, 0);
+            const bills = ms.length, avg = bills ? Math.round(totalRev / bills) : 0;
+            const totalDisc = ms.reduce((s, x) => s + (x.discount || 0), 0);
+            const totalItems = ms.reduce((s, x) => s + x.itemCount, 0);
 
-// ── SYNC ──────────────────────────────────────────────────
-function setSS(s){
-  const d=document.getElementById("sdot"),l=document.getElementById("slbl");
-  d.className="sdot"+(s==="loading"?" spin":s==="error"?" err":"");
-  l.textContent=s==="loading"?"Syncing...":s==="error"?"Error":"Sync";
-}
-async function syncAll(){
-  setSS("loading");
-  try{await loadProducts();await loadSales();await loadCustomers();setSS("ok");toast("✅ Sync สำเร็จ");}
-  catch(e){setSS("error");toast("❌ "+e.message);}
-}
+            // compare to same-length period before
+            const rangeMs = dashTo - dashFrom;
+            const prevTo = new Date(dashFrom - 1);
+            const prevFrom = new Date(dashFrom - rangeMs - 1);
+            const ps = sales.filter(s => new Date(s.date) >= prevFrom && new Date(s.date) <= prevTo);
+            const prevRev = ps.reduce((s, x) => s + x.total, 0);
+            const pct = prevRev ? Math.round((totalRev - prevRev) / prevRev * 100) : 0;
+            const arrow = pct > 0 ? "▲" : pct < 0 ? "▼" : "–"; const cls = pct > 0 ? "up" : pct < 0 ? "down" : "neu";
 
-// ── LOAD PRODUCTS (columns: name,cat,price,stock,emoji,lot,imgUrl) ──
-async function loadProducts(){
-  const rows=await sheetGet("Products!A2:G");
-  products=rows.map((r,i)=>({
-    row:i+2,
-    name:r[0]||"",lot:r[1]||"",cat:r[2]||"",
-    price:parseFloat(r[3])||0,stock:parseInt(r[4])||0,
-    emoji:r[5]||"🌿",imgUrl:r[6]||""
-  })).filter(p=>p.name);
-  renderCats();renderProds();renderProdList();
-}
+            document.getElementById("metric-grid").innerHTML = `
+        <div class="metric"><div class="metric-lbl">ยอดรวม</div><div class="metric-val">฿${(totalRev / 1000).toFixed(1)}k</div><div class="metric-sub ${cls}">${arrow} ${Math.abs(pct)}% จากช่วงก่อน</div></div>
+        <div class="metric"><div class="metric-lbl">จำนวนบิล</div><div class="metric-val">${bills}</div><div class="metric-sub neu">เฉลี่ย ฿${avg.toLocaleString()}</div></div>
+        <div class="metric"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
+        <div class="metric"><div class="metric-lbl">ส่วนลดรวม</div><div class="metric-val">฿${Math.round(totalDisc).toLocaleString()}</div><div class="metric-sub neu">บาท</div></div>`;
 
-// ── LOAD SALES (columns: date,items,subtotal,discount,total,custName) ──
-async function loadSales(){
-  const rows=await sheetGet("Sales!A2:F");
-  sales=rows.map(r=>({
-    date:new Date(r[0]),
-    itemsStr:r[1]||"",
-    items:(r[1]||"").split(",").map(s=>{const p=s.trim().split("×");return{name:p[0]?.trim()||"",emoji:"🌿",qty:parseInt(p[1])||1,price:parseFloat(p[2])||0};}),
-    subtotal:parseFloat(r[2])||0,discount:parseFloat(r[3])||0,total:parseFloat(r[4])||0,
-    custName:r[5]||"",
-    itemCount:(r[1]||"").split(",").reduce((a,s)=>{const p=s.split("×");return a+(parseInt(p[1])||1)},0)
-  })).filter(s=>!isNaN(s.date.getTime())).reverse();
-}
+            // Daily chart — group by date string
+            const byDay = {};
+            ms.forEach(s => {
+                const d = new Date(s.date);
+                const key = `${d.getDate()}/${d.getMonth() + 1}`;
+                byDay[key] = (byDay[key] || 0) + s.total;
+            });
+            const labels = Object.keys(byDay);
+            const dayData = Object.values(byDay);
 
-// ── LOAD CUSTOMERS ────────────────────────────────────────
-async function loadCustomers(){
-  const rows=await sheetGet("Customers!A2:E");
-  customers=rows.map((r,i)=>({row:i+2,name:r[0]||"",phone:r[1]||"",points:parseInt(r[2])||0,note:r[3]||"",totalSpent:parseFloat(r[4])||0})).filter(c=>c.name);
-}
+            if (barChart) { barChart.destroy(); barChart = null }
+            const dark = window.matchMedia("(prefers-color-scheme:dark)").matches;
+            barChart = new Chart(document.getElementById("bar-chart").getContext("2d"), {
+                type: "bar", data: { labels, datasets: [{ data: dayData, backgroundColor: "#3d7a14", borderRadius: 3, borderSkipped: false }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: v => "฿" + Math.round(v.raw).toLocaleString() } } },
+                    scales: {
+                        x: { ticks: { font: { size: 9, family: "Sarabun" }, color: dark ? "#636366" : "#999", autoSkip: true, maxTicksLimit: 10 }, grid: { display: false }, border: { display: false } },
+                        y: { ticks: { font: { size: 9, family: "Sarabun" }, color: dark ? "#636366" : "#999", callback: v => v >= 1000 ? "฿" + (v / 1000).toFixed(0) + "k" : "฿" + v }, grid: { color: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }, border: { display: false } }
+                    }
+                }
+            });
 
-// ── PRODUCTS UI ───────────────────────────────────────────
-function getCats(){return["ทั้งหมด",...new Set(products.map(p=>p.cat).filter(Boolean))]}
-function renderCats(){
-  document.getElementById("cat-strip").innerHTML=getCats().map(c=>
-    `<button class="cat-btn${c===activeCat?" active":""}" onclick="selCat('${c}')">${c}</button>`
-  ).join("");
-}
-function selCat(c){activeCat=c;renderCats();renderProds()}
-function renderProds(){
-  const q=(document.getElementById("s-input").value||"").toLowerCase();
-  const f=products.filter(p=>(activeCat==="ทั้งหมด"||p.cat===activeCat)&&(!q||p.name.toLowerCase().includes(q)||(p.lot||"").toLowerCase().includes(q)));
-  const g=document.getElementById("prod-grid");
-  if(!products.length){g.innerHTML=`<div style="grid-column:1/-1"><div class="empty-state"><i class="ti ti-refresh spin-icon"></i><p>กำลังโหลดจาก Google Sheets...</p></div></div>`;return}
-  if(!f.length){g.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--faint);font-size:13px;padding:24px">ไม่พบสินค้า</div>`;return}
+            const im = {};
+            ms.forEach(s => s.items.forEach(it => {
+                const key = it.name;
+                if (!im[key]) im[key] = { name: it.name, emoji: it.emoji || "🌿", qty: 0, rev: 0 };
+                im[key].qty += it.qty; im[key].rev += it.qty * (it.price || 0);
+            }));
+            const top = Object.values(im).sort((a, b) => b.rev - a.rev).slice(0, 5);
+            document.getElementById("top-list").innerHTML = top.length ? top.map((x, i) => `
+        <div class="top-item">
+          <div class="top-rank">${i + 1}</div><span class="top-emoji">${x.emoji}</span>
+          <span class="top-name">${x.name}</span>
+          <span class="top-qty">${x.qty} ต้น</span>
+          <span class="top-rev">฿${Math.round(x.rev).toLocaleString()}</span>
+        </div>`).join("") : `<div style="color:var(--faint);font-size:13px;padding:12px 0">ไม่มีข้อมูล</div>`;
+        }
 
-  // Group by name — merge multi-lot into one card
-  const grouped={};
-  f.forEach(p=>{
-    if(!grouped[p.name]) grouped[p.name]=[];
-    grouped[p.name].push(p);
-  });
+        // ── HISTORY ───────────────────────────────────────────────
+        function getTodaySales() {
+            const n = new Date();
+            return sales.filter(s => { const d = new Date(s.date); return d.getDate() === n.getDate() && d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear() });
+        }
+        function renderHistory() {
+            const ts = getTodaySales();
+            const rev = ts.reduce((s, x) => s + x.total, 0);
+            document.getElementById("today-cards").innerHTML = `
+        <div class="metric"><div class="metric-lbl">ยอดวันนี้</div><div class="metric-val">฿${rev.toLocaleString()}</div></div>
+        <div class="metric"><div class="metric-lbl">บิลวันนี้</div><div class="metric-val">${ts.length} บิล</div></div>`;
+            const hl = document.getElementById("hist-list");
+            if (!sales.length) { hl.innerHTML = `<div class="empty-state"><i class="ti ti-receipt"></i><p>ยังไม่มีประวัติ</p></div>`; return }
+            hl.innerHTML = sales.slice(0, 50).map(s => {
+                const d = new Date(s.date);
+                const ds = `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear() + 543} · ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+                const custTag = s.custName ? `<span style="color:var(--g7);font-size:10px">👤 ${s.custName}</span> ` : "";
+                const discTxt = s.discount > 0 ? ` <span style="color:var(--a6)">ส่วนลด −฿${s.discount.toLocaleString()}</span>` : "";
+                return `<div class="sale-card">
+          <div class="sale-hdr"><span class="sale-date"><i class="ti ti-clock" style="font-size:10px"></i> ${ds}</span><span class="sale-badge">${s.itemCount} รายการ</span></div>
+          <div class="sale-items-txt">${custTag}${s.items.map(x => `${x.emoji || "🌿"}${x.name}×${x.qty}`).join(" · ")}${discTxt}</div>
+          <div class="sale-total">฿${Math.round(s.total).toLocaleString()}</div>
+        </div>`}).join("");
+        }
 
-  g.innerHTML=Object.values(grouped).map(lots=>{
-    const rep=lots[0]; // representative (first lot)
-    const totalStock=lots.reduce((s,p)=>s+p.stock,0);
-    const hasMultiLot=lots.length>1;
-    const imgHtml=rep.imgUrl
-      ?`<div class="pcard-img-wrap"><img class="pcard-img" src="${rep.imgUrl}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="pcard-emoji" style="display:none">${rep.emoji}</span></div>`
-      :`<div class="pcard-emoji">${rep.emoji}</div>`;
-
-    if(hasMultiLot){
-      // Multi-lot card: show lot chips to pick from
-      const lotChips=lots.map(p=>`
-        <div class="lot-chip${p.stock<=0?" lot-chip-empty":""}" onclick="event.stopPropagation();${p.stock>0?`addCart(${p.row})`:`toast('❌ Lot นี้หมดแล้ว')`}" title="${p.lot||'ไม่มี Lot'} · ${p.stock} ต้น">
-          <span class="lot-chip-name">${p.lot||"–"}</span>
-          <span class="lot-chip-stock${p.stock<=5&&p.stock>0?" low":p.stock<=0?" out":""}">${p.stock<=0?"หมด":p.stock+" ต้น"}</span>
+        // ── CUSTOMERS ─────────────────────────────────────────────
+        function renderCustList() {
+            const q = (document.getElementById("cust-search-inp")?.value || "").toLowerCase();
+            const f = customers.filter(c => !q || c.name.toLowerCase().includes(q) || c.phone.includes(q));
+            const el = document.getElementById("cust-list");
+            if (!f.length) { el.innerHTML = `<div class="empty-state"><i class="ti ti-users"></i><p>ยังไม่มีลูกค้า</p></div>`; return }
+            el.innerHTML = f.map(c => `
+        <div class="prod-list-item">
+          <div style="width:38px;height:38px;border-radius:50%;background:var(--g1);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--g8);flex-shrink:0">${c.name[0]}</div>
+          <div class="pli-info">
+            <div class="pli-name">${c.name}${c.phone ? ` <span style="font-size:11px;font-weight:400;color:var(--m)">${c.phone}</span>` : ""}</div>
+            <div class="pli-meta">⭐ ${c.points} แต้ม · ซื้อรวม ฿${Math.round(c.totalSpent || 0).toLocaleString()}</div>
+          </div>
+          <div class="pli-actions">
+            <button class="pli-btn" onclick="openCustHist(${c.row})"><i class="ti ti-history"></i></button>
+            <button class="pli-btn" onclick="openCustForm(${c.row})"><i class="ti ti-edit"></i></button>
+          </div>
         </div>`).join("");
-      return`<div class="pcard pcard-multi">
-        ${imgHtml}
-        <div class="pcard-name">${rep.name}</div>
-        <div class="pcard-price">฿${rep.price.toLocaleString()} <span style="font-size:10px;color:var(--m)">รวม ${totalStock} ต้น</span></div>
-        <div class="lot-chips-row">${lotChips}</div>
-      </div>`;
-    }else{
-      // Single lot card
-      const lotHtml=rep.lot?`<div class="lot-badge">${rep.lot}</div>`:"";
-      return`<div class="pcard${totalStock<=0?" pcard-empty":""}" onclick="${totalStock>0?`addCart(${rep.row})`:'toast("❌ สินค้าหมดแล้ว")'}">
-        ${imgHtml}
-        <div class="pcard-name">${rep.name}</div>
-        ${lotHtml}
-        <div class="pcard-price">฿${rep.price.toLocaleString()}</div>
-        <div class="pcard-stock${totalStock<=5?" low":""}">${totalStock<=0?"หมดแล้ว":"คงเหลือ "+totalStock+" ต้น"}</div>
-      </div>`;
-    }
-  }).join("");
-}
+        }
 
-// ── CART ──────────────────────────────────────────────────
-function addCart(rowId){
-  const p=products.find(x=>x.row===rowId);
-  if(!p||p.stock<=0)return;
-  if(!cart[rowId])cart[rowId]={...p,customPrice:null,qty:0};
-  if(cart[rowId].qty>=p.stock)return;
-  cart[rowId].qty++;renderCart();
-}
-function chgQty(rowId,d){
-  if(!cart[rowId])return;
-  cart[rowId].qty+=d;
-  if(cart[rowId].qty<=0)delete cart[rowId];
-  renderCart();
-}
-function clearCart(){cart={};document.getElementById("disc-val").value="0";renderCart();}
-function getItemPrice(item){return item.customPrice!==null?item.customPrice:item.price}
-function getSubtotal(){return Object.values(cart).reduce((s,x)=>s+getItemPrice(x)*x.qty,0)}
-function getDiscount(){
-  const v=parseFloat(document.getElementById("disc-val").value)||0;
-  const sub=getSubtotal();
-  if(discMode==="pct")return Math.min(sub,sub*v/100);
-  return Math.min(sub,v);
-}
-function getFinalTotal(){return Math.max(0,getSubtotal()-getDiscount())}
-function renderCart(){
-  const items=Object.values(cart);
-  const count=items.reduce((s,x)=>s+x.qty,0);
-  document.getElementById("cart-count").textContent=count;
-  document.getElementById("pay-btn").disabled=count===0;
-  const el=document.getElementById("cart-items");
-  if(!items.length){el.innerHTML=`<div class="cart-empty">เลือกต้นไม้ด้านบน</div>`;renderTotal();return}
-  el.innerHTML=items.map(x=>{
-    const cp=getItemPrice(x);
-    const isCustom=x.customPrice!==null&&x.customPrice!==x.price;
-    const lotTag=x.lot?`<span class="lot-badge" style="font-size:9px">${x.lot}</span> `:"";
-    return`<div class="crow">
-      <span class="crow-emoji">${x.imgUrl?`<img src="${x.imgUrl}" style="width:22px;height:22px;object-fit:cover;border-radius:4px">`:x.emoji}</span>
-      <span class="crow-name">${x.name}${x.lot?`<br><span style="font-size:10px;color:var(--a6)">${x.lot}</span>`:""}</span>
-      <div class="qty-ctrl">
-        <button class="qbtn" onclick="chgQty(${x.row},-1)">−</button>
-        <span class="qnum">${x.qty}</span>
-        <button class="qbtn" onclick="chgQty(${x.row},1)">+</button>
-      </div>
-      <div class="crow-price-wrap" onclick="openPriceEdit(${x.row})" title="แตะเพื่อแก้ราคา">
-        <span class="crow-price">฿${(cp*x.qty).toLocaleString()}</span>
-        <span class="crow-disc" style="color:${isCustom?"var(--a6)":"var(--faint)"}">฿${cp.toLocaleString()} ✎</span>
-      </div>
-    </div>`}).join("");
-  renderTotal();
-}
-function renderTotal(){
-  const sub=getSubtotal();const disc=getDiscount();const final=getFinalTotal();
-  const orig=document.getElementById("total-orig");const amt=document.getElementById("total-amt");
-  if(disc>0){orig.textContent="฿"+sub.toLocaleString();orig.style.display="";}else orig.style.display="none";
-  amt.textContent="฿"+final.toLocaleString();
-}
-function setDiscMode(mode,btn){
-  discMode=mode;
-  document.querySelectorAll(".disc-tab").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  document.getElementById("disc-unit").textContent=mode==="pct"?"%":"บาท";
-  document.getElementById("disc-val").value="0";
-  renderTotal();
-}
+        function openCustForm(rowId = null) {
+            editingCustId = rowId;
+            const c = rowId ? customers.find(x => x.row === rowId) : null;
+            document.getElementById("cf-name").value = c?.name || "";
+            document.getElementById("cf-phone").value = c?.phone || "";
+            document.getElementById("cf-points").value = c?.points || "";
+            document.getElementById("cf-note").value = c?.note || "";
+            document.getElementById("cust-form-overlay").classList.add("show");
+        }
+        let editingCustId = null;
+        function closeCustForm() { document.getElementById("cust-form-overlay").classList.remove("show") }
+        async function saveCustomer() {
+            const name = document.getElementById("cf-name").value.trim();
+            const phone = document.getElementById("cf-phone").value.trim();
+            const points = parseInt(document.getElementById("cf-points").value) || 0;
+            const note = document.getElementById("cf-note").value.trim();
+            if (!name) { toast("❌ กรุณากรอกชื่อลูกค้า"); return; }
+            const btn = document.getElementById("cust-save-btn");
+            btn.disabled = true; btn.textContent = "กำลังบันทึก...";
+            try {
+                if (editingCustId) {
+                    const c = customers.find(x => x.row === editingCustId);
+                    await scriptPost({ action: "updateCustomer", row: editingCustId, name, phone, points, note, totalSpent: c?.totalSpent || 0 });
+                    if (c) Object.assign(c, { name, phone, points, note });
+                } else {
+                    await scriptPost({ action: "addCustomer", name, phone, points, note, totalSpent: 0 });
+                    await loadCustomers();
+                }
+                renderCustList(); closeCustForm(); toast(editingCustId ? "✅ แก้ไขข้อมูลลูกค้าแล้ว" : "✅ เพิ่มลูกค้าแล้ว");
+            } catch (e) { toast("❌ " + e.message); }
+            finally { btn.disabled = false; btn.textContent = "บันทึก"; }
+        }
 
-// ── PRICE EDIT ────────────────────────────────────────────
-function openPriceEdit(rowId){
-  const item=cart[rowId];if(!item)return;
-  const newPrice=prompt(`แก้ราคา "${item.name}"${item.lot?" ("+item.lot+")":""}\nราคาปกติ: ฿${item.price}\n\nกรอกราคาใหม่ (บาท/ต้น):`,item.customPrice!==null?item.customPrice:item.price);
-  if(newPrice===null)return;
-  const p=parseFloat(newPrice);
-  if(isNaN(p)||p<0){toast("❌ ราคาไม่ถูกต้อง");return;}
-  cart[rowId].customPrice=p;renderCart();
-}
+        function openCustPicker() {
+            renderPickerList();
+            document.getElementById("cust-picker-overlay").classList.add("show");
+        }
+        function closeCustPicker() { document.getElementById("cust-picker-overlay").classList.remove("show"); }
+        function renderPickerList() {
+            const q = (document.getElementById("picker-search")?.value || "").toLowerCase();
+            const f = customers.filter(c => !q || c.name.toLowerCase().includes(q) || c.phone.includes(q));
+            const el = document.getElementById("picker-list");
+            if (!f.length) { el.innerHTML = `<div style="text-align:center;color:var(--faint);font-size:13px;padding:20px">ไม่พบลูกค้า</div>`; return }
+            el.innerHTML = f.map(c => `
+        <div onclick="selectCust(${c.row})" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--rad);cursor:pointer;border-bottom:0.5px solid var(--bd)">
+          <div style="width:34px;height:34px;border-radius:50%;background:var(--g1);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--g8);flex-shrink:0">${c.name[0]}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:500;color:var(--t)">${c.name}${c.phone ? ` · <span style="color:var(--m)">${c.phone}</span>` : ""}</div>
+            <div style="font-size:11px;color:var(--m)">⭐ ${c.points} แต้ม · ฿${Math.round(c.totalSpent || 0).toLocaleString()}</div>
+          </div>
+          ${selectedCust?.row === c.row ? `<i class="ti ti-check" style="color:var(--g7);font-size:18px"></i>` : ""}
+        </div>`).join("");
+        }
+        function selectCust(rowId) {
+            selectedCust = customers.find(x => x.row === rowId) || null;
+            closeCustPicker();
+            syncModalCustBtn();
+            // sync top POS bar
+            const topBtn = document.getElementById("cust-sel-btn");
+            const topClr = document.getElementById("cust-clear");
+            if (topBtn && selectedCust) {
+                topBtn.className = "cust-sel-btn selected";
+                topBtn.innerHTML = `<i class="ti ti-user-check"></i><span>${selectedCust.name}</span>`;
+                if (topClr) topClr.style.display = "flex";
+            }
+            if (selectedCust) toast(`👤 เลือก: ${selectedCust.name} · ⭐ ${selectedCust.points} แต้ม`);
+        }
+        function clearSelectedCust() {
+            selectedCust = null;
+            const topBtn = document.getElementById("cust-sel-btn");
+            const topClr = document.getElementById("cust-clear");
+            if (topBtn) { topBtn.className = "cust-sel-btn"; topBtn.innerHTML = `<i class="ti ti-user"></i><span>เลือกลูกค้า (ไม่บังคับ)</span>`; }
+            if (topClr) topClr.style.display = "none";
+            syncModalCustBtn();
+        }
+        function openCustHist(rowId) {
+            viewingCustId = rowId;
+            const c = customers.find(x => x.row === rowId); if (!c) return;
+            const custSales = sales.filter(s => s.custName === c.name);
+            document.getElementById("cust-hist-name").textContent = c.name;
+            document.getElementById("cust-hist-meta").textContent = c.phone || "";
+            document.getElementById("cust-hist-points").textContent = c.points + " แต้ม";
+            const totalSpent = custSales.reduce((s, x) => s + x.total, 0);
+            const visits = custSales.length, avg = visits ? Math.round(totalSpent / visits) : 0;
+            document.getElementById("cust-hist-stats").innerHTML = `
+        <div class="metric"><div class="metric-lbl">ยอดรวม</div><div class="metric-val" style="font-size:16px">฿${Math.round(totalSpent).toLocaleString()}</div></div>
+        <div class="metric"><div class="metric-lbl">ครั้ง</div><div class="metric-val" style="font-size:16px">${visits}</div></div>
+        <div class="metric"><div class="metric-lbl">เฉลี่ย/บิล</div><div class="metric-val" style="font-size:16px">฿${avg.toLocaleString()}</div></div>`;
+            const hl = document.getElementById("cust-hist-list");
+            hl.innerHTML = custSales.length ? custSales.slice(0, 20).map(s => {
+                const d = new Date(s.date);
+                return `<div class="cust-hist-item">
+          <div class="cust-hist-date">${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear() + 543}</div>
+          <div class="cust-hist-items">${s.items.map(x => `${x.emoji || "🌿"}${x.name}×${x.qty}`).join(" · ")}</div>
+          <div class="cust-hist-total">฿${Math.round(s.total).toLocaleString()}</div>
+        </div>`}).join("") : `<div style="text-align:center;color:var(--faint);font-size:13px;padding:16px">ยังไม่มีประวัติการซื้อ</div>`;
+            document.getElementById("cust-hist-overlay").classList.add("show");
+        }
+        function closeCustHist() { document.getElementById("cust-hist-overlay").classList.remove("show") }
+        function selectCustFromHist() { if (viewingCustId) { selectCust(viewingCustId); closeCustHist(); } }
 
-// ── CUSTOMER SELECTOR ─────────────────────────────────────
-function syncModalCustBtn(){
-  const btn=document.getElementById("modal-cust-btn");
-  const clr=document.getElementById("modal-cust-clear");
-  const lbl=document.getElementById("modal-cust-label");
-  const pts=document.getElementById("pts-preview");
-  const ptsTxt=document.getElementById("pts-preview-text");
-  if(!btn)return;
-  if(selectedCust){
-    btn.className="cust-sel-btn selected";
-    lbl.textContent=selectedCust.name+(selectedCust.phone?" · "+selectedCust.phone:"");
-    clr.style.display="flex";
-    // Points preview
-    const earned=Math.floor(getFinalTotal()/10);
-    const current=selectedCust.points||0;
-    pts.style.display="flex";
-    ptsTxt.textContent=`${selectedCust.name} มี ${current} แต้ม · บิลนี้ได้ +${earned} แต้ม → รวม ${current+earned} แต้ม`;
-  }else{
-    btn.className="cust-sel-btn";
-    lbl.textContent="เลือกลูกค้า (ไม่บังคับ)";
-    clr.style.display="none";
-    pts.style.display="none";
-  }
-}
-let _custPickerFromModal=false;
-function openCustPickerFromModal(){_custPickerFromModal=true;openCustPicker();}
+        // ── NAV ───────────────────────────────────────────────────
+        function gotoScreen(name, btn) {
+            document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+            document.getElementById("screen-" + name).classList.add("active");
+            btn.classList.add("active");
+            if (name === "dash") {
+                // default to this month on first open
+                if (!dashFrom) {
+                    const now = new Date();
+                    dashFrom = new Date(now.getFullYear(), now.getMonth(), 1);
+                    dashTo = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+                    const btn = document.querySelector(".preset-btn[data-p='month']");
+                    if (btn) btn.classList.add("active");
+                }
+                renderDash();
+            }
+            if (name === "history") renderHistory();
+            if (name === "manage") renderProdList();
+            if (name === "customers") renderCustList();
+        }
 
-// ── PAYMENT ───────────────────────────────────────────────
-function openPay(){
-  const items=Object.values(cart);
-  const final=getFinalTotal(),disc=getDiscount();
-  document.getElementById("pay-total").textContent="฿"+final.toLocaleString();
-  let summary=items.map(x=>`${x.imgUrl?`<img src="${x.imgUrl}" style="width:14px;height:14px;object-fit:cover;border-radius:3px;vertical-align:-2px">`:x.emoji} ${x.name}${x.lot?" ("+x.lot+")":""} ×${x.qty} = ฿${(getItemPrice(x)*x.qty).toLocaleString()}`).join("<br>");
-  if(disc>0)summary+=`<br>🏷 ส่วนลด −฿${disc.toLocaleString()}`;
-  document.getElementById("pay-summary").innerHTML=summary;
-  document.getElementById("recv-inp").value="";
-  document.getElementById("change-box").textContent="";
-  document.getElementById("change-box").className="change-box";
-  document.getElementById("pay-ok").disabled=true;
-  syncModalCustBtn();
-  document.getElementById("pay-overlay").classList.add("show");
-  setTimeout(()=>document.getElementById("recv-inp").focus(),200);
-}
-function closePay(){document.getElementById("pay-overlay").classList.remove("show")}
-function calcChange(){
-  const recv=parseFloat(document.getElementById("recv-inp").value)||0;
-  const total=getFinalTotal();
-  const el=document.getElementById("change-box");const btn=document.getElementById("pay-ok");
-  if(recv>=total){el.textContent="เงินทอน ฿"+(recv-total).toLocaleString();el.className="change-box change-ok";btn.disabled=false;}
-  else if(recv>0){el.textContent="ขาดอีก ฿"+(total-recv).toLocaleString();el.className="change-box change-err";btn.disabled=true;}
-  else{el.textContent="";el.className="change-box";btn.disabled=true;}
-}
-async function confirmSale(){
-  const items=Object.values(cart);
-  const sub=getSubtotal(),disc=getDiscount(),total=getFinalTotal();
-  const now=new Date();
-  const btn=document.getElementById("pay-ok");
-  btn.disabled=true;btn.textContent="กำลังบันทึก...";
-  try{
-    const itemStr=items.map(x=>`${x.name}${x.lot?"("+x.lot+")":""}×${x.qty}×${getItemPrice(x)}`).join(", ");
-    const dateStr=`${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
-    const custName=selectedCust?selectedCust.name:"";
-    await scriptPost({action:"addSale",date:dateStr,items:itemStr,subtotal:sub,discount:disc,total,custName});
-    for(const x of items){
-      const p=products.find(q=>q.row===x.row);
-      if(p){p.stock-=x.qty;await scriptPost({action:"updateStock",row:p.row,stock:p.stock});}
-    }
-    // Update customer points
-    if(selectedCust){
-      const earned=Math.floor(total/10);
-      const newPts=selectedCust.points+earned;
-      const newSpent=(selectedCust.totalSpent||0)+total;
-      const c=customers.find(q=>q.row===selectedCust.row);
-      if(c){c.points=newPts;c.totalSpent=newSpent;}
-      await scriptPost({action:"updateCustomer",row:selectedCust.row,name:selectedCust.name,phone:selectedCust.phone,points:newPts,note:selectedCust.note||"",totalSpent:newSpent});
-    }
-    sales.unshift({date:now,items:items.map(x=>({...x,price:getItemPrice(x)})),subtotal:sub,discount:disc,total,itemCount:items.reduce((s,x)=>s+x.qty,0),custName});
-    const sc=selectedCust;
-    clearSelectedCust();
-    cart={};document.getElementById("disc-val").value="0";
-    renderCart();renderProds();renderProdList();closePay();
-    if(sc){
-      const earned=Math.floor(total/10);
-      toast(earned>0?`✅ บันทึกแล้ว · ${sc.name} ได้ +${earned} แต้ม!`:"✅ บันทึกแล้ว!");
-    }else{
-      toast("✅ บันทึกลง Google Sheets แล้ว!");
-    }
-  }catch(e){
-    toast("❌ บันทึกไม่สำเร็จ: "+e.message);
-    btn.disabled=false;btn.textContent="ยืนยันการขาย";
-  }
-}
+        function toast(msg) {
+            const t = document.getElementById("toast");
+            t.textContent = msg; t.classList.add("show");
+            clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("show"), 2800);
+        }
 
-// ── IMAGE HELPERS ─────────────────────────────────────────
-function setImgTab(mode,btn){
-  imgTabMode=mode;
-  document.querySelectorAll(".img-tab").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  document.getElementById("img-upload-area").style.display=mode==="upload"?"block":"none";
-  document.getElementById("f-img-url").style.display=mode==="url"?"block":"none";
-}
-function handleImgUpload(e){
-  const file=e.target.files[0];if(!file)return;
-  // Store as base64 for Apps Script upload, also preview
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    imgBase64=ev.target.result; // data:image/...;base64,...
-    const preview=document.getElementById("img-preview");
-    const hint=document.getElementById("img-upload-hint");
-    preview.src=imgBase64;preview.style.display="block";hint.style.display="none";
-  };
-  reader.readAsDataURL(file);
-}
-function previewImgUrl(){
-  const url=document.getElementById("f-img-url").value.trim();
-  imgUrlValue=url;
-}
-function getImgForSave(){
-  // Returns final image URL/base64 to store
-  if(imgTabMode==="url") return document.getElementById("f-img-url").value.trim();
-  return imgBase64; // base64 stored directly in sheet (or "" if none)
-}
-function resetImgFields(){
-  imgBase64="";imgUrlValue="";
-  const preview=document.getElementById("img-preview");
-  const hint=document.getElementById("img-upload-hint");
-  if(preview){preview.src="";preview.style.display="none";}
-  if(hint)hint.style.display="block";
-  const urlInp=document.getElementById("f-img-url");
-  if(urlInp)urlInp.value="";
-  const fileInp=document.getElementById("f-img-file");
-  if(fileInp)fileInp.value="";
-  setImgTab("upload",document.querySelector(".img-tab"));
-}
-
-// ── MANAGE PRODUCTS ───────────────────────────────────────
-function renderProdList(){
-  const el=document.getElementById("prod-list");
-  if(!products.length){el.innerHTML=`<div class="empty-state"><i class="ti ti-plant"></i><p>ยังไม่มีสินค้า กด "+ เพิ่มสินค้า"</p></div>`;return}
-  // Group by name to show lots together
-  const grouped={};
-  products.forEach(p=>{
-    if(!grouped[p.name])grouped[p.name]=[];
-    grouped[p.name].push(p);
-  });
-  el.innerHTML=Object.entries(grouped).map(([name,lots])=>{
-    const totalStock=lots.reduce((s,p)=>s+p.stock,0);
-    const lotsHtml=lots.map(p=>`
-      <div class="prod-list-item" style="margin-bottom:6px;background:var(--bg2)">
-        <span class="pli-emoji">${p.imgUrl?`<img src="${p.imgUrl}" style="width:36px;height:36px;object-fit:cover;border-radius:8px" onerror="this.outerHTML='${p.emoji}'">`:`<span style="font-size:24px">${p.emoji}</span>`}</span>
-        <div class="pli-info">
-          <div class="pli-name" style="font-size:12px">${p.lot||"ไม่มี Lot"} <span style="color:${p.stock<=0?"var(--r6)":p.stock<=5?"var(--a6)":"var(--g7)"}">· ${p.stock} ต้น</span></div>
-          <div class="pli-meta">฿${p.price.toLocaleString()} · ${p.cat||"ไม่มีหมวด"}</div>
-        </div>
-        <div class="pli-actions">
-          <button class="pli-btn" onclick="openProductForm(${p.row})"><i class="ti ti-edit"></i></button>
-          <button class="pli-btn del" onclick="openDelModal(${p.row})"><i class="ti ti-trash"></i></button>
-        </div>
-      </div>`).join("");
-    return`<div style="margin-bottom:12px">
-      <div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:6px;display:flex;align-items:center;gap:6px">
-        ${name} <span style="font-size:11px;color:var(--m);font-weight:400">รวม ${totalStock} ต้น · ${lots.length} Lot</span>
-        <button class="add-btn" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="openProductFormNewLot('${name}')">+ Lot ใหม่</button>
-      </div>
-      ${lotsHtml}
-    </div>`}).join("");
-}
-
-function buildEmojiGrid(selected){
-  document.getElementById("emoji-grid").innerHTML=EMOJIS.map(e=>
-    `<div class="emoji-opt${e===selected?" selected":""}" onclick="pickEmoji('${e}')">${e}</div>`
-  ).join("");
-}
-function pickEmoji(e){document.getElementById("f-emoji").value=e;buildEmojiGrid(e);}
-
-function openProductForm(rowId=null){
-  editingProductId=rowId;
-  const isEdit=rowId!==null;
-  document.getElementById("prod-form-title").textContent=isEdit?"แก้ไขสินค้า":"เพิ่มสินค้าใหม่";
-  const p=isEdit?products.find(x=>x.row===rowId):null;
-  document.getElementById("f-name").value=p?.name||"";
-  document.getElementById("f-lot").value=p?.lot||"";
-  document.getElementById("f-cat").value=p?.cat||"";
-  document.getElementById("f-price").value=p?.price||"";
-  document.getElementById("f-stock").value=p?.stock??"";
-  document.getElementById("f-emoji").value=p?.emoji||"🌿";
-  buildEmojiGrid(p?.emoji||"🌿");
-  resetImgFields();
-  if(p?.imgUrl){
-    // show existing image
-    const preview=document.getElementById("img-preview");
-    const hint=document.getElementById("img-upload-hint");
-    if(p.imgUrl.startsWith("http")){
-      // URL mode
-      setImgTab("url",document.querySelectorAll(".img-tab")[1]);
-      document.getElementById("f-img-url").value=p.imgUrl;imgUrlValue=p.imgUrl;
-    }else if(p.imgUrl.startsWith("data:")){
-      imgBase64=p.imgUrl;preview.src=p.imgUrl;preview.style.display="block";if(hint)hint.style.display="none";
-    }
-  }
-  document.getElementById("prod-overlay").classList.add("show");
-  setTimeout(()=>document.getElementById("f-name").focus(),200);
-}
-function openProductFormNewLot(name){
-  openProductForm(null);
-  document.getElementById("f-name").value=name;
-  document.getElementById("prod-form-title").textContent="เพิ่ม Lot ใหม่: "+name;
-}
-function closeProdForm(){document.getElementById("prod-overlay").classList.remove("show")}
-
-async function saveProduct(){
-  const name=document.getElementById("f-name").value.trim();
-  const lot=document.getElementById("f-lot").value.trim();
-  const cat=document.getElementById("f-cat").value.trim();
-  const price=parseFloat(document.getElementById("f-price").value)||0;
-  const stock=parseInt(document.getElementById("f-stock").value)||0;
-  const emoji=document.getElementById("f-emoji").value.trim()||"🌿";
-  const imgUrl=getImgForSave();
-  if(!name){toast("❌ กรุณากรอกชื่อต้นไม้");return;}
-  const btn=document.getElementById("prod-save-btn");
-  btn.disabled=true;btn.textContent="กำลังบันทึก...";
-  try{
-    if(editingProductId!==null){
-      const row=editingProductId;
-      await scriptPost({action:"updateProduct",row,name,lot,cat,price,stock,emoji,imgUrl});
-      const idx=products.findIndex(p=>p.row===row);
-      if(idx>=0)products[idx]={...products[idx],name,lot,cat,price,stock,emoji,imgUrl};
-    }else{
-      await scriptPost({action:"addProduct",name,lot,cat,price,stock,emoji,imgUrl});
-      await loadProducts();
-    }
-    renderCats();renderProds();renderProdList();
-    closeProdForm();
-    toast(editingProductId!==null?"✅ แก้ไขสินค้าแล้ว":"✅ เพิ่มสินค้าแล้ว");
-  }catch(e){toast("❌ "+e.message);}
-  finally{btn.disabled=false;btn.textContent="บันทึก";}
-}
-
-// ── DELETE ────────────────────────────────────────────────
-function openDelModal(rowId){
-  deletingProductId=rowId;
-  const p=products.find(x=>x.row===rowId);
-  document.getElementById("del-name").textContent=p?`${p.emoji} ${p.name}${p.lot?" ("+p.lot+")":""}`:""
-  document.getElementById("del-overlay").classList.add("show");
-}
-function closeDelModal(){document.getElementById("del-overlay").classList.remove("show")}
-async function confirmDelete(){
-  const row=deletingProductId;
-  try{
-    await scriptPost({action:"deleteProduct",row});
-    products=products.filter(p=>p.row!==row);
-    renderCats();renderProds();renderProdList();closeDelModal();toast("🗑 ลบสินค้าแล้ว");
-  }catch(e){toast("❌ "+e.message);}
-}
-
-// ── DASHBOARD ─────────────────────────────────────────────
-let dashFrom=null,dashTo=null;
-function setPreset(preset,btn){
-  document.querySelectorAll(".preset-btn").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-  const now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-  if(preset==="today"){dashFrom=new Date(today);dashTo=new Date(today);dashTo.setHours(23,59,59);}
-  else if(preset==="7d"){dashFrom=new Date(today-6*864e5);dashTo=new Date(today);dashTo.setHours(23,59,59);}
-  else if(preset==="30d"){dashFrom=new Date(today-29*864e5);dashTo=new Date(today);dashTo.setHours(23,59,59);}
-  else if(preset==="month"){dashFrom=new Date(now.getFullYear(),now.getMonth(),1);dashTo=new Date(today);dashTo.setHours(23,59,59);}
-  else if(preset==="custom"){
-    document.getElementById("custom-range").style.display="flex";return;
-  }
-  document.getElementById("custom-range").style.display="none";
-  renderDash();
-}
-function applyCustomRange(){
-  const f=document.getElementById("date-from").value;
-  const t=document.getElementById("date-to").value;
-  if(!f||!t){toast("❌ กรุณาเลือกวันที่");return;}
-  dashFrom=new Date(f);dashTo=new Date(t);dashTo.setHours(23,59,59);
-  renderDash();
-}
-function renderDash(){
-  if(!dashFrom||!dashTo)return;
-  const ms=sales.filter(s=>new Date(s.date)>=dashFrom&&new Date(s.date)<=dashTo);
-  const totalRev=ms.reduce((s,x)=>s+x.total,0);
-  const bills=ms.length,avg=bills?Math.round(totalRev/bills):0;
-  const totalDisc=ms.reduce((s,x)=>s+(x.discount||0),0);
-  const totalItems=ms.reduce((s,x)=>s+x.itemCount,0);
-
-  // compare to same-length period before
-  const rangeMs=dashTo-dashFrom;
-  const prevTo=new Date(dashFrom-1);
-  const prevFrom=new Date(dashFrom-rangeMs-1);
-  const ps=sales.filter(s=>new Date(s.date)>=prevFrom&&new Date(s.date)<=prevTo);
-  const prevRev=ps.reduce((s,x)=>s+x.total,0);
-  const pct=prevRev?Math.round((totalRev-prevRev)/prevRev*100):0;
-  const arrow=pct>0?"▲":pct<0?"▼":"–";const cls=pct>0?"up":pct<0?"down":"neu";
-
-  document.getElementById("metric-grid").innerHTML=`
-    <div class="metric"><div class="metric-lbl">ยอดรวม</div><div class="metric-val">฿${(totalRev/1000).toFixed(1)}k</div><div class="metric-sub ${cls}">${arrow} ${Math.abs(pct)}% จากช่วงก่อน</div></div>
-    <div class="metric"><div class="metric-lbl">จำนวนบิล</div><div class="metric-val">${bills}</div><div class="metric-sub neu">เฉลี่ย ฿${avg.toLocaleString()}</div></div>
-    <div class="metric"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
-    <div class="metric"><div class="metric-lbl">ส่วนลดรวม</div><div class="metric-val">฿${Math.round(totalDisc).toLocaleString()}</div><div class="metric-sub neu">บาท</div></div>`;
-
-  // Daily chart — group by date string
-  const byDay={};
-  ms.forEach(s=>{
-    const d=new Date(s.date);
-    const key=`${d.getDate()}/${d.getMonth()+1}`;
-    byDay[key]=(byDay[key]||0)+s.total;
-  });
-  const labels=Object.keys(byDay);
-  const dayData=Object.values(byDay);
-
-  if(barChart){barChart.destroy();barChart=null}
-  const dark=window.matchMedia("(prefers-color-scheme:dark)").matches;
-  barChart=new Chart(document.getElementById("bar-chart").getContext("2d"),{
-    type:"bar",data:{labels,datasets:[{data:dayData,backgroundColor:"#3d7a14",borderRadius:3,borderSkipped:false}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>"฿"+Math.round(v.raw).toLocaleString()}}},
-      scales:{
-        x:{ticks:{font:{size:9,family:"Sarabun"},color:dark?"#636366":"#999",autoSkip:true,maxTicksLimit:10},grid:{display:false},border:{display:false}},
-        y:{ticks:{font:{size:9,family:"Sarabun"},color:dark?"#636366":"#999",callback:v=>v>=1000?"฿"+(v/1000).toFixed(0)+"k":"฿"+v},grid:{color:dark?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.05)"},border:{display:false}}
-      }}
-  });
-
-  const im={};
-  ms.forEach(s=>s.items.forEach(it=>{
-    const key=it.name;
-    if(!im[key])im[key]={name:it.name,emoji:it.emoji||"🌿",qty:0,rev:0};
-    im[key].qty+=it.qty;im[key].rev+=it.qty*(it.price||0);
-  }));
-  const top=Object.values(im).sort((a,b)=>b.rev-a.rev).slice(0,5);
-  document.getElementById("top-list").innerHTML=top.length?top.map((x,i)=>`
-    <div class="top-item">
-      <div class="top-rank">${i+1}</div><span class="top-emoji">${x.emoji}</span>
-      <span class="top-name">${x.name}</span>
-      <span class="top-qty">${x.qty} ต้น</span>
-      <span class="top-rev">฿${Math.round(x.rev).toLocaleString()}</span>
-    </div>`).join(""):`<div style="color:var(--faint);font-size:13px;padding:12px 0">ไม่มีข้อมูล</div>`;
-}
-
-// ── HISTORY ───────────────────────────────────────────────
-function getTodaySales(){
-  const n=new Date();
-  return sales.filter(s=>{const d=new Date(s.date);return d.getDate()===n.getDate()&&d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear()});
-}
-function renderHistory(){
-  const ts=getTodaySales();
-  const rev=ts.reduce((s,x)=>s+x.total,0);
-  document.getElementById("today-cards").innerHTML=`
-    <div class="metric"><div class="metric-lbl">ยอดวันนี้</div><div class="metric-val">฿${rev.toLocaleString()}</div></div>
-    <div class="metric"><div class="metric-lbl">บิลวันนี้</div><div class="metric-val">${ts.length} บิล</div></div>`;
-  const hl=document.getElementById("hist-list");
-  if(!sales.length){hl.innerHTML=`<div class="empty-state"><i class="ti ti-receipt"></i><p>ยังไม่มีประวัติ</p></div>`;return}
-  hl.innerHTML=sales.slice(0,50).map(s=>{
-    const d=new Date(s.date);
-    const ds=`${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()+543} · ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
-    const custTag=s.custName?`<span style="color:var(--g7);font-size:10px">👤 ${s.custName}</span> `:"";
-    const discTxt=s.discount>0?` <span style="color:var(--a6)">ส่วนลด −฿${s.discount.toLocaleString()}</span>`:"";
-    return`<div class="sale-card">
-      <div class="sale-hdr"><span class="sale-date"><i class="ti ti-clock" style="font-size:10px"></i> ${ds}</span><span class="sale-badge">${s.itemCount} รายการ</span></div>
-      <div class="sale-items-txt">${custTag}${s.items.map(x=>`${x.emoji||"🌿"}${x.name}×${x.qty}`).join(" · ")}${discTxt}</div>
-      <div class="sale-total">฿${Math.round(s.total).toLocaleString()}</div>
-    </div>`}).join("");
-}
-
-// ── CUSTOMERS ─────────────────────────────────────────────
-function renderCustList(){
-  const q=(document.getElementById("cust-search-inp")?.value||"").toLowerCase();
-  const f=customers.filter(c=>!q||c.name.toLowerCase().includes(q)||c.phone.includes(q));
-  const el=document.getElementById("cust-list");
-  if(!f.length){el.innerHTML=`<div class="empty-state"><i class="ti ti-users"></i><p>ยังไม่มีลูกค้า</p></div>`;return}
-  el.innerHTML=f.map(c=>`
-    <div class="prod-list-item">
-      <div style="width:38px;height:38px;border-radius:50%;background:var(--g1);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--g8);flex-shrink:0">${c.name[0]}</div>
-      <div class="pli-info">
-        <div class="pli-name">${c.name}${c.phone?` <span style="font-size:11px;font-weight:400;color:var(--m)">${c.phone}</span>`:""}</div>
-        <div class="pli-meta">⭐ ${c.points} แต้ม · ซื้อรวม ฿${Math.round(c.totalSpent||0).toLocaleString()}</div>
-      </div>
-      <div class="pli-actions">
-        <button class="pli-btn" onclick="openCustHist(${c.row})"><i class="ti ti-history"></i></button>
-        <button class="pli-btn" onclick="openCustForm(${c.row})"><i class="ti ti-edit"></i></button>
-      </div>
-    </div>`).join("");
-}
-
-function openCustForm(rowId=null){
-  editingCustId=rowId;
-  const c=rowId?customers.find(x=>x.row===rowId):null;
-  document.getElementById("cf-name").value=c?.name||"";
-  document.getElementById("cf-phone").value=c?.phone||"";
-  document.getElementById("cf-points").value=c?.points||"";
-  document.getElementById("cf-note").value=c?.note||"";
-  document.getElementById("cust-form-overlay").classList.add("show");
-}
-let editingCustId=null;
-function closeCustForm(){document.getElementById("cust-form-overlay").classList.remove("show")}
-async function saveCustomer(){
-  const name=document.getElementById("cf-name").value.trim();
-  const phone=document.getElementById("cf-phone").value.trim();
-  const points=parseInt(document.getElementById("cf-points").value)||0;
-  const note=document.getElementById("cf-note").value.trim();
-  if(!name){toast("❌ กรุณากรอกชื่อลูกค้า");return;}
-  const btn=document.getElementById("cust-save-btn");
-  btn.disabled=true;btn.textContent="กำลังบันทึก...";
-  try{
-    if(editingCustId){
-      const c=customers.find(x=>x.row===editingCustId);
-      await scriptPost({action:"updateCustomer",row:editingCustId,name,phone,points,note,totalSpent:c?.totalSpent||0});
-      if(c)Object.assign(c,{name,phone,points,note});
-    }else{
-      await scriptPost({action:"addCustomer",name,phone,points,note,totalSpent:0});
-      await loadCustomers();
-    }
-    renderCustList();closeCustForm();toast(editingCustId?"✅ แก้ไขข้อมูลลูกค้าแล้ว":"✅ เพิ่มลูกค้าแล้ว");
-  }catch(e){toast("❌ "+e.message);}
-  finally{btn.disabled=false;btn.textContent="บันทึก";}
-}
-
-function openCustPicker(){
-  renderPickerList();
-  document.getElementById("cust-picker-overlay").classList.add("show");
-}
-function closeCustPicker(){document.getElementById("cust-picker-overlay").classList.remove("show");}
-function renderPickerList(){
-  const q=(document.getElementById("picker-search")?.value||"").toLowerCase();
-  const f=customers.filter(c=>!q||c.name.toLowerCase().includes(q)||c.phone.includes(q));
-  const el=document.getElementById("picker-list");
-  if(!f.length){el.innerHTML=`<div style="text-align:center;color:var(--faint);font-size:13px;padding:20px">ไม่พบลูกค้า</div>`;return}
-  el.innerHTML=f.map(c=>`
-    <div onclick="selectCust(${c.row})" style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--rad);cursor:pointer;border-bottom:0.5px solid var(--bd)">
-      <div style="width:34px;height:34px;border-radius:50%;background:var(--g1);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--g8);flex-shrink:0">${c.name[0]}</div>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:500;color:var(--t)">${c.name}${c.phone?` · <span style="color:var(--m)">${c.phone}</span>`:""}</div>
-        <div style="font-size:11px;color:var(--m)">⭐ ${c.points} แต้ม · ฿${Math.round(c.totalSpent||0).toLocaleString()}</div>
-      </div>
-      ${selectedCust?.row===c.row?`<i class="ti ti-check" style="color:var(--g7);font-size:18px"></i>`:""}
-    </div>`).join("");
-}
-function selectCust(rowId){
-  selectedCust=customers.find(x=>x.row===rowId)||null;
-  closeCustPicker();
-  syncModalCustBtn();
-  // sync top POS bar
-  const topBtn=document.getElementById("cust-sel-btn");
-  const topClr=document.getElementById("cust-clear");
-  if(topBtn&&selectedCust){
-    topBtn.className="cust-sel-btn selected";
-    topBtn.innerHTML=`<i class="ti ti-user-check"></i><span>${selectedCust.name}</span>`;
-    if(topClr)topClr.style.display="flex";
-  }
-  if(selectedCust)toast(`👤 เลือก: ${selectedCust.name} · ⭐ ${selectedCust.points} แต้ม`);
-}
-function clearSelectedCust(){
-  selectedCust=null;
-  const topBtn=document.getElementById("cust-sel-btn");
-  const topClr=document.getElementById("cust-clear");
-  if(topBtn){topBtn.className="cust-sel-btn";topBtn.innerHTML=`<i class="ti ti-user"></i><span>เลือกลูกค้า (ไม่บังคับ)</span>`;}
-  if(topClr)topClr.style.display="none";
-  syncModalCustBtn();
-}
-function openCustHist(rowId){
-  viewingCustId=rowId;
-  const c=customers.find(x=>x.row===rowId);if(!c)return;
-  const custSales=sales.filter(s=>s.custName===c.name);
-  document.getElementById("cust-hist-name").textContent=c.name;
-  document.getElementById("cust-hist-meta").textContent=c.phone||"";
-  document.getElementById("cust-hist-points").textContent=c.points+" แต้ม";
-  const totalSpent=custSales.reduce((s,x)=>s+x.total,0);
-  const visits=custSales.length,avg=visits?Math.round(totalSpent/visits):0;
-  document.getElementById("cust-hist-stats").innerHTML=`
-    <div class="metric"><div class="metric-lbl">ยอดรวม</div><div class="metric-val" style="font-size:16px">฿${Math.round(totalSpent).toLocaleString()}</div></div>
-    <div class="metric"><div class="metric-lbl">ครั้ง</div><div class="metric-val" style="font-size:16px">${visits}</div></div>
-    <div class="metric"><div class="metric-lbl">เฉลี่ย/บิล</div><div class="metric-val" style="font-size:16px">฿${avg.toLocaleString()}</div></div>`;
-  const hl=document.getElementById("cust-hist-list");
-  hl.innerHTML=custSales.length?custSales.slice(0,20).map(s=>{
-    const d=new Date(s.date);
-    return`<div class="cust-hist-item">
-      <div class="cust-hist-date">${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()+543}</div>
-      <div class="cust-hist-items">${s.items.map(x=>`${x.emoji||"🌿"}${x.name}×${x.qty}`).join(" · ")}</div>
-      <div class="cust-hist-total">฿${Math.round(s.total).toLocaleString()}</div>
-    </div>`}).join(""):`<div style="text-align:center;color:var(--faint);font-size:13px;padding:16px">ยังไม่มีประวัติการซื้อ</div>`;
-  document.getElementById("cust-hist-overlay").classList.add("show");
-}
-function closeCustHist(){document.getElementById("cust-hist-overlay").classList.remove("show")}
-function selectCustFromHist(){if(viewingCustId){selectCust(viewingCustId);closeCustHist();}}
-
-// ── NAV ───────────────────────────────────────────────────
-function gotoScreen(name,btn){
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  document.getElementById("screen-"+name).classList.add("active");
-  btn.classList.add("active");
-  if(name==="dash"){
-    // default to this month on first open
-    if(!dashFrom){
-      const now=new Date();
-      dashFrom=new Date(now.getFullYear(),now.getMonth(),1);
-      dashTo=new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59);
-      const btn=document.querySelector(".preset-btn[data-p='month']");
-      if(btn)btn.classList.add("active");
-    }
-    renderDash();
-  }
-  if(name==="history")renderHistory();
-  if(name==="manage")renderProdList();
-  if(name==="customers")renderCustList();
-}
-
-function toast(msg){
-  const t=document.getElementById("toast");
-  t.textContent=msg;t.classList.add("show");
-  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),2800);
-}
-
-// ── INIT ──────────────────────────────────────────────────
-(async()=>{
-  renderProds();
-  // set default date range to this month
-  const now=new Date();
-  dashFrom=new Date(now.getFullYear(),now.getMonth(),1);
-  dashTo=new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59);
-  await syncAll();
-})();
-</script>
+        // ── INIT ──────────────────────────────────────────────────
+        (async () => {
+            renderProds();
+            // set default date range to this month
+            const now = new Date();
+            dashFrom = new Date(now.getFullYear(), now.getMonth(), 1);
+            dashTo = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+            await syncAll();
+        })();</script>
 </body>
 </html>

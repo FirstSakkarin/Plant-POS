@@ -1418,7 +1418,10 @@
             <div id="screen-pos" class="screen active">
                 <div class="pos-wrap">
                     <div class="search-row">
-                        <div class="sbox"><i class="ti ti-search"></i><input type="text" placeholder="ค้นหาต้นไม้..." id="s-input" oninput="renderProds()"></div>
+                        <div class="sbox"><i class="ti ti-search"></i><input type="text"
+       placeholder="ค้นหาต้นไม้..."
+       id="s-input"
+       oninput="debounceSearch()"></div>
                     </div>
                     <!-- Customer selector -->
                     <div class="cust-sel-bar">
@@ -1653,11 +1656,34 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz66FGof0-0IhtUh7XsPdCJPDWmwWDvc_aW4EB8VOz8hsgtohztsEE-MX1GVshLCceABw/exec";
         const API_KEY = "AIzaSyCRWFx2hsgTIN9PbS7cbbfadt8BgiiXJQc";
         const BASE = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values`;
-        const EMOJIS = ["🌿", "🪴", "🌳", "🌹", "🌷", "🌺", "🌸", "🌼", "🌻", "🌵", "🍃", "💐", "🌱", "🌾", "🍀", "🎋", "🎍", "🌲", "🍁", "🍂", "🌴", "💮", "🌙", "⭐", "🏡"];
+        const EMOJIS = ["🌿", "🪴", "🌳", "🌹", "🌷", "🌺", "🌸", "🌼", "🌻", "🌵", "🍃", "💐", "🌱", "🌾", "🍀", "🎋", "🎍", "🌲", "🍁", "🍂", "🌴", "🌙", "⭐", "🏡"];
         const MONTHS = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
 
         // ── STATE ─────────────────────────────────────────────────
         let products = [], sales = [], customers = [], cart = {};
+
+        let searchTimer = null;
+        function loadCachedProducts() {
+
+            const cached =
+                localStorage.getItem("treesiri_products");
+
+            if (!cached) return;
+
+            try {
+
+                products = JSON.parse(cached);
+
+                renderCats();
+                renderProds();
+                renderProdList();
+
+            } catch (err) {
+
+                console.error(err);
+
+            }
+        }
         let activeCat = "ทั้งหมด", discMode = "baht";
         let barChart = null;
         let editingProductId = null, deletingProductId = null;
@@ -1709,14 +1735,28 @@
 
         // ── LOAD PRODUCTS (columns: name,cat,price,stock,emoji,lot,imgUrl) ──
         async function loadProducts() {
+
             const rows = await sheetGet("Products!A2:G");
+
             products = rows.map((r, i) => ({
                 row: i + 2,
-                name: r[0] || "", lot: r[1] || "", cat: r[2] || "",
-                price: parseFloat(r[3]) || 0, stock: parseInt(r[4]) || 0,
-                emoji: r[5] || "🌿", imgUrl: r[6] || ""
+                name: r[0] || "",
+                lot: r[1] || "",
+                cat: r[2] || "",
+                price: parseFloat(r[3]) || 0,
+                stock: parseInt(r[4]) || 0,
+                emoji: r[5] || "🌿",
+                imgUrl: r[6] || ""
             })).filter(p => p.name);
-            renderCats(); renderProds(); renderProdList();
+
+            localStorage.setItem(
+                "treesiri_products",
+                JSON.stringify(products)
+            );
+
+            renderCats();
+            renderProds();
+            renderProdList();
         }
 
         // ── LOAD SALES (columns: date,items,subtotal,discount,total,custName) ──
@@ -1746,6 +1786,17 @@
             ).join("");
         }
         function selCat(c) { activeCat = c; renderCats(); renderProds() }
+        function debounceSearch() {
+
+            clearTimeout(searchTimer);
+
+            searchTimer = setTimeout(() => {
+
+                renderProds();
+
+            }, 250);
+
+        }
         function renderProds() {
             const q = (document.getElementById("s-input").value || "").toLowerCase();
             const f = products.filter(p => (activeCat === "ทั้งหมด" || p.cat === activeCat) && (!q || p.name.toLowerCase().includes(q) || (p.lot || "").toLowerCase().includes(q)));
@@ -1930,13 +1981,25 @@
             btn.disabled = true; btn.textContent = "กำลังบันทึก...";
             try {
                 const itemStr = items.map(x => `${x.name}${x.lot ? "(" + x.lot + ")" : ""}×${x.qty}×${getItemPrice(x)}`).join(", ");
+                const stockUpdates = [];
                 const dateStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
                 const custName = selectedCust ? selectedCust.name : "";
                 await scriptPost({ action: "addSale", date: dateStr, items: itemStr, subtotal: sub, discount: disc, total, custName });
                 for (const x of items) {
+
                     const p = products.find(q => q.row === x.row);
-                    if (p) { p.stock -= x.qty; await scriptPost({ action: "updateStock", row: p.row, stock: p.stock }); }
+
+                    if (!p) continue;
+
+                    p.stock -= x.qty;
+
+                    stockUpdates.push({
+                        row: p.row,
+                        stock: p.stock
+                    });
+
                 }
+                console.log(stockUpdates);
                 // Update customer points
                 if (selectedCust) {
                     const earned = Math.floor(total / 10);

@@ -1,34 +1,13 @@
-/* ═══════════════════════════════════════════════════════
-   TreeSiri POS — JavaScript
+/* ════════════════════════════════════════════════════
+   app.js — TreeSiri POS
    แก้ไขไฟล์นี้สำหรับ logic, API, การคำนวณ
-   ═══════════════════════════════════════════════════════
-
-   สารบัญ (Ctrl+F หาชื่อ section):
-     CONFIG          — Sheet ID, Script URL, API Key
-     STATE           — ตัวแปร global ทั้งหมด
-     SHEETS API      — sheetGet, scriptPost
-     SYNC            — syncAll, setSS
-     LOAD DATA       — loadProducts, loadSales, loadCustomers
-     PRODUCTS UI     — renderCats, renderProds
-     CART            — addCart, chgQty, getSubtotal, renderCart
-     PRICE EDIT      — openPriceEdit
-     CUSTOMER SEL    — syncModalCustBtn, openCustPickerFromModal
-     PROFIT SPLIT    — renderPayProfitSplits, updateFahSplit
-     PAYMENT         — openPay, closePay, calcChange, confirmSale
-     IMAGE HELPERS   — setImgTab, handleImgUpload, getImgForSave
-     PRODUCT FORM    — setDefaultPct, syncDefaultPctBtns
-     MANAGE PRODUCTS — renderProdList, openProductForm, saveProduct
-     DELETE          — openDelModal, confirmDelete
-     DASHBOARD       — setPreset, renderDash
-     PROFIT SCREEN   — setProfitPreset, renderProfit
-     HISTORY         — renderHistory
-     CUSTOMERS       — renderCustList, openCustForm, saveCustomer
-                       openCustPicker, selectCust, openCustHist
-     NAV             — gotoScreen
-     TOAST           — toast()
-     INIT            — (async)() bootstrap
-═══════════════════════════════════════════════════════ */
-
+   Ctrl+F หา section:
+   CONFIG  STATE  SHEETS API  SYNC
+   LOAD PRODUCTS / SALES / CUSTOMERS
+   CART  PAYMENT  PROFIT SPLIT
+   MANAGE PRODUCTS  DASHBOARD  PROFIT SCREEN
+   HISTORY  CUSTOMERS  NAV  INIT
+════════════════════════════════════════════════════ */
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    CONFIG
    ⚠️  แก้ SHEET_ID, SCRIPT_URL, API_KEY ตรงนี้
@@ -149,9 +128,6 @@ function renderCats(){
   ).join("");
 }
 function selCat(c){activeCat=c;renderCats();renderProds()}
-% / TS ${pct}%</span>`;}
-  return`<span class="pbadge pb-shared">Shared 50/50</span>`;
-}
 
 function renderProds(){
   const q=(document.getElementById("s-input").value||"").toLowerCase();
@@ -384,7 +360,48 @@ function calcChange(){
   else{el.textContent="";el.className="change-box";btn.disabled=true;}
 }
 
-// Calculate profit split for the whole bill
+// ── PAYMENT CONFIRM ─────────────────────────────────────
+async function confirmSale(){
+  const items=Object.values(cart);
+  const sub=getSubtotal(),disc=getDiscount(),total=getFinalTotal();
+  const now=new Date();
+  const btn=document.getElementById("pay-ok");
+  btn.disabled=true;btn.textContent="กำลังบันทึก...";
+  try{
+    const itemStr=items.map(x=>{
+      const fahPct=payItemSplits[x.row]!==undefined?payItemSplits[x.row]:(x.defaultPct??50);
+      return x.name+(x.lot?"("+x.lot+")":"")+"x"+x.qty+"x"+getItemPrice(x)+"x"+fahPct;
+    }).join(", ");
+    const dd=now.getDate(),mm=now.getMonth()+1,yy=now.getFullYear();
+    const hh=String(now.getHours()).padStart(2,"0"),mn=String(now.getMinutes()).padStart(2,"0");
+    const dateStr=dd+"/"+mm+"/"+yy+" "+hh+":"+mn;
+    const custName=selectedCust?selectedCust.name:"";
+    await scriptPost({action:"addSale",date:dateStr,items:itemStr,subtotal:sub,discount:disc,total,custName});
+    for(const x of items){
+      const p=products.find(q=>q.row===x.row);
+      if(p){p.stock-=x.qty;await scriptPost({action:"updateStock",row:p.row,stock:p.stock});}
+    }
+    if(selectedCust){
+      const earned=Math.floor(total/10);
+      const newPts=selectedCust.points+earned;
+      const newSpent=(selectedCust.totalSpent||0)+total;
+      const c=customers.find(q=>q.row===selectedCust.row);
+      if(c){c.points=newPts;c.totalSpent=newSpent;}
+      await scriptPost({action:"updateCustomer",row:selectedCust.row,name:selectedCust.name,phone:selectedCust.phone,points:newPts,note:selectedCust.note||"",totalSpent:newSpent});
+      toast("✅ บันทึกแล้ว · "+selectedCust.name+" +"+earned+" แต้ม!");
+    }
+    const fPct=payItemSplits;
+    sales.unshift({date:now,items:items.map(x=>({name:x.name,emoji:x.emoji,lot:x.lot,price:getItemPrice(x),qty:x.qty,fahPct:fPct[x.row]!==undefined?fPct[x.row]:(x.defaultPct??50)})),subtotal:sub,discount:disc,total,custName:selectedCust?selectedCust.name:"",itemCount:items.reduce((s,x)=>s+x.qty,0)});
+    const hadCust=!!selectedCust;
+    clearSelectedCust();
+    cart={};document.getElementById("disc-val").value="0";
+    renderCart();renderProds();renderProdList();closePay();
+    if(!hadCust)toast("✅ บันทึกลง Google Sheets แล้ว!");
+  }catch(e){
+    toast("❌ บันทึกไม่สำเร็จ: "+e.message);
+    btn.disabled=false;btn.textContent="ยืนยันการขาย";
+  }
+}
 
 function setImgTab(mode,btn){
   imgTabMode=mode;
@@ -728,13 +745,10 @@ function renderHistory(){
   hl.innerHTML=sales.slice(0,50).map(s=>{
     const d=new Date(s.date);
     const ds=`${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()+543} · ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
-    const storeBadge=`<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:${s.store==="ts"?"var(--g1)":"#fff3cd"};color:${s.store==="ts"?"var(--g8)":"#7a5500"};font-weight:600;margin-right:4px">${s.store==="ts"?"🌿 TreeSiri":"🌸 สวนน้ำเพชร"}</span>`;
-    const discTxt=s.discount>0?` <span style="color:var(--a6)">ส่วนลด −฿${s.discount.toLocaleString()}</span>`:"";
-    const profitTxt=s.profitDetail&&(s.profitDetail.snp||s.profitDetail.ts)?
-      `<br><span style="font-size:10px;color:var(--m)">🌸 ฿${Math.round(s.profitDetail.snp||0).toLocaleString()} · 🌿 ฿${Math.round(s.profitDetail.ts||0).toLocaleString()}</span>`:"";
+    const discTxt=s.discount>0?` ส่วนลด −฿${s.discount.toLocaleString()}`:"";
     return`<div class="sale-card">
       <div class="sale-hdr"><span class="sale-date"><i class="ti ti-clock" style="font-size:10px"></i> ${ds}</span><span class="sale-badge">${s.itemCount} รายการ</span></div>
-      <div class="sale-items-txt">${storeBadge}${s.custName?`👤 ${s.custName} · `:""}${s.items.map(x=>`${x.emoji||"🌿"}${x.name}×${x.qty}`).join(" · ")}${discTxt}${profitTxt}</div>
+      <div class="sale-items-txt">${s.custName?`👤 ${s.custName} · `:""}${s.items.map(x=>`${x.emoji||"🌿"}${x.name}×${x.qty}`).join(" · ")}${discTxt?` · ${discTxt}`:""}</div>
       <div class="sale-total">฿${Math.round(s.total).toLocaleString()}</div>
     </div>`}).join("");
 }
@@ -878,3 +892,4 @@ function toast(msg){
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // ── INIT ──────────────────────────────────────────────────
 (async()=>{renderProds();await syncAll();})();
+

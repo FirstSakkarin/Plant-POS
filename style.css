@@ -1,42 +1,9 @@
-/* ═══════════════════════════════════════════════════════
-   TreeSiri POS — Stylesheet
-   แก้ไขไฟล์นี้เพื่อปรับสี, ขนาด, ฟอนต์, Layout
-   ═══════════════════════════════════════════════════════
-
-   สารบัญ (Ctrl+F หาชื่อ section):
-     BASE & RESET
-     CSS VARIABLES (สีและขนาด)
-     DARK MODE
-     APP SHELL
-     TOPBAR
-     SIDEBAR (tablet/desktop)
-     TAB BAR (mobile)
-     SCREENS
-     ── POS SCREEN ──
-       SEARCH
-       CATEGORY STRIP
-       PRODUCT GRID & CARDS
-       CART PANEL
-       DISCOUNT ROW
-       TOTALS & PAY BUTTON
-     ── DASHBOARD ──
-     ── HISTORY ──
-     ── MANAGE PRODUCTS ──
-     ── CUSTOMERS ──
-     ── MODALS ──
-       OVERLAY / SHEET
-       PAY MODAL
-       PRODUCT FORM
-       CUSTOMER FORM / PICKER / HISTORY
-       DELETE CONFIRM
-     PROFIT BADGES & SCREEN
-     FORM INPUTS & BUTTONS
-     EMOJI GRID
-     IMAGE UPLOAD
-     TOAST
-     EMPTY STATE / SPINNER
-     RESPONSIVE (TABLET / IPAD)
-═══════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════
+   style.css — TreeSiri POS
+   แก้ไขไฟล์นี้เพื่อปรับสี / ขนาด / layout
+   Ctrl+F หา section: VARIABLES  TOPBAR  SIDEBAR
+   PRODUCT GRID  CART  MODALS  PROFIT  RESPONSIVE
+════════════════════════════════════════════════════ */
 
 * {
             box-sizing: border-box;
@@ -1501,3 +1468,5 @@
         .pcard{min-height:120px}
         .pli-btn{width:36px;height:36px;font-size:17px}
         .add-btn{padding:9px 14px;font-size:13px}
+
+    

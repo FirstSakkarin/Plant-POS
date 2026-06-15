@@ -540,6 +540,9 @@ async function saveProduct(){
   const stock=parseInt(document.getElementById("f-stock").value)||0;
   const emoji=document.getElementById("f-emoji").value.trim()||"🌿";
   const imgUrl=getImgForSave();
+  let defaultPct=parseFloat(document.getElementById("f-default-pct").value);
+  if(isNaN(defaultPct))defaultPct=50;
+  defaultPct=Math.max(0,Math.min(100,defaultPct));
   if(!name){toast("❌ กรุณากรอกชื่อต้นไม้");return;}
   const btn=document.getElementById("prod-save-btn");
   btn.disabled=true;btn.textContent="กำลังบันทึก...";

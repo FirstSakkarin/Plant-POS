@@ -81,11 +81,12 @@ async function syncAll(){
    LOAD DATA
    Columns: Products A-H, Sales A-F, Customers A-E
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-// ── LOAD PRODUCTS (A=name,B=lot,C=cat,D=price,E=stock,F=emoji,G=imgUrl,H=defaultPct,I=stockFah,J=stockMom) ──
+// ── LOAD PRODUCTS (A=name,B=lot,C=cat,D=price,E=stock,F=emoji,G=imgUrl,H=defaultPct,I=stockFah,J=stockMom,K=cost) ──
 // defaultPct = Fah's default % (0-100), shown as starting value in checkout split
 // stockFah/stockMom = จำนวนต้นที่อยู่หน้าร้านฟ้า/ร้านแม่ (เป็นส่วนหนึ่งของ stock รวม ไม่ใช่แยกต่างหาก)
+// cost = ต้นทุนต่อต้น (บาท) — ใส่ 0 ได้ถ้าไม่มีต้นทุน ใช้คำนวณกำไร/ต้นทุนรวมในหน้ารายงาน
 async function loadProducts(){
-  const rows=await sheetGet("Products!A2:J");
+  const rows=await sheetGet("Products!A2:K");
   products=rows.map((r,i)=>({
     row:i+2,
     name:r[0]||"",lot:r[1]||"",cat:r[2]||"",
@@ -93,9 +94,21 @@ async function loadProducts(){
     emoji:r[5]||"🌿",imgUrl:r[6]||"",
     defaultPct:parseFloat(r[7])>=0?parseFloat(r[7]):50,   // Fah's default %
     stockFah:parseInt(r[8])||0,
-    stockMom:parseInt(r[9])||0
+    stockMom:parseInt(r[9])||0,
+    cost:parseFloat(r[10])||0
   })).filter(p=>p.name);
   renderProds();renderProdList();
+}
+
+// หาสินค้าที่ตรงกับรายการขาย (ใช้คำนวณต้นทุน/กำไรในหน้ารายงาน)
+// รายการขายบางส่วนเก็บชื่อรวม lot ไว้ในชื่อ เช่น "ปริกหางกระรอก(A)"
+function findProductForItem(it){
+  let name=it.name,lot=it.lot;
+  if(lot===undefined){
+    const m=(name||"").match(/^(.*)\((.*)\)$/);
+    if(m){name=m[1].trim();lot=m[2].trim();}
+  }
+  return products.find(p=>p.name===name&&(p.lot||"")===(lot||""));
 }
 
 // ── LOAD SALES (A=date,B=items,C=subtotal,D=discount,E=total,F=custName) ──
@@ -587,6 +600,7 @@ function openProductForm(rowId=null){
   document.getElementById("f-name").value=p?.name||"";
   document.getElementById("f-lot").value=p?.lot||"";
   document.getElementById("f-price").value=p?.price||"";
+  document.getElementById("f-cost").value=p?.cost||0;
   document.getElementById("f-stock").value=p?.stock??"";
   document.getElementById("f-stock-fah").value=p?.stockFah||0;
   document.getElementById("f-stock-mom").value=p?.stockMom||0;
@@ -618,6 +632,7 @@ function openProductFormNewLot(name){
   document.getElementById("prod-form-title").textContent="เพิ่ม Lot ใหม่: "+name;
   const ex=products.find(p=>p.name===name);
   if(ex){document.getElementById("f-price").value=ex.price||"";
+    document.getElementById("f-cost").value=ex.cost||0;
     const dpct2=ex.defaultPct??50;
     const el2=document.getElementById("f-default-pct");if(el2)el2.value=dpct2;
     syncDefaultPctBtns(dpct2);}
@@ -630,6 +645,7 @@ async function saveProduct(){
   const existingP=editingProductId!==null?products.find(p=>p.row===editingProductId):products.find(p=>p.name===name);
   const cat=existingP?.cat||"";
   const price=parseFloat(document.getElementById("f-price").value)||0;
+  const cost=parseFloat(document.getElementById("f-cost").value)||0;
   const stock=parseInt(document.getElementById("f-stock").value)||0;
   const stockFah=parseInt(document.getElementById("f-stock-fah").value)||0;
   const stockMom=parseInt(document.getElementById("f-stock-mom").value)||0;
@@ -648,11 +664,11 @@ async function saveProduct(){
   try{
     if(editingProductId!==null){
       const row=editingProductId;
-      await scriptPost({action:"updateProduct",row,name,lot,cat,price,stock,emoji,imgUrl,defaultPct,stockFah,stockMom});
+      await scriptPost({action:"updateProduct",row,name,lot,cat,price,cost,stock,emoji,imgUrl,defaultPct,stockFah,stockMom});
       const idx=products.findIndex(p=>p.row===row);
-      if(idx>=0)products[idx]={...products[idx],name,lot,cat,price,stock,emoji,imgUrl,defaultPct,stockFah,stockMom};
+      if(idx>=0)products[idx]={...products[idx],name,lot,cat,price,cost,stock,emoji,imgUrl,defaultPct,stockFah,stockMom};
     }else{
-      await scriptPost({action:"addProduct",name,lot,cat,price,stock,emoji,imgUrl,defaultPct,stockFah,stockMom});
+      await scriptPost({action:"addProduct",name,lot,cat,price,cost,stock,emoji,imgUrl,defaultPct,stockFah,stockMom});
       await loadProducts();
     }
     renderProds();renderProdList();closeProdForm();
@@ -717,11 +733,20 @@ function renderDash(){
   const pct=prevRev?Math.round((totalRev-prevRev)/prevRev*100):0;
   const byDay={};ms.forEach(s=>{const d=new Date(s.date);const k=`${d.getDate()}/${d.getMonth()+1}`;byDay[k]=(byDay[k]||0)+s.total;});
   const best=Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0];
+  // ต้นทุนรวม/กำไร — คำนวณจาก cost ของสินค้าปัจจุบัน × จำนวนที่ขายในช่วงนี้
+  let totalCost=0;
+  ms.forEach(s=>s.items.forEach(it=>{
+    const p=findProductForItem(it);
+    totalCost+=(p?.cost||0)*it.qty;
+  }));
+  const totalProfit=totalRev-totalCost;
   document.getElementById("metric-grid").innerHTML=`
     <div class="metric"><div class="metric-lbl">ยอดรวม</div><div class="metric-val">฿${(totalRev/1000).toFixed(1)}k</div><div class="metric-sub ${pct>0?"up":pct<0?"down":"neu"}">${pct>0?"▲":pct<0?"▼":"–"} ${Math.abs(pct)}%</div></div>
     <div class="metric"><div class="metric-lbl">จำนวนบิล</div><div class="metric-val">${bills}</div><div class="metric-sub neu">เฉลี่ย ฿${avg.toLocaleString()}</div></div>
     <div class="metric"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
-    <div class="metric"><div class="metric-lbl">ส่วนลดรวม</div><div class="metric-val">฿${Math.round(totalDisc).toLocaleString()}</div><div class="metric-sub neu">วันดี ${best?best[0]:"-"}</div></div>`;
+    <div class="metric"><div class="metric-lbl">ส่วนลดรวม</div><div class="metric-val">฿${Math.round(totalDisc).toLocaleString()}</div><div class="metric-sub neu">วันดี ${best?best[0]:"-"}</div></div>
+    <div class="metric"><div class="metric-lbl">ต้นทุนรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalCost).toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-lbl">กำไร</div><div class="metric-val" style="font-size:17px;color:${totalProfit>=0?"var(--g7)":"var(--r6)"}">฿${Math.round(totalProfit).toLocaleString()}</div></div>`;
   const dayList=[];const cur=new Date(from);
   while(cur<=toEnd){dayList.push(new Date(cur));cur.setDate(cur.getDate()+1);}
   const dayData=dayList.map(day=>{const next=new Date(day);next.setDate(next.getDate()+1);return ms.filter(s=>{const d=new Date(s.date);return d>=day&&d<next;}).reduce((a,x)=>a+x.total,0);});
@@ -787,21 +812,33 @@ function renderProfit(){
   const bills=ms.length;
   const avg=bills?Math.round(totalRev/bills):0;
 
+  // ต้นทุนรวม/กำไรสุทธิ — คำนวณจาก cost ของสินค้าปัจจุบัน × จำนวนที่ขายในช่วงนี้
+  let totalCost=0;
+  ms.forEach(s=>s.items.forEach(it=>{
+    const p=findProductForItem(it);
+    totalCost+=(p?.cost||0)*it.qty;
+  }));
+  const netProfit=totalRev-totalCost;
+
   document.getElementById("profit-metrics").innerHTML=`
     <div class="metric"><div class="metric-lbl">ยอดขายรวม</div><div class="metric-val">฿${Math.round(totalRev/1000*10)/10}k</div><div class="metric-sub neu">${bills} บิล</div></div>
     <div class="metric"><div class="metric-lbl">🌿 Fah ได้รวม</div><div class="metric-val" style="font-size:17px;color:var(--g7)">฿${Math.round(fahTotal).toLocaleString()}</div></div>
     <div class="metric"><div class="metric-lbl">🌸 แม่ได้รวม</div><div class="metric-val" style="font-size:17px;color:var(--p7)">฿${Math.round(momTotal).toLocaleString()}</div></div>
-    <div class="metric"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>`;
+    <div class="metric"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
+    <div class="metric"><div class="metric-lbl">ต้นทุนรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalCost).toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-lbl">กำไรสุทธิ</div><div class="metric-val" style="font-size:17px;color:${netProfit>=0?"var(--g7)":"var(--r6)"}">฿${Math.round(netProfit).toLocaleString()}</div></div>`;
 
   // Breakdown by item name
   const byName={};
   ms.forEach(s=>s.items.forEach(it=>{
     const k=it.name;
-    if(!byName[k])byName[k]={name:k,emoji:it.emoji||"🌿",qty:0,rev:0,fahRev:0,momRev:0};
+    if(!byName[k])byName[k]={name:k,emoji:it.emoji||"🌿",qty:0,rev:0,fahRev:0,momRev:0,cost:0};
     const rev=it.qty*(it.price||0);
     const fPct=(it.fahPct>=0?it.fahPct:50)/100;
+    const p=findProductForItem(it);
     byName[k].qty+=it.qty;byName[k].rev+=rev;
     byName[k].fahRev+=rev*fPct;byName[k].momRev+=rev*(1-fPct);
+    byName[k].cost+=(p?.cost||0)*it.qty;
   }));
   const sorted=Object.values(byName).sort((a,b)=>b.rev-a.rev);
 
@@ -811,17 +848,22 @@ function renderProfit(){
       <div class="profit-line"><span class="p-lbl">ยอดขายรวม</span><span class="p-val">฿${Math.round(totalRev).toLocaleString()}</span></div>
       <div class="profit-line"><span class="p-lbl">🌿 Fah ได้</span><span class="p-val pv-ts">฿${Math.round(fahTotal).toLocaleString()}</span></div>
       <div class="profit-line"><span class="p-lbl">🌸 แม่ได้</span><span class="p-val pv-snp">฿${Math.round(momTotal).toLocaleString()}</span></div>
+      <div class="profit-line"><span class="p-lbl">ต้นทุนรวม</span><span class="p-val">฿${Math.round(totalCost).toLocaleString()}</span></div>
+      <div class="profit-line"><span class="p-lbl">กำไรสุทธิ</span><span class="p-val" style="color:${netProfit>=0?"var(--g7)":"var(--r6)"}">฿${Math.round(netProfit).toLocaleString()}</span></div>
     </div>
     ${sorted.length?`<div class="profit-block">
       <div class="profit-block-title"><i class="ti ti-list" style="color:var(--m);font-size:16px"></i> แยกตามสินค้า</div>
-      ${sorted.map(x=>`
+      ${sorted.map(x=>{
+        const itemProfit=x.rev-x.cost;
+        return`
         <div class="profit-line">
           <span class="p-lbl">${x.emoji} ${x.name} <span style="font-size:10px;color:var(--faint)">${x.qty} ต้น</span></span>
           <div style="text-align:right">
             <div class="p-val" style="font-size:12px">฿${Math.round(x.rev).toLocaleString()}</div>
             <div style="font-size:10px"><span style="color:var(--g7)">🌿฿${Math.round(x.fahRev).toLocaleString()}</span> / <span style="color:var(--p7)">🌸฿${Math.round(x.momRev).toLocaleString()}</span></div>
+            <div style="font-size:10px;color:var(--m)">ต้นทุน ฿${Math.round(x.cost).toLocaleString()} · กำไร <span style="color:${itemProfit>=0?"var(--g7)":"var(--r6)"}">฿${Math.round(itemProfit).toLocaleString()}</span></div>
           </div>
-        </div>`).join("")}
+        </div>`}).join("")}
     </div>`:""}`;
 }
 

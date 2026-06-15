@@ -54,9 +54,10 @@ function jsonOut(obj) {
 }
 
 /* ───────────────────────────────────────────────
-   PRODUCTS  (ชีต "Products", คอลัมน์ A-J)
+   PRODUCTS  (ชีต "Products", คอลัมน์ A-K)
    A name | B lot | C cat | D price | E stock | F emoji
-   G imgUrl | H defaultPct | I stockFah | J stockMom
+   G imgUrl | H defaultPct | I stockFah | J stockMom | K cost
+   (ถ้ายังไม่มีคอลัมน์ K ให้เพิ่มหัวคอลัมน์ "cost" ในชีต Products)
 ─────────────────────────────────────────────── */
 function addProduct(ss, p) {
   const sheet = ss.getSheetByName("Products");
@@ -66,7 +67,8 @@ function addProduct(ss, p) {
     p.emoji || "🌿", p.imgUrl || "",
     p.defaultPct ?? 50,
     p.stockFah || 0,
-    p.stockMom || 0
+    p.stockMom || 0,
+    p.cost || 0
   ]);
   return {};
 }
@@ -82,6 +84,7 @@ function updateProduct(ss, p) {
   ]]);
   sheet.getRange(row, 9).setValue(p.stockFah || 0);   // I
   sheet.getRange(row, 10).setValue(p.stockMom || 0);  // J
+  sheet.getRange(row, 11).setValue(p.cost || 0);      // K
   return {};
 }
 

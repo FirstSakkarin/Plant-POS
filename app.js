@@ -129,6 +129,10 @@ function renderCats(){
 }
 function selCat(c){activeCat=c;renderCats();renderProds()}
 
+// วาดการ์ดสินค้าทั้งหมดในหน้า "ขาย" (.prod-grid)
+// หมายเหตุ: สี/ขนาดบางส่วนของการ์ดถูกกำหนดแบบ inline style ในฟังก์ชันนี้
+// (เช่น font-size:26px ของอิโมจิ, สี var(--g7) ของราคา) — ถ้าจะแก้สี/ขนาดเหล่านี้
+// ให้แก้ตรงนี้ หรือย้ายไปใช้ class .pcard-emoji / .pcard-price ใน style.css แทน
 function renderProds(){
   const q=(document.getElementById("s-input").value||"").toLowerCase();
   const f=products.filter(p=>(activeCat==="ทั้งหมด"||p.cat===activeCat)&&(!q||p.name.toLowerCase().includes(q)||(p.lot||"").toLowerCase().includes(q)));

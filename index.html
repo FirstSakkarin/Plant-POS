@@ -1,3 +1,15 @@
+<!--
+  ════════════════════════════════════════════════════
+  index.html — TreeSiri POS
+  โครงสร้างหน้าเว็บทั้งหมด แบ่งเป็น:
+   1) <head>  — โหลดฟอนต์ (Sarabun), ไอคอน (Tabler Icons), Chart.js, style.css
+   2) .app    — ตัวแอปหลัก: topbar, แท็บเมนู, sidebar (จอใหญ่), หน้าจอต่างๆ (.screen)
+   3) .overlay/.sheet — popup ต่างๆ ที่เด้งขึ้นจากด้านล่าง (modal)
+  ── แก้ "ไอคอน" ของปุ่ม/แท็บ ให้แก้ class="ti ti-xxx" (ชื่อไอคอนจาก Tabler Icons)
+  ── แก้ "ข้อความ" บนปุ่ม/หัวข้อ แก้ตรงข้อความภาษาไทยได้เลย
+  ── แก้ "สี/ขนาด" ให้ไปแก้ใน style.css (ดูคู่มือด้านบนของไฟล์นั้น)
+  ════════════════════════════════════════════════════
+-->
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -166,7 +178,7 @@
   </div>
 </div>
 
-<!-- Pay Modal -->
+<!-- ════ POPUP: หน้าต่างชำระเงิน (กดปุ่ม "ชำระเงิน" เพื่อเปิด) ════ -->
 <div class="overlay" id="pay-overlay">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -199,7 +211,7 @@
   </div>
 </div>
 
-<!-- Product Form Modal -->
+<!-- ════ POPUP: ฟอร์มเพิ่ม/แก้ไขสินค้า (ชื่อ, ราคา, สต็อก, emoji, รูป) ════ -->
 <div class="overlay" id="prod-overlay">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -248,7 +260,7 @@
   </div>
 </div>
 
-<!-- Delete Confirm -->
+<!-- ════ POPUP: ยืนยันการลบสินค้า ════ -->
 <div class="overlay" id="del-overlay">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -261,7 +273,7 @@
   </div>
 </div>
 
-<!-- Customer Form Modal -->
+<!-- ════ POPUP: ฟอร์มเพิ่ม/แก้ไขลูกค้า ════ -->
 <div class="overlay" id="cust-form-overlay">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -281,7 +293,7 @@
   </div>
 </div>
 
-<!-- Customer Picker Modal -->
+<!-- ════ POPUP: เลือกลูกค้า (สำหรับผูกกับบิลขาย) ════ -->
 <div class="overlay" id="cust-picker-overlay">
   <div class="sheet" style="max-height:80vh">
     <div class="sheet-handle"></div>
@@ -294,7 +306,7 @@
   </div>
 </div>
 
-<!-- Customer History Modal -->
+<!-- ════ POPUP: ประวัติการซื้อของลูกค้า ════ -->
 <div class="overlay" id="cust-hist-overlay">
   <div class="sheet" style="max-height:85vh">
     <div class="sheet-handle"></div>

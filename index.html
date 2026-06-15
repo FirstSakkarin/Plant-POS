@@ -167,9 +167,10 @@
 </div>
 
 <!-- ════ POPUP: หน้าต่างชำระเงิน (กดปุ่ม "ชำระเงิน" เพื่อเปิด) ════ -->
-<div class="overlay" id="pay-overlay">
+<div class="overlay" id="pay-overlay" data-close="closePay">
   <div class="sheet">
     <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closePay()"><i class="ti ti-x"></i></button>
     <div class="sheet-title">ชำระเงิน</div>
     <div id="pay-summary" style="font-size:12px;color:var(--m);margin-bottom:8px;line-height:1.6"></div>
     <!-- Customer selector inside modal -->
@@ -200,9 +201,10 @@
 </div>
 
 <!-- ════ POPUP: ฟอร์มเพิ่ม/แก้ไขสินค้า (ชื่อ, ราคา, สต็อก, emoji, รูป) ════ -->
-<div class="overlay" id="prod-overlay">
+<div class="overlay" id="prod-overlay" data-close="closeProdForm">
   <div class="sheet">
     <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeProdForm()"><i class="ti ti-x"></i></button>
     <div class="sheet-title" id="prod-form-title">เพิ่มสินค้าใหม่</div>
     <div class="form-lbl">ชื่อต้นไม้ *</div>
     <input class="form-inp" id="f-name" type="text" placeholder="เช่น มอนสเตร่า">
@@ -247,9 +249,10 @@
 </div>
 
 <!-- ════ POPUP: ยืนยันการลบสินค้า ════ -->
-<div class="overlay" id="del-overlay">
+<div class="overlay" id="del-overlay" data-close="closeDelModal">
   <div class="sheet">
     <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeDelModal()"><i class="ti ti-x"></i></button>
     <div class="sheet-title">ลบสินค้า</div>
     <p style="font-size:14px;color:var(--m);margin-bottom:16px">ยืนยันลบ "<span id="del-name" style="color:var(--t);font-weight:600"></span>" ออกจากระบบและ Google Sheet?</p>
     <div class="sheet-btns">
@@ -260,9 +263,10 @@
 </div>
 
 <!-- ════ POPUP: ฟอร์มเพิ่ม/แก้ไขลูกค้า ════ -->
-<div class="overlay" id="cust-form-overlay">
+<div class="overlay" id="cust-form-overlay" data-close="closeCustForm">
   <div class="sheet">
     <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeCustForm()"><i class="ti ti-x"></i></button>
     <div class="sheet-title" id="cust-form-title">เพิ่มลูกค้าใหม่</div>
     <div class="form-lbl">ชื่อ / ชื่อเล่น *</div>
     <input class="form-inp" id="cf-name" type="text" placeholder="เช่น คุณสมชาย">
@@ -280,9 +284,10 @@
 </div>
 
 <!-- ════ POPUP: เลือกลูกค้า (สำหรับผูกกับบิลขาย) ════ -->
-<div class="overlay" id="cust-picker-overlay">
+<div class="overlay" id="cust-picker-overlay" data-close="closeCustPicker">
   <div class="sheet" style="max-height:80vh">
     <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeCustPicker()"><i class="ti ti-x"></i></button>
     <div class="sheet-title">เลือกลูกค้า</div>
     <div class="cust-search" style="margin-bottom:10px"><i class="ti ti-search"></i><input type="text" id="picker-search" placeholder="ค้นหา..." oninput="renderPickerList()"></div>
     <div id="picker-list" style="max-height:50vh;overflow-y:auto"></div>
@@ -293,9 +298,10 @@
 </div>
 
 <!-- ════ POPUP: ประวัติการซื้อของลูกค้า ════ -->
-<div class="overlay" id="cust-hist-overlay">
+<div class="overlay" id="cust-hist-overlay" data-close="closeCustHist">
   <div class="sheet" style="max-height:85vh">
     <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeCustHist()"><i class="ti ti-x"></i></button>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div>
         <div class="sheet-title" style="margin-bottom:2px" id="cust-hist-name">ประวัติการซื้อ</div>
@@ -309,6 +315,20 @@
     <div class="sheet-btns" style="margin-top:12px">
       <button class="btn-secondary" onclick="closeCustHist()">ปิด</button>
       <button class="btn-primary" onclick="selectCustFromHist()">เลือกลูกค้านี้</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ POPUP: ใบเสร็จ / ออกบิล (พิมพ์ได้) ════ -->
+<div class="overlay" id="receipt-overlay" data-close="closeReceipt">
+  <div class="sheet" style="max-height:90vh">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeReceipt()"><i class="ti ti-x"></i></button>
+    <div class="sheet-title">ใบเสร็จ</div>
+    <div id="receipt-body" class="receipt"></div>
+    <div class="sheet-btns">
+      <button class="btn-secondary" onclick="closeReceipt()">ปิด</button>
+      <button class="btn-primary" onclick="printReceiptNow()"><i class="ti ti-printer"></i> พิมพ์ใบเสร็จ</button>
     </div>
   </div>
 </div>

@@ -184,11 +184,15 @@
             gap: 4px;
             background: #fff;
             border-radius: 30px;
-            margin: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
             padding: 6px;
-            box-shadow: 0 4px 16px rgba(0,0,0,.08);
+            box-shadow: 0 4px 16px rgba(0,0,0,.12);
             border: 0.5px solid var(--bd);
-            flex-shrink: 0
+            /* ลอยติดด้านล่างสุดของจอเสมอ (มือถือ) ไม่เลื่อนตามเนื้อหา */
+            position: absolute;
+            left: 10px;
+            right: 10px;
+            bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+            z-index: 20
         }
 
         /* ปุ่มแท็บเมนูด้านล่าง (ขาย/รายงาน/คลังต้นไม้/ลูกค้า)
@@ -247,7 +251,10 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             display: none;
-            flex-direction: column
+            flex-direction: column;
+            /* เผื่อพื้นที่ด้านล่างให้เนื้อหา (รวมปุ่มชำระเงิน) ไม่โดน tab-bar ลอยบัง
+               padding ตรงนี้อยู่ "ภายใน" พื้นที่เลื่อนของ .screen เอง จึงดันปุ่มขึ้นมาเหนือ tab-bar จริงๆ */
+            padding-bottom: 78px
         }
 
             .screen.active {
@@ -807,6 +814,123 @@
             font-weight: 700;
             color: var(--g8)
         }
+
+        /* แถวล่างของ sale-card: ยอดรวม + ปุ่มพิมพ์ใบเสร็จ */
+        .sale-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 2px
+        }
+
+        .sale-print-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: var(--g1);
+            color: var(--g8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: pointer;
+            flex-shrink: 0
+        }
+
+        /* ── ใบเสร็จ (Receipt) — แสดงใน popup และใช้พิมพ์ ── */
+        .receipt {
+            font-family: 'Sarabun',sans-serif;
+            background: #fff;
+            border: 1px dashed var(--bd);
+            border-radius: var(--rad);
+            padding: 16px;
+            font-size: 12px;
+            color: #000;
+            max-width: 300px;
+            margin: 0 auto
+        }
+
+        .r-store {
+            text-align: center;
+            font-size: 17px;
+            font-weight: 700
+        }
+
+        .r-sub {
+            text-align: center;
+            font-size: 11px;
+            color: var(--m);
+            margin-bottom: 2px
+        }
+
+        .r-meta {
+            text-align: center;
+            font-size: 10px;
+            color: var(--m);
+            margin-bottom: 8px
+        }
+
+        .r-line {
+            border: none;
+            border-top: 1px dashed var(--bd);
+            margin: 8px 0
+        }
+
+        .r-item {
+            margin-bottom: 4px
+        }
+
+        .r-item-name {
+            font-size: 11px
+        }
+
+        .r-item-line {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--m)
+        }
+
+        .r-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin: 2px 0
+        }
+
+        .r-total {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--g8);
+            margin-top: 4px
+        }
+
+        .r-foot {
+            text-align: center;
+            font-size: 11px;
+            color: var(--m);
+            margin-top: 12px
+        }
+
+        /* พิมพ์ใบเสร็จ — แสดงเฉพาะ #receipt-body ตอนสั่งพิมพ์ */
+        @media print {
+            body * {
+                visibility: hidden
+            }
+
+            #receipt-body, #receipt-body * {
+                visibility: visible
+            }
+
+            #receipt-body {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                border: none
+            }
+        }
         /* ── MANAGE ── */
         .manage-wrap {
             padding: 12px
@@ -916,7 +1040,9 @@
             padding: 20px;
             padding-bottom: max(20px,env(safe-area-inset-bottom,0px));
             max-height: 90vh;
-            overflow-y: auto
+            overflow-y: auto;
+            position: relative;
+            transition: transform .25s ease
         }
 
         .sheet-handle {
@@ -924,7 +1050,28 @@
             height: 4px;
             background: var(--bd);
             border-radius: 2px;
-            margin: 0 auto 16px
+            margin: 0 auto 16px;
+            cursor: grab;
+            touch-action: none
+        }
+
+        /* ปุ่มปิด (X) มุมบนขวาของ popup — กดแล้วเท่ากับกดยกเลิก */
+        .sheet-close {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg2);
+            color: var(--m);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 1
         }
 
         .sheet-title {
@@ -959,6 +1106,26 @@
 
             .form-inp:focus {
                 border-color: var(--g7)
+            }
+
+        /* กล่องอัปโหลดรูปสินค้า — กำหนดขนาดคงที่ ไม่ให้รูปที่เลือกมาแสดงเต็มขนาดไฟล์จนล้นจอ */
+        .img-upload-area {
+            width: 100%;
+            height: 160px;
+            border-radius: var(--rad);
+            border: 1px dashed var(--bd);
+            background: var(--bg2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            cursor: pointer
+        }
+
+            .img-preview {
+                width: 100%;
+                height: 100%;
+                object-fit: contain   /* ย่อรูปให้พอดีกล่อง คงสัดส่วน ไม่ครอป/ไม่ล้น */
             }
 
         .emoji-grid {

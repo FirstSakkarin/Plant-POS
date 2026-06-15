@@ -397,6 +397,7 @@ async function confirmSale(){
     clearSelectedCust();
     cart={};document.getElementById("disc-val").value="0";
     renderCart();renderProds();renderProdList();closePay();
+    openReceipt(sales[0]);
     if(!hadCust)toast("✅ บันทึกลง Google Sheets แล้ว!");
   }catch(e){
     toast("❌ บันทึกไม่สำเร็จ: "+e.message);
@@ -747,14 +748,17 @@ function renderHistory(){
     <div class="metric"><div class="metric-lbl">บิลวันนี้</div><div class="metric-val">${ts.length} บิล</div></div>`;
   const hl=document.getElementById("hist-list");
   if(!sales.length){hl.innerHTML=`<div class="empty-state"><i class="ti ti-receipt"></i><p>ยังไม่มีประวัติ</p></div>`;return}
-  hl.innerHTML=sales.slice(0,50).map(s=>{
+  hl.innerHTML=sales.slice(0,50).map((s,i)=>{
     const d=new Date(s.date);
     const ds=`${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()+543} · ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
     const discTxt=s.discount>0?` ส่วนลด −฿${s.discount.toLocaleString()}`:"";
     return`<div class="sale-card">
       <div class="sale-hdr"><span class="sale-date"><i class="ti ti-clock" style="font-size:10px"></i> ${ds}</span><span class="sale-badge">${s.itemCount} รายการ</span></div>
       <div class="sale-items-txt">${s.custName?`👤 ${s.custName} · `:""}${s.items.map(x=>`${x.emoji||"🌿"}${x.name}×${x.qty}`).join(" · ")}${discTxt?` · ${discTxt}`:""}</div>
-      <div class="sale-total">฿${Math.round(s.total).toLocaleString()}</div>
+      <div class="sale-foot">
+        <div class="sale-total">฿${Math.round(s.total).toLocaleString()}</div>
+        <button class="sale-print-btn" onclick="openReceipt(sales[${i}])" title="ออกบิล / พิมพ์"><i class="ti ti-printer"></i></button>
+      </div>
     </div>`}).join("");
 }
 
@@ -895,8 +899,78 @@ function toast(msg){
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   RECEIPT  — ออกบิล/ใบเสร็จ พร้อมสั่งพิมพ์ (ใช้ทั้งหน้าขายและประวัติการขาย)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function buildReceiptHTML(s){
+  const d=new Date(s.date);
+  const ds=`${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()+543} · ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  const itemsHtml=s.items.map(x=>`
+    <div class="r-item">
+      <div class="r-item-name">${x.emoji||"🌿"} ${x.name}${x.lot?" ("+x.lot+")":""}</div>
+      <div class="r-item-line"><span>${x.qty} × ฿${x.price.toLocaleString()}</span><span>฿${(x.qty*x.price).toLocaleString()}</span></div>
+    </div>`).join("");
+  const discRow=s.discount>0?`<div class="r-row"><span>ส่วนลด</span><span>−฿${s.discount.toLocaleString()}</span></div>`:"";
+  return `
+    <div class="r-store">🌿 TreeSiri</div>
+    <div class="r-sub">ใบเสร็จรับเงิน / Receipt</div>
+    <div class="r-meta">${ds}${s.custName?` · 👤 ${s.custName}`:""}</div>
+    <hr class="r-line">
+    ${itemsHtml}
+    <hr class="r-line">
+    <div class="r-row"><span>รวม</span><span>฿${s.subtotal.toLocaleString()}</span></div>
+    ${discRow}
+    <div class="r-row r-total"><span>ยอดสุทธิ</span><span>฿${Math.round(s.total).toLocaleString()}</span></div>
+    <div class="r-foot">ขอบคุณที่ใช้บริการ 🌿</div>`;
+}
+function openReceipt(s){
+  if(!s)return;
+  document.getElementById("receipt-body").innerHTML=buildReceiptHTML(s);
+  document.getElementById("receipt-overlay").classList.add("show");
+}
+function closeReceipt(){document.getElementById("receipt-overlay").classList.remove("show")}
+function printReceiptNow(){window.print()}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SWIPE-DOWN TO CLOSE POPUP — ลากแถบจับด้านบนของ popup ลง เพื่อปิด (= กดยกเลิก)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function initSheetSwipe(){
+  document.querySelectorAll(".overlay[data-close]").forEach(overlay=>{
+    const sheet=overlay.querySelector(".sheet");
+    const handle=overlay.querySelector(".sheet-handle");
+    if(!sheet||!handle)return;
+    const closeFn=window[overlay.dataset.close];
+    let startY=0,curY=0,dragging=false;
+
+    handle.addEventListener("touchstart",e=>{
+      startY=e.touches[0].clientY;curY=startY;dragging=true;
+      sheet.style.transition="none";
+    },{passive:true});
+
+    handle.addEventListener("touchmove",e=>{
+      if(!dragging)return;
+      curY=e.touches[0].clientY;
+      const dy=Math.max(0,curY-startY);   // ลากลงได้อย่างเดียว
+      sheet.style.transform=`translateY(${dy}px)`;
+    },{passive:true});
+
+    handle.addEventListener("touchend",()=>{
+      if(!dragging)return;
+      dragging=false;
+      sheet.style.transition="transform .25s ease";
+      const dy=Math.max(0,curY-startY);
+      if(dy>80){              // ลากลงเกิน 80px = ปิด
+        sheet.style.transform=`translateY(100%)`;
+        setTimeout(()=>{sheet.style.transform="";if(typeof closeFn==="function")closeFn();},180);
+      }else{
+        sheet.style.transform="";  // ลากไม่พอ ดีดกลับที่เดิม
+      }
+    });
+  });
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    INIT  — bootstrap เมื่อโหลดหน้า
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // ── INIT ──────────────────────────────────────────────────
-(async()=>{renderProds();await syncAll();})();
+(async()=>{renderProds();await syncAll();initSheetSwipe();})();
 

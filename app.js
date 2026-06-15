@@ -374,7 +374,7 @@ async function confirmSale(){
   try{
     const itemStr=items.map(x=>{
       const fahPct=payItemSplits[x.row]!==undefined?payItemSplits[x.row]:(x.defaultPct??50);
-      return x.name+(x.lot?"("+x.lot+")":"")+"x"+x.qty+"x"+getItemPrice(x)+"x"+fahPct;
+      return x.name+(x.lot?"("+x.lot+")":"")+"×"+x.qty+"×"+getItemPrice(x)+"×"+fahPct;
     }).join(", ");
     const dd=now.getDate(),mm=now.getMonth()+1,yy=now.getFullYear();
     const hh=String(now.getHours()).padStart(2,"0"),mn=String(now.getMinutes()).padStart(2,"0");

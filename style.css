@@ -175,7 +175,7 @@
             flex-shrink: 0
         }
 
-        /* ปุ่มแท็บเมนูด้านล่าง (ขาย/สรุป/ประวัติ/สินค้า/ลูกค้า/กำไร) */
+        /* ปุ่มแท็บเมนูด้านล่าง (ขาย/รายงาน/สินค้า/ลูกค้า) */
         .tab {
             flex: 1;
             padding: 9px 0 7px;
@@ -189,7 +189,7 @@
             flex-direction: column;
             align-items: center;
             gap: 2px;
-            transition: color .15s
+            transition: color .15s, background .15s
         }
 
             .tab i {
@@ -198,6 +198,25 @@
 
             .tab.active {
                 color: var(--g7)  /* สีของแท็บที่กำลังเลือกอยู่ */
+            }
+
+        /* แท็บ "ขาย" — เน้นพิเศษให้เด่นกว่าแท็บอื่น */
+        .tab.sell {
+            flex: 1.4;
+            border-radius: var(--rad);
+            margin: 4px;
+            background: var(--g8);
+            color: #d4edaa;
+            font-weight: 700
+        }
+
+            .tab.sell i {
+                font-size: 22px
+            }
+
+            .tab.sell.active {
+                background: var(--g8);
+                color: #d4edaa
             }
         /* Screens */
         .screens {
@@ -260,40 +279,6 @@
                 .sbox input::placeholder {
                     color: var(--faint)
                 }
-
-        .cat-strip {
-            display: flex;
-            gap: 7px;
-            padding: 8px 12px;
-            overflow-x: auto;
-            flex-shrink: 0;
-            border-bottom: 0.5px solid var(--bd);
-            scrollbar-width: none
-        }
-
-            .cat-strip::-webkit-scrollbar {
-                display: none
-            }
-
-        /* ปุ่มหมวดหมู่สินค้า (เช่น ทั้งหมด, ในร่ม, ดอกไม้) แถบเลื่อนแนวนอน */
-        .cat-btn {
-            white-space: nowrap;
-            padding: 4px 12px;     /* ขนาดกล่องปุ่ม */
-            border-radius: 20px;   /* ความกลมของปุ่ม (ทรงเม็ดยา) */
-            font-size: 12px;       /* ขนาดตัวอักษร */
-            font-family: 'Sarabun',sans-serif;
-            cursor: pointer;
-            border: 0.5px solid var(--bd);
-            background: var(--bg);
-            color: var(--m)
-        }
-
-            .cat-btn.active {
-                background: var(--g1);   /* สีพื้นหลังเมื่อถูกเลือก */
-                color: var(--g8);        /* สีตัวอักษรเมื่อถูกเลือก */
-                border-color: var(--g3); /* สีขอบเมื่อถูกเลือก */
-                font-weight: 600
-            }
 
         .prod-area {
             flex: 1;
@@ -359,6 +344,35 @@
             .pcard-stock.low {
                 color: var(--r6);
                 font-weight: 600
+            }
+
+        /* การ์ดสินค้าในหน้า "จัดการสินค้า" — เหมือน .pcard แต่เพิ่มปุ่มแก้ไข/ลบ */
+        .mcard {
+            position: relative
+        }
+
+        .mcard-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px
+        }
+
+        .mcard-btn {
+            flex: 1;
+            height: 28px;
+            border-radius: 7px;
+            border: 0.5px solid var(--bd);
+            background: var(--bg2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--m)
+        }
+
+            .mcard-btn.del {
+                color: var(--r6)
             }
         /* Cart */
         .cart-panel {

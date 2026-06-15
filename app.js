@@ -26,7 +26,7 @@ const MONTHS     = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค."
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // ── STATE ─────────────────────────────────────────────────
 let products=[], sales=[], customers=[];
-let cart={}, activeCat="ทั้งหมด", discMode="baht";
+let cart={}, discMode="baht";
 let barChart=null;
 let editingProductId=null, deletingProductId=null;
 let selectedCust=null, editingCustId=null, viewingCustId=null;
@@ -90,7 +90,7 @@ async function loadProducts(){
     emoji:r[5]||"🌿",imgUrl:r[6]||"",
     defaultPct:parseFloat(r[7])>=0?parseFloat(r[7]):50   // Fah's default %
   })).filter(p=>p.name);
-  renderCats();renderProds();renderProdList();
+  renderProds();renderProdList();
 }
 
 // ── LOAD SALES (A=date,B=items,C=subtotal,D=discount,E=total,F=custName) ──
@@ -121,21 +121,13 @@ async function loadCustomers(){
    PRODUCTS UI  — หน้าขาย: categories, product grid
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // ── PRODUCTS UI ───────────────────────────────────────────
-function getCats(){return["ทั้งหมด",...new Set(products.map(p=>p.cat).filter(Boolean))]}
-function renderCats(){
-  document.getElementById("cat-strip").innerHTML=getCats().map(c=>
-    `<button class="cat-btn${c===activeCat?" active":""}" onclick="selCat('${c}')">${c}</button>`
-  ).join("");
-}
-function selCat(c){activeCat=c;renderCats();renderProds()}
-
 // วาดการ์ดสินค้าทั้งหมดในหน้า "ขาย" (.prod-grid)
 // หมายเหตุ: สี/ขนาดบางส่วนของการ์ดถูกกำหนดแบบ inline style ในฟังก์ชันนี้
 // (เช่น font-size:26px ของอิโมจิ, สี var(--g7) ของราคา) — ถ้าจะแก้สี/ขนาดเหล่านี้
 // ให้แก้ตรงนี้ หรือย้ายไปใช้ class .pcard-emoji / .pcard-price ใน style.css แทน
 function renderProds(){
   const q=(document.getElementById("s-input").value||"").toLowerCase();
-  const f=products.filter(p=>(activeCat==="ทั้งหมด"||p.cat===activeCat)&&(!q||p.name.toLowerCase().includes(q)||(p.lot||"").toLowerCase().includes(q)));
+  const f=products.filter(p=>(!q||p.name.toLowerCase().includes(q)||(p.lot||"").toLowerCase().includes(q)));
   const g=document.getElementById("prod-grid");
   if(!products.length){g.innerHTML=`<div style="grid-column:1/-1"><div class="empty-state"><i class="ti ti-refresh spin-icon"></i><p>กำลังโหลดจาก Google Sheets...</p></div></div>`;return}
   if(!f.length){g.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--faint);font-size:13px;padding:24px">ไม่พบสินค้า</div>`;return}
@@ -460,34 +452,35 @@ function syncDefaultPctBtns(val){
 // ── MANAGE PRODUCTS ───────────────────────────────────────
 function renderProdList(){
   const el=document.getElementById("prod-list");
-  if(!products.length){el.innerHTML=`<div class="empty-state"><i class="ti ti-plant"></i><p>ยังไม่มีสินค้า กด "+ เพิ่มสินค้า"</p></div>`;return}
+  if(!products.length){el.innerHTML=`<div style="grid-column:1/-1"><div class="empty-state"><i class="ti ti-plant"></i><p>ยังไม่มีสินค้า กด "+ เพิ่มสินค้า"</p></div></div>`;return}
   const grouped={};
   products.forEach(p=>{if(!grouped[p.name])grouped[p.name]=[];grouped[p.name].push(p);});
   el.innerHTML=Object.entries(grouped).map(([name,lots])=>{
     const totalStock=lots.reduce((s,p)=>s+p.stock,0);
     const rep=lots[0];
-    const lotsHtml=lots.map(p=>{
-      const thumb=p.imgUrl?`<img src="${p.imgUrl}" style="width:38px;height:38px;object-fit:cover;border-radius:8px">`:`<span style="font-size:24px">${p.emoji}</span>`;
-      return`<div class="prod-list-item" style="margin-bottom:6px;background:var(--bg2)">
-        <span class="pli-emoji">${thumb}</span>
-        <div class="pli-info">
-          <div class="pli-name" style="font-size:12px">${p.lot||"ไม่มี Lot"} <span style="color:${p.stock<=0?"var(--r6)":p.stock<=5?"var(--a6)":"var(--g7)"};font-weight:600">· ${p.stock} ต้น</span></div>
-          <div class="pli-meta">฿${p.price.toLocaleString()} · ${p.cat||"ไม่มีหมวด"}</div>
-          <div style="margin-top:3px"><span class="pbadge" style="background:var(--g1);color:var(--g8);font-size:10px">Fah ${p.defaultPct??50}%</span></div>
+    const headerHtml=`<div style="grid-column:1/-1;display:flex;align-items:center;gap:7px;margin:6px 0 2px">
+      <span style="font-size:13px;font-weight:700;color:var(--t)">${rep.emoji} ${name}</span>
+      <span style="font-size:11px;color:var(--m)">รวม ${totalStock} ต้น · ${lots.length} Lot</span>
+      <button class="add-btn" style="margin-left:auto;padding:5px 10px;font-size:11px" onclick="openProductFormNewLot('${name}')">+ Lot</button>
+    </div>`;
+    const cards=lots.map(p=>{
+      const imgHtml=p.imgUrl
+        ?`<div style="position:relative;margin-bottom:6px"><img style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;background:var(--bg2)" src="${p.imgUrl}" loading="lazy" onerror="this.style.display='none'"><span style="position:absolute;bottom:4px;right:6px;font-size:16px;background:rgba(255,255,255,.85);border-radius:6px;padding:2px 4px;line-height:1">${p.emoji}</span></div>`
+        :`<div style="font-size:26px;text-align:center;margin-bottom:5px;line-height:1">${p.emoji}</div>`;
+      return`<div class="pcard mcard" style="cursor:default">
+        ${imgHtml}
+        <div style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3">${p.lot||name}</div>
+        <div style="font-size:13px;color:var(--g7);font-weight:600;margin-top:2px">฿${p.price.toLocaleString()}</div>
+        <div style="font-size:10px;color:${p.stock<=0?"var(--r6)":p.stock<=5?"var(--a6)":"var(--faint)"};margin-top:2px">${p.stock<=0?"หมดแล้ว":"คงเหลือ "+p.stock+" ต้น"}</div>
+        <span class="pbadge" style="background:var(--g1);color:var(--g8);font-size:10px">Fah ${p.defaultPct??50}%</span>
+        <div class="mcard-actions">
+          <button class="mcard-btn" onclick="openProductForm(${p.row})"><i class="ti ti-edit"></i></button>
+          <button class="mcard-btn del" onclick="openDelModal(${p.row})"><i class="ti ti-trash"></i></button>
         </div>
-        <div class="pli-actions">
-          <button class="pli-btn" onclick="openProductForm(${p.row})"><i class="ti ti-edit"></i></button>
-          <button class="pli-btn del" onclick="openDelModal(${p.row})"><i class="ti ti-trash"></i></button>
-        </div>
-      </div>`}).join("");
-    return`<div style="margin-bottom:14px">
-      <div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:6px;display:flex;align-items:center;gap:7px">
-        ${rep.emoji} ${name}
-        <span style="font-size:11px;color:var(--m);font-weight:400">รวม ${totalStock} ต้น · ${lots.length} Lot</span>
-        <button class="add-btn" style="margin-left:auto;padding:5px 10px;font-size:11px" onclick="openProductFormNewLot('${name}')">+ Lot ใหม่</button>
-      </div>
-      ${lotsHtml}
-    </div>`}).join("");
+      </div>`;
+    }).join("");
+    return headerHtml+cards;
+  }).join("");
 }
 
 function buildEmojiGrid(selected){
@@ -503,7 +496,6 @@ function openProductForm(rowId=null){
   document.getElementById("prod-form-title").textContent=rowId?"แก้ไขสินค้า":"เพิ่มสินค้าใหม่";
   document.getElementById("f-name").value=p?.name||"";
   document.getElementById("f-lot").value=p?.lot||"";
-  document.getElementById("f-cat").value=p?.cat||"";
   document.getElementById("f-price").value=p?.price||"";
   document.getElementById("f-stock").value=p?.stock??"";
   document.getElementById("f-emoji").value=p?.emoji||"🌿";
@@ -532,7 +524,7 @@ function openProductFormNewLot(name){
   document.getElementById("f-name").value=name;
   document.getElementById("prod-form-title").textContent="เพิ่ม Lot ใหม่: "+name;
   const ex=products.find(p=>p.name===name);
-  if(ex){document.getElementById("f-cat").value=ex.cat||"";document.getElementById("f-price").value=ex.price||"";
+  if(ex){document.getElementById("f-price").value=ex.price||"";
     const dpct2=ex.defaultPct??50;
     const el2=document.getElementById("f-default-pct");if(el2)el2.value=dpct2;
     syncDefaultPctBtns(dpct2);}
@@ -542,7 +534,8 @@ function closeProdForm(){document.getElementById("prod-overlay").classList.remov
 async function saveProduct(){
   const name=document.getElementById("f-name").value.trim();
   const lot=document.getElementById("f-lot").value.trim();
-  const cat=document.getElementById("f-cat").value.trim();
+  const existingP=editingProductId!==null?products.find(p=>p.row===editingProductId):products.find(p=>p.name===name);
+  const cat=existingP?.cat||"";
   const price=parseFloat(document.getElementById("f-price").value)||0;
   const stock=parseInt(document.getElementById("f-stock").value)||0;
   const emoji=document.getElementById("f-emoji").value.trim()||"🌿";
@@ -560,7 +553,7 @@ async function saveProduct(){
       await scriptPost({action:"addProduct",name,lot,cat,price,stock,emoji,imgUrl,defaultPct});
       await loadProducts();
     }
-    renderCats();renderProds();renderProdList();closeProdForm();
+    renderProds();renderProdList();closeProdForm();
     toast(editingProductId!==null?"✅ แก้ไขสินค้าแล้ว":"✅ เพิ่มสินค้าแล้ว");
   }catch(e){toast("❌ "+e.message);}
   finally{btn.disabled=false;btn.textContent="บันทึก";}
@@ -582,7 +575,7 @@ async function confirmDelete(){
   try{
     await scriptPost({action:"deleteProduct",row});
     products=products.filter(p=>p.row!==row);
-    renderCats();renderProds();renderProdList();closeDelModal();toast("🗑 ลบสินค้าแล้ว");
+    renderProds();renderProdList();closeDelModal();toast("🗑 ลบสินค้าแล้ว");
   }catch(e){toast("❌ "+e.message);}
 }
 
@@ -878,11 +871,13 @@ function gotoScreen(name,btn){
   document.querySelectorAll(".tab,.sb-btn").forEach(t=>t.classList.remove("active"));
   document.getElementById("screen-"+name).classList.add("active");
   document.querySelectorAll(`[onclick*="gotoScreen(\'${name}\'"], [onclick*="gotoScreen('${name}'"]`).forEach(b=>b.classList.add("active"));
-  if(name==="dash"){if(!dashFrom)setPreset("today",document.querySelector("#date-presets .preset-btn"));else renderDash();}
-  if(name==="history")renderHistory();
+  if(name==="report"){
+    if(!dashFrom)setPreset("today",document.querySelector("#date-presets .preset-btn"));else renderDash();
+    renderHistory();
+    if(!profitFrom)setProfitPreset("today",document.querySelector("#profit-presets .preset-btn"));else renderProfit();
+  }
   if(name==="manage")renderProdList();
   if(name==="customers")renderCustList();
-  if(name==="profit"){if(!profitFrom)setProfitPreset("today",document.querySelector("#profit-presets .preset-btn"));else renderProfit();}
 }
 
 function toast(msg){

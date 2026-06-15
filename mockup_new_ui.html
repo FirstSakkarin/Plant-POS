@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TreeSiri — Mockup โครงสร้างใหม่</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+/* ════════════════════════════════════════════════════
+   MOCKUP — โครงสร้างแท็บใหม่ของ TreeSiri
+   นี่คือไฟล์ตัวอย่าง (ยังไม่ใช่ของจริง) ใช้สำหรับดูพรีวิวเท่านั้น
+   ลำดับแท็บใหม่: ขาย → รายงาน → สินค้า → ลูกค้า
+════════════════════════════════════════════════════ */
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent }
+html, body { height: 100%; background: #111; font-family: 'Sarabun',sans-serif }
+:root {
+  --g9: #1e3a08; --g8: #2d5c0e; --g7: #3d7a14; --g3: #97C459; --g2: #C0DD97; --g1: #EAF3DE;
+  --a8: #633806; --a6: #BA7517; --a3: #EF9F27; --a1: #FAEEDA;
+  --r6: #A32D2D; --r1: #FCEBEB;
+  --bg: #fff; --bg2: #f7f7f5; --bg3: #efefec;
+  --t: #1a1a1a; --m: #666; --faint: #999;
+  --bd: rgba(0,0,0,0.1); --bds: rgba(0,0,0,0.2);
+  --rad: 10px; --rad-lg: 14px; --rad-xl: 20px;
+}
+.app { max-width: 430px; margin: 0 auto; height: 100vh; height: 100dvh; display: flex; flex-direction: column; background: var(--bg); position: relative; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,.4) }
+
+/* Topbar */
+.topbar { background: var(--g9); padding: 12px 16px; flex-shrink: 0 }
+.topbar-row { display: flex; align-items: center; justify-content: space-between }
+.store-name { font-size: 16px; font-weight: 600; color: #c8e89a }
+.topbar-sub { font-size: 11px; color: #7aaa3a; margin-top: 1px }
+.sync-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #7aaa3a; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 20px; border: none }
+.sdot { width: 6px; height: 6px; border-radius: 50%; background: #5ec430; flex-shrink: 0 }
+
+/* ── แท็บเมนูใหม่: เน้น "ขาย" ให้เด่น/ใหญ่กว่าแท็บอื่น ── */
+.tab-bar { display: flex; background: var(--bg); border-bottom: 0.5px solid var(--bd); flex-shrink: 0; padding: 6px 8px; gap: 6px }
+.tab { flex: 1; padding: 8px 0 6px; font-size: 10px; color: var(--faint); cursor: pointer; border: none; background: none; display: flex; flex-direction: column; align-items: center; gap: 3px; border-radius: 10px; transition: .15s }
+.tab i { font-size: 20px }
+.tab.active { color: var(--m); background: var(--bg2) }
+/* ปุ่ม "ขาย" เป็นปุ่มเด่น สีเขียวเข้ม ใหญ่กว่าปุ่มอื่นเล็กน้อย ใช้สื่อว่าเป็นงานหลัก */
+.tab.sell { flex: 1.4; }
+.tab.sell i { font-size: 24px }
+.tab.sell.active, .tab.sell { background: var(--g8); color: #d4edaa; font-weight: 700 }
+.tab.sell:not(.active) { background: var(--g8); color: #d4edaa }
+
+/* Screens */
+.screens { flex: 1; overflow: hidden; position: relative }
+.screen { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; display: none; flex-direction: column }
+.screen.active { display: flex }
+
+/* ── POS (เหมือนเดิม แต่ยกขึ้นมาเป็นหน้าแรก) ── */
+.pos-wrap { display: flex; flex-direction: column; height: 100% }
+.search-row { padding: 9px 12px; border-bottom: 0.5px solid var(--bd); flex-shrink: 0 }
+.sbox { display: flex; align-items: center; gap: 7px; background: var(--bg2); border-radius: var(--rad); padding: 0 10px; border: 0.5px solid var(--bd) }
+.sbox i { font-size: 15px; color: var(--faint) }
+.sbox input { flex: 1; border: none; background: none; font-size: 13px; color: var(--t); padding: 8px 0; outline: none }
+.prod-area { flex: 1; overflow-y: auto; padding: 10px 12px }
+.prod-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px }
+.pcard { border: 0.5px solid var(--bd); border-radius: var(--rad-lg); padding: 10px; cursor: pointer; background: var(--bg); min-height: 118px; position: relative }
+.pcard-emoji { font-size: 26px; text-align: center; margin-bottom: 5px; line-height: 1 }
+.pcard-name { font-size: 12px; font-weight: 600; color: var(--t); line-height: 1.3 }
+.pcard-price { font-size: 13px; color: var(--g7); font-weight: 600; margin-top: 3px }
+.pcard-stock { font-size: 10px; color: var(--faint); margin-top: 1px }
+.pcard-stock.low { color: var(--r6); font-weight: 600 }
+
+.cart-panel { flex-shrink: 0; border-top: 0.5px solid var(--bd); padding: 10px 12px }
+.cart-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px }
+.cart-title { font-size: 13px; font-weight: 600; color: var(--t) }
+.clear-btn { font-size: 11px; color: var(--faint); border: none; background: none; text-decoration: underline }
+.cart-empty { text-align: center; color: var(--faint); font-size: 12px; padding: 12px 0 }
+.total-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px }
+.total-lbl { font-size: 13px; color: var(--m) }
+.total-amt { font-size: 22px; font-weight: 700; color: var(--g8); letter-spacing: -.5px }
+.pay-btn { width: 100%; padding: 14px; background: var(--g8); color: #d4edaa; border: none; border-radius: var(--rad-lg); font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px }
+.pay-btn:disabled { background: var(--bg3); color: var(--faint); cursor: not-allowed }
+.pcard:active { transform: scale(.96); background: var(--g1); border-color: var(--g3) }
+.pcard.out { opacity: .5; cursor: not-allowed }
+
+/* แถวสินค้าในตะกร้า */
+.cart-scroll { max-height: 130px; overflow-y: auto; margin-bottom: 8px }
+.crow { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 0.5px solid var(--bd) }
+.crow:last-child { border-bottom: none }
+.crow-emoji { font-size: 14px; flex-shrink: 0 }
+.crow-name { flex: 1; font-size: 12px; color: var(--t); line-height: 1.2 }
+.crow-price { font-size: 12px; font-weight: 600; color: var(--g7) }
+.qty-ctrl { display: flex; align-items: center; gap: 3px }
+.qbtn { width: 22px; height: 22px; border-radius: 50%; border: 0.5px solid var(--bd); background: var(--bg2); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--t) }
+.qnum { font-size: 12px; font-weight: 600; min-width: 16px; text-align: center; color: var(--t) }
+
+/* ── หน้า "รายงาน" รวม สรุป+ประวัติ+กำไร ── */
+.rep-wrap { padding: 14px }
+.date-presets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px }
+.preset-btn { padding: 4px 11px; border-radius: 20px; font-size: 11px; cursor: pointer; border: 0.5px solid var(--bd); background: var(--bg); color: var(--m); white-space: nowrap }
+.preset-btn.active { background: var(--g1); color: var(--g8); border-color: var(--g3); font-weight: 600 }
+.metric-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin-bottom: 4px }
+.metric { background: var(--bg2); border-radius: var(--rad-lg); padding: 11px }
+.metric-lbl { font-size: 11px; color: var(--m); margin-bottom: 4px }
+.metric-val { font-size: 20px; font-weight: 700; color: var(--t); letter-spacing: -.5px }
+.metric-sub { font-size: 11px; margin-top: 2px }
+.up { color: var(--g7) } .down { color: var(--r6) }
+
+.section-lbl { font-size: 11px; font-weight: 600; color: var(--m); text-transform: uppercase; letter-spacing: .5px; margin: 16px 0 7px; display:flex; align-items:center; gap:6px }
+.section-lbl i { font-size: 14px; color: var(--g7) }
+
+.chart-card { background: var(--bg2); border-radius: var(--rad-lg); padding: 12px; margin-bottom: 4px }
+.chart-wrap { position: relative; width: 100%; height: 150px }
+
+.top-item { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 0.5px solid var(--bd) }
+.top-item:last-child { border-bottom: none }
+.top-rank { width: 20px; height: 20px; border-radius: 50%; background: var(--g1); color: var(--g8); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0 }
+.top-emoji { font-size: 17px; flex-shrink: 0 }
+.top-name { flex: 1; font-size: 12px; font-weight: 500; color: var(--t) }
+.top-rev { font-size: 12px; font-weight: 600; color: var(--g7); min-width: 60px; text-align: right }
+
+/* กำไร แยกตามประเภท */
+.profit-block { background: var(--bg2); border-radius: var(--rad-lg); padding: 14px; margin-bottom: 10px; border: 0.5px solid var(--bd) }
+.profit-block-title { font-size: 13px; font-weight: 700; color: var(--t); margin-bottom: 10px; display: flex; align-items: center; gap: 6px }
+.profit-line { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 0.5px solid var(--bd); font-size: 13px }
+.profit-line:last-child { border-bottom: none; font-weight: 700; font-size: 14px; padding-top: 8px }
+.p-lbl { color: var(--m) } .p-val { font-weight: 600; color: var(--t) }
+.pv-shared { color: #3c5aa6 } .pv-ind { color: var(--a6) }
+
+/* ประวัติการขาย (compact list ด้านล่างสุด) */
+.sale-card { border: 0.5px solid var(--bd); border-radius: var(--rad-lg); padding: 10px 12px; margin-bottom: 8px; background: var(--bg) }
+.sale-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px }
+.sale-date { font-size: 11px; color: var(--m) }
+.sale-badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; background: var(--g1); color: var(--g8); font-weight: 600 }
+.sale-items-txt { font-size: 11px; color: var(--t); margin-bottom: 4px; line-height: 1.5 }
+.sale-total { text-align: right; font-size: 14px; font-weight: 700; color: var(--g8) }
+
+/* ── หน้า "สินค้า" ใช้เลย์เอาต์กริดแบบหน้าขาย ── */
+.manage-wrap { padding: 12px }
+.manage-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px }
+.manage-title { font-size: 16px; font-weight: 700; color: var(--t) }
+.add-btn { display: flex; align-items: center; gap: 5px; padding: 7px 13px; background: var(--g8); color: #d4edaa; border: none; border-radius: var(--rad); font-size: 13px; font-weight: 600; cursor: pointer }
+/* ใช้ .prod-grid / .pcard เดียวกับหน้าขาย แต่เพิ่มปุ่มแก้ไข/ลบมุมขวาบน */
+.mcard { position: relative }
+.mcard-actions { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px }
+.mcard-btn { width: 24px; height: 24px; border-radius: 50%; border: 0.5px solid var(--bd); background: rgba(255,255,255,.9); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--m) }
+.mcard-btn.del { color: var(--r6) }
+
+/* ── ลูกค้า (ย้ายไปแท็บสุดท้าย) ── */
+.cust-wrap { padding: 12px }
+.cust-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px }
+.cust-search { display: flex; align-items: center; gap: 7px; background: var(--bg2); border-radius: var(--rad); padding: 0 10px; border: 0.5px solid var(--bd); margin-bottom: 10px }
+.cust-search i { font-size: 15px; color: var(--faint) }
+.cust-search input { flex: 1; border: none; background: none; font-size: 13px; color: var(--t); padding: 8px 0; outline: none }
+.cust-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 0.5px solid var(--bd); border-radius: var(--rad-lg); margin-bottom: 8px; background: var(--bg) }
+.cust-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--g1); color: var(--g8); font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0 }
+.cust-info { flex: 1; min-width: 0 }
+.cust-name { font-size: 13px; font-weight: 600; color: var(--t) }
+.cust-meta { font-size: 11px; color: var(--m); margin-top: 2px }
+.cust-points { font-size: 12px; font-weight: 600; color: var(--a6); background: var(--a1); padding: 3px 8px; border-radius: 10px; white-space: nowrap }
+
+.note-banner { background: #FFF7E0; border: 0.5px solid var(--a3); color: var(--a8); font-size: 11px; padding: 8px 10px; border-radius: 8px; margin: 8px 12px 0; line-height: 1.6 }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="topbar-row">
+      <div><div class="store-name">TreeSiri</div><div class="topbar-sub">ขาย · รายงาน · สินค้า · ลูกค้า</div></div>
+      <button class="sync-pill"><span class="sdot"></span> Sync</button>
+    </div>
+  </div>
+
+  <!-- ══ แท็บเมนูใหม่: ขาย (เด่นสุด, อยู่ซ้ายสุด) → รายงาน → สินค้า → ลูกค้า (ท้ายสุด) ══ -->
+  <div class="tab-bar">
+    <button class="tab sell active" onclick="go('pos',this)"><i class="ti ti-basket"></i>ขาย</button>
+    <button class="tab" onclick="go('report',this)"><i class="ti ti-chart-bar"></i>รายงาน</button>
+    <button class="tab" onclick="go('manage',this)"><i class="ti ti-plant"></i>สินค้า</button>
+    <button class="tab" onclick="go('customers',this)"><i class="ti ti-users"></i>ลูกค้า</button>
+  </div>
+
+  <div class="screens">
+
+    <!-- ═══════════ 1) ขาย — เหมือนเดิม เพราะใช้งานบ่อยสุด ═══════════ -->
+    <div id="screen-pos" class="screen active">
+      <div class="pos-wrap">
+        <div class="search-row">
+          <div class="sbox"><i class="ti ti-search"></i><input type="text" id="s-input" placeholder="ค้นหาต้นไม้..." oninput="renderProds()"></div>
+        </div>
+        <div class="prod-area">
+          <div class="prod-grid" id="prod-grid"></div>
+        </div>
+        <div class="cart-panel">
+          <div class="cart-hdr"><span class="cart-title"><i class="ti ti-shopping-cart" style="font-size:14px;vertical-align:-2px"></i> ตะกร้า (<span id="cart-count">0</span>)</span><button class="clear-btn" onclick="clearCart()">ล้างทั้งหมด</button></div>
+          <div class="cart-scroll" id="cart-items"><div class="cart-empty">เลือกต้นไม้ด้านบน</div></div>
+          <div class="total-row"><span class="total-lbl">ยอดรวม</span><div class="total-amt" id="total-amt">฿0</div></div>
+          <button class="pay-btn" id="pay-btn" disabled><i class="ti ti-cash" style="font-size:19px"></i> ชำระเงิน</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 2) รายงาน — รวม สรุป + ประวัติ + กำไร ไว้หน้าเดียว ═══════════ -->
+    <div id="screen-report" class="screen">
+      <div class="rep-wrap">
+        <div class="date-presets">
+          <button class="preset-btn active" onclick="selPreset(this)">วันนี้</button>
+          <button class="preset-btn" onclick="selPreset(this)">7 วัน</button>
+          <button class="preset-btn" onclick="selPreset(this)">30 วัน</button>
+          <button class="preset-btn" onclick="selPreset(this)">เดือนนี้</button>
+        </div>
+
+        <!-- สรุปยอด -->
+        <div class="metric-grid">
+          <div class="metric"><div class="metric-lbl">ยอดขายวันนี้</div><div class="metric-val">฿4,250</div><div class="metric-sub up">↑ 12% จากเมื่อวาน</div></div>
+          <div class="metric"><div class="metric-lbl">กำไรวันนี้</div><div class="metric-val">฿1,680</div><div class="metric-sub up">↑ 8%</div></div>
+          <div class="metric"><div class="metric-lbl">จำนวนบิล</div><div class="metric-val">18</div><div class="metric-sub" style="color:var(--m)">เฉลี่ย ฿236/บิล</div></div>
+          <div class="metric"><div class="metric-lbl">สินค้าขายดี</div><div class="metric-val" style="font-size:14px">มอนสเตร่า</div><div class="metric-sub" style="color:var(--m)">ขายได้ 6 ต้น</div></div>
+        </div>
+
+        <!-- กราฟยอดขายรายวัน -->
+        <div class="section-lbl"><i class="ti ti-chart-bar"></i> ยอดขายรายวัน</div>
+        <div class="chart-card"><div class="chart-wrap"><canvas id="barChart"></canvas></div></div>
+
+        <!-- สินค้าขายดี Top 5 -->
+        <div class="section-lbl"><i class="ti ti-trophy"></i> สินค้าขายดี Top 5</div>
+        <div class="chart-card">
+          <div class="top-item"><div class="top-rank">1</div><div class="top-emoji">🪴</div><div class="top-name">มอนสเตร่า</div><div class="top-rev">฿2,100</div></div>
+          <div class="top-item"><div class="top-rank">2</div><div class="top-emoji">🌺</div><div class="top-name">เฟื่องฟ้า</div><div class="top-rev">฿900</div></div>
+          <div class="top-item"><div class="top-rank">3</div><div class="top-emoji">🌹</div><div class="top-name">กุหลาบหนู</div><div class="top-rev">฿720</div></div>
+        </div>
+
+        <!-- สรุปกำไร แยกประเภท -->
+        <div class="section-lbl"><i class="ti ti-coin"></i> สรุปกำไร</div>
+        <div class="profit-block">
+          <div class="profit-block-title"><i class="ti ti-users" style="color:#3c5aa6"></i> กำไรร่วม (Shared 50%)</div>
+          <div class="profit-line"><span class="p-lbl">ยอดขาย</span><span class="p-val">฿2,950</span></div>
+          <div class="profit-line"><span class="p-lbl">กำไรรวม</span><span class="p-val pv-shared">฿1,120</span></div>
+          <div class="profit-line"><span class="p-lbl">ส่วนของ TreeSiri</span><span class="p-val">฿560</span></div>
+        </div>
+        <div class="profit-block">
+          <div class="profit-block-title"><i class="ti ti-user" style="color:var(--a6)"></i> กำไรส่วนตัว (Individual)</div>
+          <div class="profit-line"><span class="p-lbl">ยอดขาย</span><span class="p-val">฿1,300</span></div>
+          <div class="profit-line"><span class="p-lbl">กำไรรวม</span><span class="p-val pv-ind">฿560</span></div>
+        </div>
+
+        <!-- ประวัติการขาย (รวมไว้ด้านล่างสุด เป็น list ย่อ) -->
+        <div class="section-lbl"><i class="ti ti-history"></i> ประวัติการขายล่าสุด</div>
+        <div class="sale-card">
+          <div class="sale-hdr"><span class="sale-date">15 มิ.ย. 14:32</span><span class="sale-badge">คุณสมชาย</span></div>
+          <div class="sale-items-txt">มอนสเตร่า ×1, เฟื่องฟ้า ×2</div>
+          <div class="sale-total">฿650</div>
+        </div>
+        <div class="sale-card">
+          <div class="sale-hdr"><span class="sale-date">15 มิ.ย. 13:10</span><span class="sale-badge">ลูกค้าทั่วไป</span></div>
+          <div class="sale-items-txt">แคคตัสจิ๋ว ×3</div>
+          <div class="sale-total">฿267</div>
+        </div>
+        <div style="text-align:center;padding:10px 0 4px"><button class="preset-btn" onclick="showMoreSales(this)">ดูเพิ่มเติม...</button></div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 3) สินค้า — เลย์เอาต์กริดแบบเดียวกับหน้าขาย ═══════════ -->
+    <div id="screen-manage" class="screen">
+      <div class="manage-wrap">
+        <div class="manage-hdr">
+          <span class="manage-title">จัดการสินค้า</span>
+          <button class="add-btn" onclick="addProductCard()"><i class="ti ti-plus" style="font-size:15px"></i> เพิ่มสินค้า</button>
+        </div>
+        <!-- ใช้ .prod-grid + .pcard เหมือนหน้าขาย เพิ่มปุ่มแก้ไข/ลบที่มุมการ์ด -->
+        <div class="prod-grid">
+          <div class="pcard mcard">
+            <div class="mcard-actions"><div class="mcard-btn" onclick="editProductCard(this)"><i class="ti ti-pencil"></i></div><div class="mcard-btn del" onclick="deleteProductCard(this)"><i class="ti ti-trash"></i></div></div>
+            <div class="pcard-emoji">🪴</div><div class="pcard-name">มอนสเตร่า</div><div class="pcard-price">฿350</div><div class="pcard-stock">คงเหลือ 8 ต้น</div>
+          </div>
+          <div class="pcard mcard">
+            <div class="mcard-actions"><div class="mcard-btn" onclick="editProductCard(this)"><i class="ti ti-pencil"></i></div><div class="mcard-btn del" onclick="deleteProductCard(this)"><i class="ti ti-trash"></i></div></div>
+            <div class="pcard-emoji">🌿</div><div class="pcard-name">ฟิโลเดนดรอน</div><div class="pcard-price">฿220</div><div class="pcard-stock">คงเหลือ 12 ต้น</div>
+          </div>
+          <div class="pcard mcard">
+            <div class="mcard-actions"><div class="mcard-btn" onclick="editProductCard(this)"><i class="ti ti-pencil"></i></div><div class="mcard-btn del" onclick="deleteProductCard(this)"><i class="ti ti-trash"></i></div></div>
+            <div class="pcard-emoji">🌵</div><div class="pcard-name">แคคตัสจิ๋ว</div><div class="pcard-price">฿89</div><div class="pcard-stock low">เหลือ 3 ต้น</div>
+          </div>
+          <div class="pcard mcard">
+            <div class="mcard-actions"><div class="mcard-btn" onclick="editProductCard(this)"><i class="ti ti-pencil"></i></div><div class="mcard-btn del" onclick="deleteProductCard(this)"><i class="ti ti-trash"></i></div></div>
+            <div class="pcard-emoji">🌺</div><div class="pcard-name">เฟื่องฟ้า</div><div class="pcard-price">฿150</div><div class="pcard-stock">คงเหลือ 20 ต้น</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 4) ลูกค้า — ย้ายไปเป็นแท็บสุดท้าย ═══════════ -->
+    <div id="screen-customers" class="screen">
+      <div class="cust-wrap">
+        <div class="cust-hdr">
+          <span class="manage-title">ลูกค้า</span>
+          <button class="add-btn" onclick="addCustomerCard()"><i class="ti ti-user-plus" style="font-size:15px"></i> เพิ่มลูกค้า</button>
+        </div>
+        <div class="cust-search"><i class="ti ti-search"></i><input type="text" id="cust-search-input" oninput="filterCustomers()" placeholder="ค้นหาชื่อ / เบอร์..."></div>
+        <div class="cust-card"><div class="cust-avatar">ส</div><div class="cust-info"><div class="cust-name">คุณสมชาย</div><div class="cust-meta">081-234-5678 · ซื้อแล้ว ฿4,800</div></div><div class="cust-points">320 แต้ม</div></div>
+        <div class="cust-card"><div class="cust-avatar">น</div><div class="cust-info"><div class="cust-name">คุณนิดา</div><div class="cust-meta">089-876-5432 · ซื้อแล้ว ฿2,150</div></div><div class="cust-points">150 แต้ม</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="note-banner">
+    📝 นี่คือ "ตัวอย่างหน้าตา" (mockup) ใช้ข้อมูลสมมติ ยังไม่เชื่อมกับ Google Sheet จริง — ถ้าโครงสร้าง/ตำแหน่งปุ่มโอเคแล้ว แจ้งมาได้เลยว่าจะให้แก้ในโค้ดจริง (index.html / style.css / app.js)
+  </div>
+</div>
+
+<script>
+function go(id, btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ── ข้อมูลสินค้าจำลอง สำหรับลองกดในหน้า "ขาย" ── */
+const PRODUCTS = [
+  {id:1, emoji:'🪴', name:'มอนสเตร่า',     price:350, stock:8},
+  {id:2, emoji:'🌿', name:'ฟิโลเดนดรอน',  price:220, stock:12},
+  {id:3, emoji:'🌵', name:'แคคตัสจิ๋ว',    price:89,  stock:3},
+  {id:4, emoji:'🌺', name:'เฟื่องฟ้า',     price:150, stock:20},
+  {id:5, emoji:'🌹', name:'กุหลาบหนู',     price:180, stock:15},
+  {id:6, emoji:'🍃', name:'บอสตันเฟิร์น', price:199, stock:9},
+  {id:7, emoji:'🌱', name:'โหระพา',        price:45,  stock:0},
+];
+let cart = {}; // id -> {product, qty}
+
+function renderProds(){
+  const q = (document.getElementById('s-input').value || '').toLowerCase();
+  const list = PRODUCTS.filter(p => !q || p.name.toLowerCase().includes(q));
+  document.getElementById('prod-grid').innerHTML = list.map(p => `
+    <div class="pcard${p.stock<=0?' out':''}" onclick="${p.stock>0?`addCart(${p.id})`:''}">
+      <div class="pcard-emoji">${p.emoji}</div>
+      <div class="pcard-name">${p.name}</div>
+      <div class="pcard-price">฿${p.price}</div>
+      <div class="pcard-stock${p.stock>0&&p.stock<=5?' low':''}">${p.stock<=0?'หมดแล้ว':'คงเหลือ '+p.stock+' ต้น'}</div>
+    </div>
+  `).join('');
+}
+
+function addCart(id){
+  const p = PRODUCTS.find(x=>x.id===id);
+  if(!p || p.stock<=0) return;
+  if(!cart[id]) cart[id] = {product:p, qty:0};
+  if(cart[id].qty < p.stock) cart[id].qty++;
+  renderCart();
+}
+function chgQty(id, delta){
+  const c = cart[id]; if(!c) return;
+  c.qty += delta;
+  if(c.qty <= 0) delete cart[id];
+  else if(c.qty > c.product.stock) c.qty = c.product.stock;
+  renderCart();
+}
+function clearCart(){ cart = {}; renderCart(); }
+
+function renderCart(){
+  const items = Object.values(cart);
+  const wrap = document.getElementById('cart-items');
+  const count = items.reduce((s,c)=>s+c.qty,0);
+  const total = items.reduce((s,c)=>s+c.qty*c.product.price,0);
+  document.getElementById('cart-count').textContent = count;
+  document.getElementById('total-amt').textContent = '฿'+total.toLocaleString();
+  document.getElementById('pay-btn').disabled = count===0;
+
+  if(!items.length){ wrap.innerHTML = `<div class="cart-empty">เลือกต้นไม้ด้านบน</div>`; return; }
+  wrap.innerHTML = items.map(c => `
+    <div class="crow">
+      <span class="crow-emoji">${c.product.emoji}</span>
+      <span class="crow-name">${c.product.name}</span>
+      <span class="crow-price">฿${(c.qty*c.product.price).toLocaleString()}</span>
+      <div class="qty-ctrl">
+        <button class="qbtn" onclick="chgQty(${c.product.id},-1)">−</button>
+        <span class="qnum">${c.qty}</span>
+        <button class="qbtn" onclick="chgQty(${c.product.id},1)">+</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+renderProds();
+renderCart();
+new Chart(document.getElementById('barChart'), {
+  type:'bar',
+  data:{ labels:['10 มิ.ย','11 มิ.ย','12 มิ.ย','13 มิ.ย','14 มิ.ย','15 มิ.ย'],
+    datasets:[{ data:[2100,3400,2800,4100,3200,4250], backgroundColor:'#97C459', borderRadius:6 }] },
+  options:{ plugins:{legend:{display:false}}, scales:{ y:{display:false}, x:{ grid:{display:false}, ticks:{font:{size:10}} } }, maintainAspectRatio:false }
+});
+
+/* ── หน้า "รายงาน": ปุ่มเลือกช่วงวันที่ (mockup — สลับสถานะ active เฉยๆ) ── */
+function selPreset(btn){
+  btn.parentElement.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ── หน้า "รายงาน": ปุ่มดูเพิ่มเติม ประวัติการขาย ── */
+const MORE_SALES = [
+  {date:'15 มิ.ย. 11:05', cust:'คุณวีระ', items:'กุหลาบหนู ×2, โหระพา ×1', total:'฿405'},
+  {date:'14 มิ.ย. 16:40', cust:'ลูกค้าทั่วไป', items:'บอสตันเฟิร์น ×1', total:'฿199'},
+];
+let moreSalesShown = false;
+function showMoreSales(btn){
+  if(moreSalesShown) return;
+  moreSalesShown = true;
+  const html = MORE_SALES.map(s=>`
+    <div class="sale-card">
+      <div class="sale-hdr"><span class="sale-date">${s.date}</span><span class="sale-badge">${s.cust}</span></div>
+      <div class="sale-items-txt">${s.items}</div>
+      <div class="sale-total">${s.total}</div>
+    </div>
+  `).join('');
+  btn.insertAdjacentHTML('beforebegin', html);
+  btn.remove();
+}
+
+/* ── หน้า "สินค้า": เพิ่ม/แก้ไข/ลบ (mockup — แก้ไขแค่ที่แสดงผล) ── */
+function addProductCard(){
+  const name = prompt('ชื่อต้นไม้ใหม่:');
+  if(!name) return;
+  const price = prompt('ราคา (บาท):','0') || '0';
+  const stock = prompt('จำนวนคงเหลือ:','0') || '0';
+  const grid = document.querySelector('#screen-manage .prod-grid');
+  const card = document.createElement('div');
+  card.className = 'pcard mcard';
+  card.innerHTML = `
+    <div class="mcard-actions"><div class="mcard-btn" onclick="editProductCard(this)"><i class="ti ti-pencil"></i></div><div class="mcard-btn del" onclick="deleteProductCard(this)"><i class="ti ti-trash"></i></div></div>
+    <div class="pcard-emoji">🌱</div><div class="pcard-name">${name}</div><div class="pcard-price">฿${price}</div><div class="pcard-stock">คงเหลือ ${stock} ต้น</div>
+  `;
+  grid.appendChild(card);
+}
+function editProductCard(btn){
+  const card = btn.closest('.pcard');
+  const nameEl = card.querySelector('.pcard-name');
+  const priceEl = card.querySelector('.pcard-price');
+  const newName = prompt('ชื่อต้นไม้:', nameEl.textContent);
+  if(newName) nameEl.textContent = newName;
+  const newPrice = prompt('ราคา (บาท):', priceEl.textContent.replace('฿',''));
+  if(newPrice) priceEl.textContent = '฿'+newPrice;
+}
+function deleteProductCard(btn){
+  const card = btn.closest('.pcard');
+  if(confirm('ลบ "'+card.querySelector('.pcard-name').textContent+'" ใช่หรือไม่?')) card.remove();
+}
+
+/* ── หน้า "ลูกค้า": ค้นหา + เพิ่มลูกค้า (mockup) ── */
+function filterCustomers(){
+  const q = (document.getElementById('cust-search-input').value || '').toLowerCase();
+  document.querySelectorAll('#screen-customers .cust-card').forEach(c=>{
+    const name = c.querySelector('.cust-name').textContent.toLowerCase();
+    const meta = c.querySelector('.cust-meta').textContent.toLowerCase();
+    c.style.display = (!q || name.includes(q) || meta.includes(q)) ? '' : 'none';
+  });
+}
+function addCustomerCard(){
+  const name = prompt('ชื่อลูกค้า:');
+  if(!name) return;
+  const phone = prompt('เบอร์โทร:','') || '-';
+  const wrap = document.querySelector('#screen-customers .cust-wrap');
+  const card = document.createElement('div');
+  card.className = 'cust-card';
+  card.innerHTML = `
+    <div class="cust-avatar">${name.charAt(0)}</div>
+    <div class="cust-info"><div class="cust-name">${name}</div><div class="cust-meta">${phone} · ซื้อแล้ว ฿0</div></div>
+    <div class="cust-points">0 แต้ม</div>
+  `;
+  wrap.appendChild(card);
+}
+</script>
+</body>
+</html>

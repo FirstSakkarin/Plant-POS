@@ -365,7 +365,7 @@ function openPay(){
   document.getElementById("pay-ok").disabled=true;
   payItemSplits={};
   selectedSaleStore=null;
-  document.querySelectorAll(".pt-btn[id^='store-']").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll("[id^='store-']").forEach(b=>b.classList.remove("active"));
   syncModalCustBtn();
   renderPayProfitSplits();
   document.getElementById("pay-overlay").classList.add("show");
@@ -374,7 +374,7 @@ function openPay(){
 function closePay(){document.getElementById("pay-overlay").classList.remove("show")}
 function selectSaleStore(store,btn){
   selectedSaleStore=store;
-  document.querySelectorAll(".pt-btn[id^='store-']").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll("[id^='store-']").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
   calcChange();
 }

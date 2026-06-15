@@ -184,6 +184,12 @@
       <i class="ti ti-star"></i>
       <span id="pts-preview-text"></span>
     </div>
+    <!-- เลือกร้านที่ขายออก -->
+    <div class="form-lbl">ขายออกจากร้าน *</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="pt-btn" id="store-fah" style="flex:1" onclick="selectSaleStore('fah',this)"><i class="ti ti-building-store" style="font-size:13px"></i> ร้านฟ้า</button>
+      <button class="pt-btn" id="store-mom" style="flex:1" onclick="selectSaleStore('mom',this)"><i class="ti ti-building-store" style="font-size:13px"></i> ร้านแม่</button>
+    </div>
     <!-- % กำไรต่อรายการ -->
     <div id="pay-profit-splits" style="margin-bottom:10px"></div>
     <div class="modal-total-box">
@@ -212,8 +218,20 @@
     <input class="form-inp" id="f-lot" type="text" placeholder="เช่น Lot A, สวนอ.สมชาย, 15/1/68">
     <div class="form-lbl">ราคาปกติ (บาท) *</div>
     <input class="form-inp" id="f-price" type="number" placeholder="0" inputmode="decimal">
-    <div class="form-lbl">จำนวนสต็อก</div>
-    <input class="form-inp" id="f-stock" type="number" placeholder="0" inputmode="numeric">
+    <div class="form-lbl">จำนวนสต็อกรวม</div>
+    <input class="form-inp" id="f-stock" type="number" placeholder="0" inputmode="numeric" oninput="updateStockBreakdownHint()">
+    <div class="form-lbl">จำนวนที่อยู่หน้าร้าน (เป็นส่วนหนึ่งของสต็อกรวม)</div>
+    <div style="display:flex;gap:8px;margin-bottom:4px">
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--m);margin-bottom:3px">🔵 ร้านฟ้า</div>
+        <input class="form-inp" id="f-stock-fah" type="number" placeholder="0" inputmode="numeric" oninput="updateStockBreakdownHint()">
+      </div>
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--m);margin-bottom:3px">🟢 ร้านแม่</div>
+        <input class="form-inp" id="f-stock-mom" type="number" placeholder="0" inputmode="numeric" oninput="updateStockBreakdownHint()">
+      </div>
+    </div>
+    <div id="stock-breakdown-hint" style="font-size:11px;color:var(--faint);margin-bottom:8px">🏡 เหลือในสวน: 0 ต้น</div>
     <div class="form-lbl">% Fah เริ่มต้น (ค่าเริ่มต้นตอนขาย แก้ได้ในบิล)</div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <div style="display:flex;gap:6px;flex:1">
@@ -244,6 +262,35 @@
     <div class="sheet-btns">
       <button class="btn-secondary" onclick="closeProdForm()">ยกเลิก</button>
       <button class="btn-primary" id="prod-save-btn" onclick="saveProduct()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ POPUP: ย้ายสต็อก (สวน / ร้านฟ้า / ร้านแม่) ════ -->
+<div class="overlay" id="transfer-overlay" data-close="closeTransferModal">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeTransferModal()"><i class="ti ti-x"></i></button>
+    <div class="sheet-title">ย้ายสต็อก</div>
+    <p style="font-size:13px;color:var(--m);margin-bottom:10px" id="transfer-name"></p>
+    <div id="transfer-current" style="font-size:12px;color:var(--m);margin-bottom:12px;line-height:1.6"></div>
+    <div class="form-lbl">จาก</div>
+    <select class="form-inp" id="tr-from">
+      <option value="garden">🏡 สวน</option>
+      <option value="fah">🔵 ร้านฟ้า</option>
+      <option value="mom">🟢 ร้านแม่</option>
+    </select>
+    <div class="form-lbl">ไปยัง</div>
+    <select class="form-inp" id="tr-to">
+      <option value="fah">🔵 ร้านฟ้า</option>
+      <option value="mom">🟢 ร้านแม่</option>
+      <option value="garden">🏡 สวน</option>
+    </select>
+    <div class="form-lbl">จำนวน (ต้น)</div>
+    <input class="form-inp" id="tr-qty" type="number" placeholder="0" inputmode="numeric" min="1">
+    <div class="sheet-btns">
+      <button class="btn-secondary" onclick="closeTransferModal()">ยกเลิก</button>
+      <button class="btn-primary" onclick="confirmTransfer()">ย้ายสต็อก</button>
     </div>
   </div>
 </div>

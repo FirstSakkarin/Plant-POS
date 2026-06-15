@@ -37,6 +37,8 @@ let _custPickerFromModal=false;
 
 // Per-item Fah% overrides during checkout (rowId -> fahPct 0-100)
 let payItemSplits={};
+// ร้านที่ขายออก ในบิลนี้ ("fah" | "mom")
+let selectedSaleStore=null;
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    SHEETS API  — อ่าน/เขียน Google Sheets
@@ -79,16 +81,19 @@ async function syncAll(){
    LOAD DATA
    Columns: Products A-H, Sales A-F, Customers A-E
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-// ── LOAD PRODUCTS (A=name,B=lot,C=cat,D=price,E=stock,F=emoji,G=imgUrl,H=defaultPct) ──
+// ── LOAD PRODUCTS (A=name,B=lot,C=cat,D=price,E=stock,F=emoji,G=imgUrl,H=defaultPct,I=stockFah,J=stockMom) ──
 // defaultPct = Fah's default % (0-100), shown as starting value in checkout split
+// stockFah/stockMom = จำนวนต้นที่อยู่หน้าร้านฟ้า/ร้านแม่ (เป็นส่วนหนึ่งของ stock รวม ไม่ใช่แยกต่างหาก)
 async function loadProducts(){
-  const rows=await sheetGet("Products!A2:H");
+  const rows=await sheetGet("Products!A2:J");
   products=rows.map((r,i)=>({
     row:i+2,
     name:r[0]||"",lot:r[1]||"",cat:r[2]||"",
     price:parseFloat(r[3])||0,stock:parseInt(r[4])||0,
     emoji:r[5]||"🌿",imgUrl:r[6]||"",
-    defaultPct:parseFloat(r[7])>=0?parseFloat(r[7]):50   // Fah's default %
+    defaultPct:parseFloat(r[7])>=0?parseFloat(r[7]):50,   // Fah's default %
+    stockFah:parseInt(r[8])||0,
+    stockMom:parseInt(r[9])||0
   })).filter(p=>p.name);
   renderProds();renderProdList();
 }
@@ -346,19 +351,29 @@ function openPay(){
   document.getElementById("change-box").className="change-box";
   document.getElementById("pay-ok").disabled=true;
   payItemSplits={};
+  selectedSaleStore=null;
+  document.querySelectorAll(".pt-btn[id^='store-']").forEach(b=>b.classList.remove("active"));
   syncModalCustBtn();
   renderPayProfitSplits();
   document.getElementById("pay-overlay").classList.add("show");
   setTimeout(()=>document.getElementById("recv-inp").focus(),200);
 }
 function closePay(){document.getElementById("pay-overlay").classList.remove("show")}
+function selectSaleStore(store,btn){
+  selectedSaleStore=store;
+  document.querySelectorAll(".pt-btn[id^='store-']").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  calcChange();
+}
 function calcChange(){
   const recv=parseFloat(document.getElementById("recv-inp").value)||0;
   const total=getFinalTotal();
   const el=document.getElementById("change-box"),btn=document.getElementById("pay-ok");
-  if(recv>=total){el.textContent="เงินทอน ฿"+(recv-total).toLocaleString();el.className="change-box change-ok";btn.disabled=false;}
+  const ready=!!selectedSaleStore;
+  if(recv>=total){el.textContent="เงินทอน ฿"+(recv-total).toLocaleString();el.className="change-box change-ok";btn.disabled=!ready;}
   else if(recv>0){el.textContent="ขาดอีก ฿"+(total-recv).toLocaleString();el.className="change-box change-err";btn.disabled=true;}
   else{el.textContent="";el.className="change-box";btn.disabled=true;}
+  if(recv>=total&&!ready)el.textContent+=" · กรุณาเลือกร้านที่ขายออก";
 }
 
 // ── PAYMENT CONFIRM ─────────────────────────────────────
@@ -378,9 +393,17 @@ async function confirmSale(){
     const dateStr=dd+"/"+mm+"/"+yy+" "+hh+":"+mn;
     const custName=selectedCust?selectedCust.name:"";
     await scriptPost({action:"addSale",date:dateStr,items:itemStr,subtotal:sub,discount:disc,total,custName});
+    let negativeWarn=false;
     for(const x of items){
       const p=products.find(q=>q.row===x.row);
-      if(p){p.stock-=x.qty;await scriptPost({action:"updateStock",row:p.row,stock:p.stock});}
+      if(p){
+        p.stock-=x.qty;
+        await scriptPost({action:"updateStock",row:p.row,stock:p.stock});
+        if(selectedSaleStore==="fah"){p.stockFah=(p.stockFah||0)-x.qty;}
+        else if(selectedSaleStore==="mom"){p.stockMom=(p.stockMom||0)-x.qty;}
+        if((p.stockFah||0)<0||(p.stockMom||0)<0)negativeWarn=true;
+        await scriptPost({action:"updateStockLocations",row:p.row,stockFah:p.stockFah||0,stockMom:p.stockMom||0});
+      }
     }
     if(selectedCust){
       const earned=Math.floor(total/10);
@@ -396,9 +419,11 @@ async function confirmSale(){
     const hadCust=!!selectedCust;
     clearSelectedCust();
     cart={};document.getElementById("disc-val").value="0";
+    selectedSaleStore=null;
     renderCart();renderProds();renderProdList();closePay();
     openReceipt(sales[0]);
-    if(!hadCust)toast("✅ บันทึกลง Google Sheets แล้ว!");
+    if(negativeWarn)toast("⚠️ สต็อกหน้าร้านติดลบ กรุณาตรวจสอบ/ย้ายสต็อก");
+    else if(!hadCust)toast("✅ บันทึกลง Google Sheets แล้ว!");
   }catch(e){
     toast("❌ บันทึกไม่สำเร็จ: "+e.message);
     btn.disabled=false;btn.textContent="ยืนยันการขาย";
@@ -444,6 +469,17 @@ function setDefaultPct(pct, btn){
   document.getElementById("f-default-pct").value=pct;
   syncDefaultPctBtns(pct);
 }
+// ── สต็อกแยกตามร้าน: แสดงจำนวนที่เหลือในสวน = รวม - ฟ้า - แม่ ──
+function updateStockBreakdownHint(){
+  const hint=document.getElementById("stock-breakdown-hint");
+  if(!hint)return;
+  const total=parseInt(document.getElementById("f-stock").value)||0;
+  const fah=parseInt(document.getElementById("f-stock-fah").value)||0;
+  const mom=parseInt(document.getElementById("f-stock-mom").value)||0;
+  const garden=total-fah-mom;
+  hint.textContent=`🏡 เหลือในสวน: ${garden} ต้น`;
+  hint.style.color=garden<0?"var(--r6)":"var(--faint)";
+}
 function syncDefaultPctBtns(val){
   const v=parseFloat(val);
   document.querySelectorAll(".pt-btn").forEach(b=>{
@@ -473,13 +509,16 @@ function renderProdList(){
       const imgHtml=p.imgUrl
         ?`<div style="position:relative;margin-bottom:6px"><img style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;background:var(--bg2)" src="${p.imgUrl}" loading="lazy" onerror="this.style.display='none'"><span style="position:absolute;bottom:4px;right:6px;font-size:16px;background:rgba(255,255,255,.85);border-radius:6px;padding:2px 4px;line-height:1">${p.emoji}</span></div>`
         :`<div style="font-size:26px;text-align:center;margin-bottom:5px;line-height:1">${p.emoji}</div>`;
+      const fah=p.stockFah||0,mom=p.stockMom||0,garden=p.stock-fah-mom;
       return`<div class="pcard mcard" style="cursor:default">
         ${imgHtml}
         <div style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3">${p.lot||name}</div>
         <div style="font-size:13px;color:var(--g7);font-weight:600;margin-top:2px">฿${p.price.toLocaleString()}</div>
         <div style="font-size:10px;color:${p.stock<=0?"var(--r6)":p.stock<=5?"var(--a6)":"var(--faint)"};margin-top:2px">${p.stock<=0?"หมดแล้ว":"คงเหลือ "+p.stock+" ต้น"}</div>
+        <div style="font-size:10px;color:var(--m);margin-top:3px;line-height:1.5">🏡สวน ${garden} · 🔵ฟ้า ${fah} · 🟢แม่ ${mom}</div>
         <span class="pbadge" style="background:var(--g1);color:var(--g8);font-size:10px">Fah ${p.defaultPct??50}%</span>
         <div class="mcard-actions">
+          <button class="mcard-btn" onclick="openTransferModal(${p.row})" title="ย้ายสต็อก"><i class="ti ti-arrows-exchange"></i></button>
           <button class="mcard-btn" onclick="openProductForm(${p.row})"><i class="ti ti-edit"></i></button>
           <button class="mcard-btn del" onclick="openDelModal(${p.row})"><i class="ti ti-trash"></i></button>
         </div>
@@ -487,6 +526,46 @@ function renderProdList(){
     }).join("");
     return headerHtml+cards;
   }).join("");
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ย้ายสต็อก (สวน / ร้านฟ้า / ร้านแม่)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+let transferringRow=null;
+function openTransferModal(row){
+  transferringRow=row;
+  const p=products.find(x=>x.row===row);
+  if(!p)return;
+  const fah=p.stockFah||0,mom=p.stockMom||0,garden=p.stock-fah-mom;
+  document.getElementById("transfer-name").textContent=`${p.emoji} ${p.name}${p.lot?" ("+p.lot+")":""}`;
+  document.getElementById("transfer-current").innerHTML=`🏡 สวน ${garden} ต้น &nbsp;·&nbsp; 🔵 ร้านฟ้า ${fah} ต้น &nbsp;·&nbsp; 🟢 ร้านแม่ ${mom} ต้น &nbsp;·&nbsp; รวม ${p.stock} ต้น`;
+  document.getElementById("tr-from").value="garden";
+  document.getElementById("tr-to").value="fah";
+  document.getElementById("tr-qty").value="";
+  document.getElementById("transfer-overlay").classList.add("show");
+}
+function closeTransferModal(){document.getElementById("transfer-overlay").classList.remove("show")}
+async function confirmTransfer(){
+  const p=products.find(x=>x.row===transferringRow);
+  if(!p)return;
+  const from=document.getElementById("tr-from").value;
+  const to=document.getElementById("tr-to").value;
+  const qty=parseInt(document.getElementById("tr-qty").value)||0;
+  if(qty<=0){toast("❌ กรอกจำนวนที่จะย้าย");return;}
+  if(from===to){toast("❌ เลือกตำแหน่งต้นทาง/ปลายทางให้ต่างกัน");return;}
+  let fah=p.stockFah||0,mom=p.stockMom||0;
+  const garden=()=>p.stock-fah-mom;
+  const get=loc=>loc==="garden"?garden():loc==="fah"?fah:mom;
+  if(get(from)<qty){toast(`⚠️ ต้นทางมีไม่พอ (มี ${get(from)} ต้น) แต่จะย้ายให้ตามจำนวนที่ระบุ`);}
+  // ลดจากต้นทาง / เพิ่มที่ปลายทาง — garden คำนวณจาก stock-fah-mom จึงไม่ต้องเก็บค่าตรง
+  if(from==="fah")fah-=qty; else if(from==="mom")mom-=qty;
+  if(to==="fah")fah+=qty; else if(to==="mom")mom+=qty;
+  try{
+    await scriptPost({action:"updateStockLocations",row:p.row,stockFah:fah,stockMom:mom});
+    p.stockFah=fah;p.stockMom=mom;
+    renderProdList();renderProds();closeTransferModal();
+    toast("✅ ย้ายสต็อกแล้ว");
+  }catch(e){toast("❌ "+e.message);}
 }
 
 function buildEmojiGrid(selected){
@@ -504,6 +583,9 @@ function openProductForm(rowId=null){
   document.getElementById("f-lot").value=p?.lot||"";
   document.getElementById("f-price").value=p?.price||"";
   document.getElementById("f-stock").value=p?.stock??"";
+  document.getElementById("f-stock-fah").value=p?.stockFah||0;
+  document.getElementById("f-stock-mom").value=p?.stockMom||0;
+  updateStockBreakdownHint();
   document.getElementById("f-emoji").value=p?.emoji||"🌿";
   buildEmojiGrid(p?.emoji||"🌿");
   resetImgFields();
@@ -544,6 +626,8 @@ async function saveProduct(){
   const cat=existingP?.cat||"";
   const price=parseFloat(document.getElementById("f-price").value)||0;
   const stock=parseInt(document.getElementById("f-stock").value)||0;
+  const stockFah=parseInt(document.getElementById("f-stock-fah").value)||0;
+  const stockMom=parseInt(document.getElementById("f-stock-mom").value)||0;
   const emoji=document.getElementById("f-emoji").value.trim()||"🌿";
   const imgUrl=getImgForSave();
   let defaultPct=parseFloat(document.getElementById("f-default-pct").value);
@@ -555,11 +639,11 @@ async function saveProduct(){
   try{
     if(editingProductId!==null){
       const row=editingProductId;
-      await scriptPost({action:"updateProduct",row,name,lot,cat,price,stock,emoji,imgUrl,defaultPct});
+      await scriptPost({action:"updateProduct",row,name,lot,cat,price,stock,emoji,imgUrl,defaultPct,stockFah,stockMom});
       const idx=products.findIndex(p=>p.row===row);
-      if(idx>=0)products[idx]={...products[idx],name,lot,cat,price,stock,emoji,imgUrl,defaultPct};
+      if(idx>=0)products[idx]={...products[idx],name,lot,cat,price,stock,emoji,imgUrl,defaultPct,stockFah,stockMom};
     }else{
-      await scriptPost({action:"addProduct",name,lot,cat,price,stock,emoji,imgUrl,defaultPct});
+      await scriptPost({action:"addProduct",name,lot,cat,price,stock,emoji,imgUrl,defaultPct,stockFah,stockMom});
       await loadProducts();
     }
     renderProds();renderProdList();closeProdForm();

@@ -14,7 +14,7 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // ── CONFIG ────────────────────────────────────────────────
 const SHEET_ID   = "1c_t89oC0p5setOKKu2vuPbkVb_NXPCJ8jh_O9pP4s-o";
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz66FGof0-0IhtUh7XsPdCJPDWmwWDvc_aW4EB8VOz8hsgtohztsEE-MX1GVshLCceABw/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwafGn6aiLcDEose37teohLzl1v0ZTZb4FoyubaO8h9i8Qo5EM7q6zYA4QNJ9AYGjRYPg/exec";
 const API_KEY    = "AIzaSyCRWFx2hsgTIN9PbS7cbbfadt8BgiiXJQc";
 const BASE       = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values`;
 const EMOJIS     = ["🌿","🪴","🌳","🌹","🌺","🌸","🌼","🌻","🌵","🍃","💐","🌱","🌾","🍀","🎋","🎍","🌲","🍁","🍂","🌴","🌊","🌙","⭐","🦋"];

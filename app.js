@@ -477,8 +477,13 @@ function updateStockBreakdownHint(){
   const fah=parseInt(document.getElementById("f-stock-fah").value)||0;
   const mom=parseInt(document.getElementById("f-stock-mom").value)||0;
   const garden=total-fah-mom;
-  hint.textContent=`🏡 เหลือในสวน: ${garden} ต้น`;
-  hint.style.color=garden<0?"var(--r6)":"var(--faint)";
+  if(garden<0){
+    hint.textContent=`⚠️ ฟ้า+แม่ (${fah+mom}) เกินสต็อกรวม (${total}) อยู่ ${-garden} ต้น — แก้ให้ตรงกันก่อนบันทึก`;
+    hint.style.color="var(--r6)";
+  }else{
+    hint.textContent=`🏡 เหลือในสวน: ${garden} ต้น`;
+    hint.style.color="var(--faint)";
+  }
 }
 function syncDefaultPctBtns(val){
   const v=parseFloat(val);
@@ -634,6 +639,10 @@ async function saveProduct(){
   if(isNaN(defaultPct))defaultPct=50;
   defaultPct=Math.max(0,Math.min(100,defaultPct));
   if(!name){toast("❌ กรุณากรอกชื่อต้นไม้");return;}
+  if(stockFah+stockMom>stock){
+    toast(`❌ สต็อกหน้าร้าน (ฟ้า ${stockFah} + แม่ ${stockMom} = ${stockFah+stockMom}) เกินสต็อกรวม (${stock}) — แก้ให้รวมกันไม่เกินสต็อกรวมก่อนบันทึก`);
+    return;
+  }
   const btn=document.getElementById("prod-save-btn");
   btn.disabled=true;btn.textContent="กำลังบันทึก...";
   try{

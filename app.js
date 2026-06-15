@@ -121,6 +121,13 @@ async function loadCustomers(){
    PRODUCTS UI  — หน้าขาย: categories, product grid
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // ── PRODUCTS UI ───────────────────────────────────────────
+// สีของตัวเลข Fah % : 100% = เขียว (Fah ได้เต็ม), 50% = เหลือง (แบ่งกับแม่ครึ่งๆ), อื่นๆ/0% = แดง
+function fahColor(pct){
+  const p=pct??50;
+  if(p===100)return"var(--g7)";
+  if(p===50)return"var(--y7)";
+  return"var(--r6)";
+}
 // วาดการ์ดสินค้าทั้งหมดในหน้า "ขาย" (.prod-grid)
 // หมายเหตุ: สี/ขนาดบางส่วนของการ์ดถูกกำหนดแบบ inline style ในฟังก์ชันนี้
 // (เช่น font-size:26px ของอิโมจิ, สี var(--g7) ของราคา) — ถ้าจะแก้สี/ขนาดเหล่านี้
@@ -146,23 +153,21 @@ function renderProds(){
       const chips=lots.map(p=>`
         <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:7px;background:${p.stock<=0?"var(--bg3)":"var(--g1)"};border:0.5px solid ${p.stock<=0?"var(--bd)":"var(--g3)"};cursor:${p.stock>0?"pointer":"not-allowed"};margin-top:4px;opacity:${p.stock<=0?.55:1}"
              onclick="event.stopPropagation();${p.stock>0?`addCart(${p.row})`:`toast('❌ Lot นี้หมดแล้ว')`}">
-          <span style="font-size:11px;font-weight:600;color:${p.stock<=0?"var(--faint)":"var(--g8)"}">${p.lot||"–"}</span>
-          <span style="font-size:10px;color:${p.stock<=0?"var(--r6)":p.stock<=5?"var(--a6)":"var(--g7)"};font-weight:600">${p.stock<=0?"หมด":p.stock+" ต้น"}</span>
+          <span style="font-size:11px;font-weight:600;color:${p.stock<=0?"var(--faint)":"var(--g8)"}">${p.lot||"–"} <span style="color:${fahColor(p.defaultPct)}">Fah ${p.defaultPct??50}%</span></span>
+          <span style="font-size:10px;color:${p.stock<=0?"var(--r6)":p.stock<=5?"var(--a6)":"var(--g7)"};font-weight:600">${p.stock<=0?"หมด":"คงเหลือ "+p.stock+" ต้น"}</span>
         </div>`).join("");
       return`<div class="pcard" style="cursor:default">
         ${imgHtml}
         <div style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3">${rep.name}</div>
         <div style="font-size:13px;color:var(--g7);font-weight:600;margin-top:2px">฿${rep.price.toLocaleString()} <span style="font-size:10px;color:var(--m)">รวม ${totalStock} ต้น</span></div>
-        <span class="pbadge" style="background:var(--a1);color:var(--a8);font-size:10px">Fah ${rep.defaultPct??50}%</span>
         ${chips}
       </div>`;
     }
     return`<div class="pcard${totalStock<=0?" pcard-empty":""}" onclick="${totalStock>0?`addCart(${rep.row})`:'toast("❌ สินค้าหมดแล้ว")'}">
       ${imgHtml}
       <div style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3">${rep.name}</div>
-      ${rep.lot?`<span style="font-size:10px;color:var(--a6);background:var(--a1);padding:1px 6px;border-radius:8px;font-weight:600">${rep.lot}</span>`:""}
+      <span class="pbadge" style="background:var(--bg2);color:var(--m);font-size:10px">${rep.lot?rep.lot+" · ":""}<span style="color:${fahColor(rep.defaultPct)};font-weight:700">Fah ${rep.defaultPct??50}%</span></span>
       <div style="font-size:13px;color:var(--g7);font-weight:600;margin-top:2px">฿${rep.price.toLocaleString()}</div>
-      <span class="pbadge" style="background:var(--g1);color:var(--g8);font-size:10px">Fah ${rep.defaultPct??50}%</span>
       <div style="font-size:10px;color:${totalStock<=5&&totalStock>0?"var(--r6)":"var(--faint)"};margin-top:2px">${totalStock<=0?"หมดแล้ว":"คงเหลือ "+totalStock+" ต้น"}</div>
     </div>`;
   }).join("");
@@ -298,7 +303,7 @@ function renderPayProfitSplits(){
         <span style="font-size:15px;flex-shrink:0">${thumb}</span>
         <div style="flex:1;min-width:0">
           <div style="font-size:12px;font-weight:600;color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.name}${x.lot?" ("+x.lot+")":""}</div>
-          <div style="font-size:10px;color:var(--m)">฿${rev.toLocaleString()} · 🌿 ฿${Math.round(rev*fahPct/100).toLocaleString()} / 🌸 ฿${Math.round(rev*momPct/100).toLocaleString()}</div>
+          <div style="font-size:10px;color:var(--m)">฿${rev.toLocaleString()} · <span style="color:var(--g7)">🌿 ฿${Math.round(rev*fahPct/100).toLocaleString()}</span> / <span style="color:var(--p7)">🌸 ฿${Math.round(rev*momPct/100).toLocaleString()}</span></div>
         </div>
         <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
           <span style="font-size:11px;color:var(--m)">Fah</span>
@@ -320,7 +325,7 @@ function updateFahSplit(rowId,val,inp){
   const row=inp?.closest("div[style*='border-bottom']");
   if(row){
     const info=row.querySelector("div[style*='font-size:10px']");
-    if(info)info.textContent=`฿${rev.toLocaleString()} · 🌿 ฿${Math.round(rev*v/100).toLocaleString()} / 🌸 ฿${Math.round(rev*(100-v)/100).toLocaleString()}`;
+    if(info)info.innerHTML=`฿${rev.toLocaleString()} · <span style="color:var(--g7)">🌿 ฿${Math.round(rev*v/100).toLocaleString()}</span> / <span style="color:var(--p7)">🌸 ฿${Math.round(rev*(100-v)/100).toLocaleString()}</span>`;
   }
 }
 
@@ -691,7 +696,7 @@ function renderProfit(){
   document.getElementById("profit-metrics").innerHTML=`
     <div class="metric"><div class="metric-lbl">ยอดขายรวม</div><div class="metric-val">฿${Math.round(totalRev/1000*10)/10}k</div><div class="metric-sub neu">${bills} บิล</div></div>
     <div class="metric"><div class="metric-lbl">🌿 Fah ได้รวม</div><div class="metric-val" style="font-size:17px;color:var(--g7)">฿${Math.round(fahTotal).toLocaleString()}</div></div>
-    <div class="metric"><div class="metric-lbl">🌸 แม่ได้รวม</div><div class="metric-val" style="font-size:17px;color:#7a5500">฿${Math.round(momTotal).toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-lbl">🌸 แม่ได้รวม</div><div class="metric-val" style="font-size:17px;color:var(--p7)">฿${Math.round(momTotal).toLocaleString()}</div></div>
     <div class="metric"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>`;
 
   // Breakdown by item name
@@ -720,7 +725,7 @@ function renderProfit(){
           <span class="p-lbl">${x.emoji} ${x.name} <span style="font-size:10px;color:var(--faint)">${x.qty} ต้น</span></span>
           <div style="text-align:right">
             <div class="p-val" style="font-size:12px">฿${Math.round(x.rev).toLocaleString()}</div>
-            <div style="font-size:10px;color:var(--m)">🌿฿${Math.round(x.fahRev).toLocaleString()} / 🌸฿${Math.round(x.momRev).toLocaleString()}</div>
+            <div style="font-size:10px"><span style="color:var(--g7)">🌿฿${Math.round(x.fahRev).toLocaleString()}</span> / <span style="color:var(--p7)">🌸฿${Math.round(x.momRev).toLocaleString()}</span></div>
           </div>
         </div>`).join("")}
     </div>`:""}`;

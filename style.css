@@ -56,6 +56,15 @@
             --a3: #EF9F27;   /* ส้มสด: ขอบของป้ายที่ถูกเลือก, จุดสถานะกำลังซิงค์ */
             --a1: #FAEEDA;   /* ส้มพาสเทล: พื้นหลังป้ายแต้ม/ป้ายส่วนลด */
 
+            /* โทนเหลือง (ใช้บอกว่าแบ่ง Fah/แม่ คนละ 50%) */
+            --y7: #a37a00;   /* เหลืองเข้ม: ตัวหนังสือ Fah 50% */
+
+            /* โทนชมพู (ใช้กับส่วนของ "แม่" ในหน้ารายงานกำไร) */
+            --p8: #9d1f5c;   /* ชมพูเข้ม: ตัวเลขสำคัญของแม่ */
+            --p7: #c2185b;   /* ชมพูกลาง: ตัวหนังสือ/ราคาของแม่ */
+            --p3: #f48fb1;   /* ชมพูอ่อน: ขอบป้ายของแม่ */
+            --p1: #fce4ec;   /* ชมพูพาสเทล: พื้นหลังป้าย/การ์ดของแม่ */
+
             /* โทนแดง (ใช้กับการแจ้งเตือน/ลบ/สต็อกต่ำ/error) */
             --r7: #7a1f1f;   /* แดงเข้มสุด (สำรอง) */
             --r6: #A32D2D;   /* แดงกลาง: ปุ่มลบ, สต็อกต่ำ, จุด sync error */
@@ -200,14 +209,17 @@
                 color: var(--g7)  /* สีของแท็บที่กำลังเลือกอยู่ */
             }
 
-        /* แท็บ "ขาย" — เน้นพิเศษให้เด่นกว่าแท็บอื่น */
+        /* แท็บ "ขาย" — เน้นพิเศษให้เด่นกว่าแท็บอื่น
+           สถานะปกติ (ยังไม่ได้เลือก) = พื้นเขียวอ่อน ตัวหนังสือเขียวเข้ม
+           สถานะถูกเลือก (.active) = พื้นเขียวเข้ม ตัวหนังสือสว่าง + เงาด้านในให้รู้สึกว่า "กดอยู่" */
         .tab.sell {
             flex: 1.4;
             border-radius: var(--rad);
             margin: 4px;
-            background: var(--g8);
-            color: #d4edaa;
-            font-weight: 700
+            background: var(--g2);   /* พื้นหลังตอนยังไม่ถูกเลือก */
+            color: var(--g8);        /* ตัวหนังสือตอนยังไม่ถูกเลือก */
+            font-weight: 700;
+            transition: background .15s, color .15s, box-shadow .15s
         }
 
             .tab.sell i {
@@ -215,8 +227,9 @@
             }
 
             .tab.sell.active {
-                background: var(--g8);
-                color: #d4edaa
+                background: var(--g8);                          /* พื้นหลังตอนถูกเลือก/กดอยู่ */
+                color: #d4edaa;                                  /* ตัวหนังสือตอนถูกเลือก */
+                box-shadow: inset 0 2px 5px rgba(0,0,0,0.3)      /* เงาด้านในให้ดูเหมือนปุ่มถูกกดลง */
             }
         /* Screens */
         .screens {
@@ -1483,7 +1496,9 @@
    SIDEBAR  (desktop/tablet เท่านั้น)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 /* ── SIDEBAR (hidden mobile) ── */
-        .sidebar{display:none}
+        @media(max-width:767px){
+          .sidebar{display:none}
+        }
         /* ── STORE SWITCHER (mobile bar) ── */
         .mobile-store-sw{display:flex;gap:6px;padding:7px 12px;background:var(--g9);border-bottom:0.5px solid rgba(255,255,255,0.1);flex-shrink:0}
         /* ── STORE TAB ── */
@@ -1515,7 +1530,7 @@
         .profit-line:last-child{border-bottom:none;font-weight:700;font-size:14px;padding-top:8px}
         .p-lbl{color:var(--m)}
         .p-val{font-weight:600;color:var(--t)}
-        .pv-snp{color:#7a5500}.pv-ts{color:var(--g7)}
+        .pv-snp{color:var(--p7)}.pv-ts{color:var(--g7)}
         
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    TOUCH-FRIENDLY SIZES

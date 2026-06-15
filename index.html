@@ -33,27 +33,27 @@
   <!-- Topbar -->
   <div class="topbar">
     <div class="topbar-row">
-      <div><div class="store-name">TreeSiri</div><div class="topbar-sub">ขาย · รายงาน · สินค้า · ลูกค้า</div></div>
+      <div><div class="store-name">TreeSiri</div><div class="topbar-sub">ขาย · รายงาน · คลังต้นไม้ · ลูกค้า</div></div>
       <button class="sync-pill" onclick="syncAll()"><span class="sdot" id="sdot"></span><span id="slbl">Sync</span></button>
     </div>
   </div>
   <!-- Tabs -->
   <div class="tab-bar">
-    <button class="tab sell active" onclick="gotoScreen('pos',this)"><i class="ti ti-basket"></i>ขาย</button>
-    <button class="tab" onclick="gotoScreen('report',this)"><i class="ti ti-chart-bar"></i>รายงาน</button>
-    <button class="tab" onclick="gotoScreen('manage',this)"><i class="ti ti-plant"></i>สินค้า</button>
-    <button class="tab" onclick="gotoScreen('customers',this)"><i class="ti ti-users"></i>ลูกค้า</button>
+    <button class="tab active" onclick="gotoScreen('pos',this)"><i class="ti ti-basket"></i><span>ขาย</span></button>
+    <button class="tab" onclick="gotoScreen('report',this)"><i class="ti ti-chart-bar"></i><span>รายงาน</span></button>
+    <button class="tab" onclick="gotoScreen('manage',this)"><i class="ti ti-plant"></i><span>คลังต้นไม้</span></button>
+    <button class="tab" onclick="gotoScreen('customers',this)"><i class="ti ti-users"></i><span>ลูกค้า</span></button>
   </div>
   <!-- Sidebar (tablet/desktop only) -->
   <nav class="sidebar" id="app-sidebar">
     <div class="sidebar-top">
       <div class="sidebar-store-name" id="sb-store-name">TreeSiri</div>
-      <div class="sidebar-sub">ขาย · รายงาน · สินค้า · ลูกค้า</div>
+      <div class="sidebar-sub">ขาย · รายงาน · คลังต้นไม้ · ลูกค้า</div>
     </div>
     <div class="sidebar-nav">
       <button class="sb-btn active" onclick="gotoScreen('pos',this)"><i class="ti ti-basket"></i>ขาย</button>
       <button class="sb-btn" onclick="gotoScreen('report',this)"><i class="ti ti-chart-bar"></i>รายงาน</button>
-      <button class="sb-btn" onclick="gotoScreen('manage',this)"><i class="ti ti-plant"></i>สินค้า</button>
+      <button class="sb-btn" onclick="gotoScreen('manage',this)"><i class="ti ti-plant"></i>คลังต้นไม้</button>
       <button class="sb-btn" onclick="gotoScreen('customers',this)"><i class="ti ti-users"></i>ลูกค้า</button>
     </div>
     <div class="sidebar-foot">

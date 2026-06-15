@@ -177,60 +177,63 @@
             }
         }
         /* Tabs */
+        /* แถบเมนูด้านล่าง — ทรงพิล (rounded pill) ลอยเหนือขอบจอ */
         .tab-bar {
             display: flex;
-            background: var(--bg);
-            border-bottom: 0.5px solid var(--bd);
+            align-items: center;
+            gap: 4px;
+            background: #fff;
+            border-radius: 30px;
+            margin: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+            padding: 6px;
+            box-shadow: 0 4px 16px rgba(0,0,0,.08);
+            border: 0.5px solid var(--bd);
             flex-shrink: 0
         }
 
-        /* ปุ่มแท็บเมนูด้านล่าง (ขาย/รายงาน/สินค้า/ลูกค้า) */
+        /* ปุ่มแท็บเมนูด้านล่าง (ขาย/รายงาน/คลังต้นไม้/ลูกค้า)
+           ปกติ = แสดงแค่ไอคอน, แท็บที่ถูกเลือก (.active) = ขยาย+มีพื้นพิล+โชว์ชื่อ */
         .tab {
             flex: 1;
-            padding: 9px 0 7px;
-            font-size: 10px;      /* ขนาดตัวอักษรชื่อแท็บ */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 11px 0;
+            border-radius: 24px;
+            font-size: 12px;      /* ขนาดตัวอักษรชื่อแท็บ (โชว์เฉพาะแท็บที่ active) */
+            font-weight: 600;
             font-family: 'Sarabun',sans-serif;
             color: var(--faint);
             cursor: pointer;
             border: none;
             background: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            transition: color .15s, background .15s
+            transition: background .15s, color .15s, flex .15s
         }
 
             .tab i {
-                font-size: 19px   /* ขนาดไอคอนแท็บ (ค่านี้ถูก override เป็น 22px ใน TOUCH SIZES ด้านล่าง) */
+                font-size: 20px   /* ขนาดไอคอนแท็บ (ค่านี้ถูก override ใน TOUCH SIZES ด้านล่าง) */
             }
 
+            .tab span {
+                display: none     /* ชื่อแท็บ — ซ่อนไว้ จะโชว์เมื่อ .active เท่านั้น */
+            }
+
+            /* แท็บที่กำลังเลือกอยู่ — ขยายกว้างขึ้น มีพื้นเขียวอ่อน + โชว์ชื่อ */
             .tab.active {
-                color: var(--g7)  /* สีของแท็บที่กำลังเลือกอยู่ */
+                flex: 1.7;
+                background: var(--g2);
+                color: var(--g8);
+                font-weight: 700
             }
 
-        /* แท็บ "ขาย" — เน้นพิเศษให้เด่นกว่าแท็บอื่น
-           สถานะปกติ (ยังไม่ได้เลือก) = พื้นเขียวอ่อน ตัวหนังสือเขียวเข้ม
-           สถานะถูกเลือก (.active) = พื้นเขียวเข้ม ตัวหนังสือสว่าง + เงาด้านในให้รู้สึกว่า "กดอยู่" */
-        .tab.sell {
-            flex: 1.4;
-            border-radius: var(--rad);
-            margin: 4px;
-            background: var(--g2);   /* พื้นหลังตอนยังไม่ถูกเลือก */
-            color: var(--g8);        /* ตัวหนังสือตอนยังไม่ถูกเลือก */
-            font-weight: 700;
-            transition: background .15s, color .15s, box-shadow .15s
-        }
+                .tab.active i {
+                    font-size: 19px
+                }
 
-            .tab.sell i {
-                font-size: 22px
-            }
-
-            .tab.sell.active {
-                background: var(--g8);                          /* พื้นหลังตอนถูกเลือก/กดอยู่ */
-                color: #d4edaa;                                  /* ตัวหนังสือตอนถูกเลือก */
-                box-shadow: inset 0 2px 5px rgba(0,0,0,0.3)      /* เงาด้านในให้ดูเหมือนปุ่มถูกกดลง */
-            }
+                .tab.active span {
+                    display: inline
+                }
         /* Screens */
         .screens {
             flex: 1;
@@ -1540,7 +1543,7 @@
    ปรับขนาดปุ่ม/ไอคอน/การ์ดให้กดง่ายขึ้นบนมือถือ (override ค่าด้านบน) */
         .qbtn{width:28px;height:28px;font-size:16px}     /* ปุ่ม +/- จำนวนในตะกร้า: ขนาดวงกลม + ไอคอน */
         .pay-btn{padding:16px;font-size:16px}            /* ปุ่ม "ชำระเงิน" ใหญ่สุดท้าย: ความหนา + ขนาดตัวอักษร */
-        .tab i{font-size:22px}                           /* ไอคอนแท็บเมนูด้านล่าง (ขาย/สรุป/ประวัติ...) */
+        .tab:not(.active) i{font-size:22px}              /* ไอคอนแท็บที่ยังไม่ถูกเลือก (ขาย/สรุป/ประวัติ...) */
         .pcard{min-height:120px}                         /* ความสูงขั้นต่ำของการ์ดสินค้าในกริด */
         .pli-btn{width:36px;height:36px;font-size:17px}  /* ปุ่มแก้ไข/ลบ ในหน้าจัดการสินค้า */
         .add-btn{padding:9px 14px;font-size:13px}        /* ปุ่ม "เพิ่มสินค้า" / "เพิ่มลูกค้า" */

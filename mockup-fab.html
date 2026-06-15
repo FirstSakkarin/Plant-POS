@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup: Tab bar แบบ Pill</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  :root{
+    --bg:#f7f8f5; --bd:#e2e6dd; --t:#1f2a16; --m:#6b7a5e; --faint:#9aa893;
+    --g2:#dff0c8; --g8:#3a6b1f; --g9:#2b4d17;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Sarabun',sans-serif;background:#ddd;display:flex;justify-content:center;padding:30px 0}
+  .phone{width:380px;height:760px;background:var(--bg);border-radius:28px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.25);display:flex;flex-direction:column;position:relative}
+  .content{flex:1;display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:13px}
+  .label{position:absolute;top:14px;left:0;right:0;text-align:center;font-size:12px;font-weight:700;color:var(--m);background:rgba(255,255,255,.85);padding:4px 0;z-index:5}
+
+  /* ===== Tab bar แบบ pill ลอย ===== */
+  .tab-wrap{padding:10px 14px 16px}
+  .tab-bar{
+    display:flex; align-items:center; gap:4px;
+    background:#fff; border-radius:30px;
+    padding:6px; box-shadow:0 4px 16px rgba(0,0,0,.08);
+    border:0.5px solid var(--bd);
+  }
+  .tab{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+    border:none; background:none; cursor:pointer; font-family:inherit;
+    padding:10px 0; border-radius:24px; color:var(--faint);
+    font-size:12px; font-weight:600; transition:.15s;
+  }
+  .tab i{font-size:20px}
+  .tab span{display:none}
+
+  .tab.active{
+    flex:1.6;
+    background:var(--g2); color:var(--g8);
+  }
+  .tab.active span{display:inline}
+  .tab.active i{font-size:18px}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="label">Tab bar แบบ pill — แท็บที่เลือกขยาย+มีตัวหนังสือ</div>
+  <div class="content">หน้าจอเนื้อหา</div>
+  <div class="tab-wrap">
+    <div class="tab-bar">
+      <button class="tab active"><i class="ti ti-basket"></i><span>ขาย</span></button>
+      <button class="tab"><i class="ti ti-chart-bar"></i><span>รายงาน</span></button>
+      <button class="tab"><i class="ti ti-plant"></i><span>สินค้า</span></button>
+      <button class="tab"><i class="ti ti-users"></i><span>ลูกค้า</span></button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -830,11 +830,11 @@ function renderProfit(){
 
   document.getElementById("profit-metrics").innerHTML=`
     <div class="metric"><div class="metric-lbl">ยอดขายรวม</div><div class="metric-val">฿${Math.round(totalRev/1000*10)/10}k</div><div class="metric-sub neu">${bills} บิล</div></div>
-    <div class="metric"><div class="metric-lbl">🌿 Fah ได้รวม</div><div class="metric-val" style="font-size:17px;color:var(--g7)">฿${Math.round(fahTotal).toLocaleString()}</div></div>
-    <div class="metric"><div class="metric-lbl">🌸 แม่ได้รวม</div><div class="metric-val" style="font-size:17px;color:var(--p7)">฿${Math.round(momTotal).toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-lbl">กำไรสุทธิ</div><div class="metric-val" style="font-size:17px;color:${netProfit>=0?"var(--g7)":"var(--r6)"}">฿${Math.round(netProfit).toLocaleString()}</div></div>
     <div class="metric"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
     <div class="metric"><div class="metric-lbl">ต้นทุนรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalCost).toLocaleString()}</div></div>
-    <div class="metric"><div class="metric-lbl">กำไรสุทธิ</div><div class="metric-val" style="font-size:17px;color:${netProfit>=0?"var(--g7)":"var(--r6)"}">฿${Math.round(netProfit).toLocaleString()}</div></div>`;
+    <div class="metric"><div class="metric-lbl">🌸 แม่ได้รวม</div><div class="metric-val" style="font-size:17px;color:var(--p7)">฿${Math.round(momTotal).toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-lbl">🌿 ฟ้าได้รวม</div><div class="metric-val" style="font-size:17px;color:#4DBBFF">฿${Math.round(fahTotal).toLocaleString()}</div></div>`;
 
   // Breakdown by item name
   const byName={};

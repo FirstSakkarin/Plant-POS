@@ -662,13 +662,21 @@ async function saveProduct(){
   const btn=document.getElementById("prod-save-btn");
   btn.disabled=true;btn.textContent="กำลังบันทึก...";
   try{
+    // ถ้ารูปเป็น base64 (อัปโหลดจากเครื่อง) → ส่งขึ้น Drive ก่อน ได้ URL กลับมาแทน
+    let finalImgUrl=imgUrl;
+    if(imgUrl.startsWith("data:")){
+      btn.textContent="กำลังอัปโหลดรูป...";
+      const r=await scriptPost({action:"uploadImage",imageBase64:imgUrl});
+      finalImgUrl=r.url||"";
+    }
+    const savedImgUrl=finalImgUrl;
     if(editingProductId!==null){
       const row=editingProductId;
-      await scriptPost({action:"updateProduct",row,name,lot,cat,price,cost,stock,emoji,imgUrl,defaultPct,stockFah,stockMom});
+      await scriptPost({action:"updateProduct",row,name,lot,cat,price,cost,stock,emoji,imgUrl:savedImgUrl,defaultPct,stockFah,stockMom});
       const idx=products.findIndex(p=>p.row===row);
-      if(idx>=0)products[idx]={...products[idx],name,lot,cat,price,cost,stock,emoji,imgUrl,defaultPct,stockFah,stockMom};
+      if(idx>=0)products[idx]={...products[idx],name,lot,cat,price,cost,stock,emoji,imgUrl:savedImgUrl,defaultPct,stockFah,stockMom};
     }else{
-      await scriptPost({action:"addProduct",name,lot,cat,price,cost,stock,emoji,imgUrl,defaultPct,stockFah,stockMom});
+      await scriptPost({action:"addProduct",name,lot,cat,price,cost,stock,emoji,imgUrl:savedImgUrl,defaultPct,stockFah,stockMom});
       await loadProducts();
     }
     renderProds();renderProdList();closeProdForm();

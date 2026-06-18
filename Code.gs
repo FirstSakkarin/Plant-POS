@@ -39,6 +39,7 @@ function doPost(e) {
       case "deleteProduct":   result = deleteProduct(ss, data); break;
       case "addCustomer":     result = addCustomer(ss, data); break;
       case "updateCustomer":  result = updateCustomer(ss, data); break;
+      case "uploadImage":     result = uploadImage(data); break;
       default:
         return jsonOut({ ok: false, error: "Unknown action: " + data.action });
     }
@@ -131,6 +132,28 @@ function addSale(ss, s) {
    CUSTOMERS  (ชีต "Customers", คอลัมน์ A-E)
    A name | B phone | C points | D note | E totalSpent
 ─────────────────────────────────────────────── */
+/* ───────────────────────────────────────────────
+   IMAGE UPLOAD  — อัปโหลดรูปขึ้น Google Drive
+   รับ base64 (data:image/...;base64,...) → อัปโหลดเป็นไฟล์ใน Drive
+   → ตั้งเป็น public → return URL สำหรับเก็บลง Sheets
+─────────────────────────────────────────────── */
+function uploadImage(data) {
+  const b64 = data.imageBase64 || "";
+  const match = b64.match(/^data:(.+);base64,(.+)$/);
+  if (!match) throw new Error("Invalid image data");
+  const mimeType = match[1];
+  const raw = match[2];
+  const blob = Utilities.newBlob(Utilities.base64Decode(raw), mimeType, "treesiri_" + Date.now() + ".jpg");
+  // อัปโหลดเข้า folder "TreeSiri POS Images" (สร้างอัตโนมัติถ้ายังไม่มี)
+  const folders = DriveApp.getFoldersByName("TreeSiri POS Images");
+  const folder = folders.hasNext() ? folders.next() : DriveApp.createFolder("TreeSiri POS Images");
+  const file = folder.createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  const id = file.getId();
+  // ใช้ thumbnail URL — เปิดได้ใน <img> tag โดยตรง
+  return { url: "https://drive.google.com/thumbnail?id=" + id + "&sz=w600" };
+}
+
 function addCustomer(ss, c) {
   const sheet = ss.getSheetByName("Customers");
   sheet.appendRow([

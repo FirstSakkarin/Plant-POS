@@ -814,22 +814,20 @@ function renderProfit(){
   let totalRev=0,fahTotal=0,momTotal=0,totalItems=0;
   ms.forEach(s=>{
     totalRev+=s.total;
+    // หักส่วนลดรายการ — กระจายส่วนลดของบิลตามสัดส่วนราคารายการ
+    // แล้วค่อยแบ่งฟ้า/แม่ตาม % ของรายการนั้น
+    // เช่น สนใบพาย Fah 100% → ส่วนลดตกไปที่ฟ้าทั้งหมด
+    const sub=s.subtotal||0;
+    const discRatio=sub>0?(s.discount||0)/sub:0;
     s.items.forEach(it=>{
       const rev=it.qty*(it.price||0);
       const fPct=(it.fahPct>=0?it.fahPct:50)/100;
-      fahTotal+=rev*fPct;
-      momTotal+=rev*(1-fPct);
+      const net=rev*(1-discRatio);   // รายได้สุทธิหลังหักส่วนลดของรายการนี้
+      fahTotal+=net*fPct;
+      momTotal+=net*(1-fPct);
       totalItems+=it.qty;
     });
   });
-
-  // Bill-level discount adjustment (proportional)
-  const totalItemRev=fahTotal+momTotal;
-  const totalDisc=ms.reduce((a,s)=>a+(s.discount||0),0);
-  if(totalItemRev>0&&totalDisc>0){
-    const r=1-totalDisc/totalItemRev;
-    fahTotal*=r; momTotal*=r;
-  }
 
   const bills=ms.length;
   const avg=bills?Math.round(totalRev/bills):0;

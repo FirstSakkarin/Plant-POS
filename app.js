@@ -832,17 +832,27 @@ function renderProfit(){
   const bills=ms.length;
   const avg=bills?Math.round(totalRev/bills):0;
 
-  // ต้นทุนรวม/กำไรสุทธิ — คำนวณจาก cost ของสินค้าปัจจุบัน × จำนวนที่ขายในช่วงนี้
-  let totalCost=0;
+  // ต้นทุนรวม แยกฟ้า/แม่ — cost แบ่งตาม fahPct ของแต่ละรายการ
+  // เช่น สนใบพาย Fah 100% → ต้นทุนทั้งหมดเป็นของฟ้า
+  let totalCost=0, fahCost=0, momCost=0;
   ms.forEach(s=>s.items.forEach(it=>{
     const p=findProductForItem(it);
-    totalCost+=(p?.cost||0)*it.qty;
+    const cost=(p?.cost||0)*it.qty;
+    const fPct=(it.fahPct>=0?it.fahPct:50)/100;
+    totalCost+=cost;
+    fahCost+=cost*fPct;
+    momCost+=cost*(1-fPct);
   }));
   const netProfit=totalRev-totalCost;
+  const fahProfit=fahTotal-fahCost;
+  const momProfit=momTotal-momCost;
 
   document.getElementById("profit-metrics").innerHTML=`
     <div class="metric"><div class="metric-lbl">ยอดขายรวม</div><div class="metric-val">฿${Math.round(totalRev/1000*10)/10}k</div><div class="metric-sub neu">${bills} บิล</div></div>
     <div class="metric"><div class="metric-lbl">กำไรสุทธิ</div><div class="metric-val" style="font-size:17px;color:${netProfit>=0?"var(--g7)":"var(--r6)"}">฿${Math.round(netProfit).toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-lbl">🌸 กำไรแม่สุทธิ</div><div class="metric-val" style="font-size:17px;color:${momProfit>=0?"var(--p7)":"var(--r6)"}">฿${Math.round(momProfit).toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-lbl">🌿 กำไรฟ้าสุทธิ</div><div class="metric-val" style="font-size:17px;color:${fahProfit>=0?"#4DBBFF":"var(--r6)"}">฿${Math.round(fahProfit).toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-lbl">💰 ต้นทุนของฟ้า</div><div class="metric-val" style="font-size:17px">฿${Math.round(fahCost).toLocaleString()}</div><div class="metric-sub neu">แม่ ฿${Math.round(momCost).toLocaleString()}</div></div>
     <div class="metric"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
     <div class="metric"><div class="metric-lbl">ต้นทุนรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalCost).toLocaleString()}</div></div>
     <div class="metric"><div class="metric-lbl">🌸 แม่ได้รวม</div><div class="metric-val" style="font-size:17px;color:var(--p7)">฿${Math.round(momTotal).toLocaleString()}</div></div>

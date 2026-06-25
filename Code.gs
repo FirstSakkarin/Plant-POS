@@ -40,6 +40,7 @@ function doPost(e) {
       case "addCustomer":     result = addCustomer(ss, data); break;
       case "updateCustomer":  result = updateCustomer(ss, data); break;
       case "uploadImage":     result = uploadImage(data); break;
+      case "rebuildSummary":  result = (updateSummary(ss), {}); break;
       default:
         return jsonOut({ ok: false, error: "Unknown action: " + data.action });
     }
@@ -125,7 +126,108 @@ function addSale(ss, s) {
     s.total || 0,
     s.custName || ""
   ]);
+  updateSummary(ss); // อัปเดตชีตสรุปผลทุกครั้งที่มีการขาย
   return {};
+}
+
+/* ───────────────────────────────────────────────
+   SUMMARY  (ชีต "สรุปผล") — อัปเดตอัตโนมัติทุกครั้งที่บันทึกขาย
+   แสดงยอดรายวัน: จำนวนบิล, ยอดก่อนลด, ส่วนลด, ยอดสุทธิ, ฟ้าได้, แม่ได้
+─────────────────────────────────────────────── */
+function updateSummary(ss) {
+  const salesSheet = ss.getSheetByName("Sales");
+  let sumSheet = ss.getSheetByName("สรุปผล");
+  if (!sumSheet) sumSheet = ss.insertSheet("สรุปผล");
+  sumSheet.clearContents().clearFormats();
+
+  const data = salesSheet.getDataRange().getValues();
+  if (data.length <= 1) return;
+
+  // จัดกลุ่มยอดตามวัน
+  const byDay = {};
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const dateStr = String(row[0] || "").trim();
+    if (!dateStr) continue;
+
+    // แปลง date string → key "YYYY-MM-DD" (รองรับทั้ง ISO และ DD/MM/YYYY)
+    let dayKey = "";
+    const iso = dateStr.match(/^(\d{4}-\d{2}-\d{2})/);
+    const dmy = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (iso) dayKey = iso[1];
+    else if (dmy) dayKey = dmy[3] + "-" + String(dmy[2]).padStart(2,"0") + "-" + String(dmy[1]).padStart(2,"0");
+    else continue;
+
+    const subtotal = parseFloat(row[2]) || 0;
+    const discount = parseFloat(row[3]) || 0;
+    const total    = parseFloat(row[4]) || 0;
+    const itemsStr = String(row[1] || "");
+    const custName = String(row[5] || "");
+
+    // คำนวณ ฟ้า/แม่ ต่อบิล — หักส่วนลดก่อนแล้วค่อยแบ่งตาม fahPct ของรายการ
+    let fahTotal = 0, momTotal = 0;
+    const discRatio = subtotal > 0 ? discount / subtotal : 0;
+    itemsStr.split(",").forEach(seg => {
+      const p = seg.trim().split("×");
+      const qty   = parseInt(p[1]) || 1;
+      const price = parseFloat(p[2]) || 0;
+      const fPct  = (parseFloat(p[3]) >= 0 ? parseFloat(p[3]) : 50) / 100;
+      const net   = qty * price * (1 - discRatio);
+      fahTotal += net * fPct;
+      momTotal += net * (1 - fPct);
+    });
+
+    if (!byDay[dayKey]) byDay[dayKey] = {bills:0, subtotal:0, discount:0, total:0, fah:0, mom:0, custs:[]};
+    byDay[dayKey].bills++;
+    byDay[dayKey].subtotal += subtotal;
+    byDay[dayKey].discount += discount;
+    byDay[dayKey].total    += total;
+    byDay[dayKey].fah      += fahTotal;
+    byDay[dayKey].mom      += momTotal;
+    if (custName) byDay[dayKey].custs.push(custName);
+  }
+
+  const days = Object.keys(byDay).sort();
+
+  // สร้าง rows
+  const headers = ["วันที่","จำนวนบิล","ยอดก่อนลด (฿)","ส่วนลด (฿)","ยอดสุทธิ (฿)","🌿 ฟ้าได้ (฿)","🌸 แม่ได้ (฿)","ลูกค้า"];
+  const rows = [headers];
+  let gBills=0, gSub=0, gDisc=0, gTotal=0, gFah=0, gMom=0;
+
+  days.forEach(day => {
+    const d = byDay[day];
+    rows.push([
+      day, d.bills,
+      Math.round(d.subtotal), Math.round(d.discount), Math.round(d.total),
+      Math.round(d.fah), Math.round(d.mom),
+      [...new Set(d.custs)].join(", ")
+    ]);
+    gBills+=d.bills; gSub+=d.subtotal; gDisc+=d.discount;
+    gTotal+=d.total; gFah+=d.fah; gMom+=d.mom;
+  });
+
+  // แถวรวมทั้งหมด
+  rows.push(["รวมทั้งหมด", gBills, Math.round(gSub), Math.round(gDisc), Math.round(gTotal), Math.round(gFah), Math.round(gMom), ""]);
+
+  sumSheet.getRange(1, 1, rows.length, headers.length).setValues(rows);
+
+  // จัดรูปแบบ header
+  sumSheet.getRange(1, 1, 1, headers.length)
+    .setFontWeight("bold").setBackground("#1e3a08").setFontColor("#c8e89a").setFontSize(11);
+  // จัดรูปแบบแถวรวม
+  sumSheet.getRange(rows.length, 1, 1, headers.length)
+    .setFontWeight("bold").setBackground("#EAF3DE").setFontColor("#1e3a08");
+  // แถวข้อมูลสลับสี
+  for (let r = 2; r < rows.length; r++) {
+    sumSheet.getRange(r, 1, 1, headers.length)
+      .setBackground(r % 2 === 0 ? "#f7f7f5" : "#ffffff");
+  }
+  // จัด format ตัวเลข
+  sumSheet.getRange(2, 3, rows.length-1, 5).setNumberFormat("#,##0");
+  sumSheet.autoResizeColumns(1, headers.length);
+
+  // อัปเดต timestamp
+  sumSheet.getRange(rows.length+2, 1).setValue("อัปเดตล่าสุด: " + new Date().toLocaleString("th-TH"));
 }
 
 /* ───────────────────────────────────────────────

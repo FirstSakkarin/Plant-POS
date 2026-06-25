@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Applications/**)",
+      "Bash(mkdir -p /tmp/td_learn)",
+      "Read(//tmp/**)",
+      "Bash(cp __TRACKED_VAR__/SiamXTikTok/Siam.9.toe Siam.toe)",
+      "Bash(cp __TRACKED_VAR__/Register/register.53.toe register.toe)",
+      "Bash(cp __TRACKED_VAR__/AR_Facetracking/AR_FaceTracking.18.toe AR_FaceTracking.toe)",
+      "Bash(grep -vE \"^#|^$\")",
+      "Bash(grep -vE \"^[[:space:]]*#|^[[:space:]]*$\")",
+      "Bash(MEM=\"/Users/1st/.claude/projects/-Users-1st-SynologyDrive-Macbook-M1Max-TreeSiri-GitHub-Plant-POS/memory\" *)"
+    ]
+  }
+}

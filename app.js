@@ -800,13 +800,32 @@ function setProfitPreset(preset,btn){
   document.querySelectorAll("#profit-presets .preset-btn").forEach(b=>b.classList.remove("active"));
   if(btn)btn.classList.add("active");
   const now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-  if(preset==="today"){profitFrom=profitTo=today;}
-  else if(preset==="7d"){profitFrom=new Date(today-6*864e5);profitTo=today;}
-  else if(preset==="30d"){profitFrom=new Date(today-29*864e5);profitTo=today;}
-  else if(preset==="mtd"){profitFrom=new Date(now.getFullYear(),now.getMonth(),1);profitTo=today;}
+  const cr=document.getElementById("profit-custom-range");
+  if(preset==="custom"){
+    if(cr)cr.style.display="flex";
+    // อ่านค่าจาก input ถ้ามี
+    const f=document.getElementById("profit-date-from")?.value;
+    const t=document.getElementById("profit-date-to")?.value;
+    if(f)profitFrom=new Date(f);
+    if(t)profitTo=new Date(t);
+  } else {
+    if(cr)cr.style.display="none";
+    if(preset==="today"){profitFrom=profitTo=today;}
+    else if(preset==="7d"){profitFrom=new Date(today-6*864e5);profitTo=today;}
+    else if(preset==="30d"){profitFrom=new Date(today-29*864e5);profitTo=today;}
+    else if(preset==="mtd"){profitFrom=new Date(now.getFullYear(),now.getMonth(),1);profitTo=today;}
+    else if(preset==="1y"){profitFrom=new Date(now.getFullYear()-1,now.getMonth(),now.getDate());profitTo=today;}
+  }
   renderProfit();
 }
 function renderProfit(){
+  // ถ้าโหมดกำหนดเอง อ่านค่าจาก input ก่อนเสมอ
+  if(document.getElementById("profit-custom-range")?.style.display==="flex"){
+    const f=document.getElementById("profit-date-from")?.value;
+    const t=document.getElementById("profit-date-to")?.value;
+    if(f)profitFrom=new Date(f);
+    if(t)profitTo=new Date(t);
+  }
   const from=profitFrom||new Date(new Date().setHours(0,0,0,0));
   const toEnd=new Date(profitTo||from);toEnd.setHours(23,59,59,999);
   const ms=sales.filter(s=>{const d=new Date(s.date);return d>=from&&d<=toEnd;});

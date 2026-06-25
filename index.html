@@ -111,6 +111,13 @@
           <button class="preset-btn" onclick="setProfitPreset('7d',this)">7 วัน</button>
           <button class="preset-btn" onclick="setProfitPreset('30d',this)">30 วัน</button>
           <button class="preset-btn" onclick="setProfitPreset('mtd',this)">เดือนนี้</button>
+          <button class="preset-btn" onclick="setProfitPreset('1y',this)">1 ปี</button>
+          <button class="preset-btn" onclick="setProfitPreset('custom',this)">กำหนดเอง</button>
+        </div>
+        <div class="date-range-wrap" id="profit-custom-range" style="display:none">
+          <input class="date-inp" type="date" id="profit-date-from" onchange="renderProfit()">
+          <span class="date-sep">ถึง</span>
+          <input class="date-inp" type="date" id="profit-date-to" onchange="renderProfit()">
         </div>
         <div class="metric-grid" id="profit-metrics" style="margin-bottom:12px"></div>
         <div id="profit-breakdown"></div>

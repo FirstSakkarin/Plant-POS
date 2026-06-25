@@ -811,9 +811,10 @@ function renderProfit(){
   const toEnd=new Date(profitTo||from);toEnd.setHours(23,59,59,999);
   const ms=sales.filter(s=>{const d=new Date(s.date);return d>=from&&d<=toEnd;});
 
-  let totalRev=0,fahTotal=0,momTotal=0,totalItems=0;
+  let totalRev=0,fahTotal=0,momTotal=0,totalItems=0,totalDisc=0;
   ms.forEach(s=>{
     totalRev+=s.total;
+    totalDisc+=(s.discount||0);
     // หักส่วนลดรายการ — กระจายส่วนลดของบิลตามสัดส่วนราคารายการ
     // แล้วค่อยแบ่งฟ้า/แม่ตาม % ของรายการนั้น
     // เช่น สนใบพาย Fah 100% → ส่วนลดตกไปที่ฟ้าทั้งหมด
@@ -856,8 +857,11 @@ function renderProfit(){
     <div class="metric"><div class="metric-lbl">🌿 ยอดขายฟ้ารวม</div><div class="metric-val" style="font-size:17px;color:#4DBBFF">฿${Math.round(fahTotal).toLocaleString()}</div></div>
     <div class="metric"><div class="metric-lbl">ต้นทุนรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalCost).toLocaleString()}</div></div>
     <div class="metric"><div class="metric-lbl">💰 ต้นทุนฟ้ารวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(fahCost).toLocaleString()}</div></div>
-    <div class="metric"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
-    <div class="metric"><div class="metric-lbl">จำนวนบิลทั้งหมด</div><div class="metric-val">${bills}</div><div class="metric-sub neu">บิล</div></div>`;
+    <div class="metric-trio">
+      <div class="metric"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
+      <div class="metric"><div class="metric-lbl">จำนวนบิล</div><div class="metric-val">${bills}</div><div class="metric-sub neu">บิล</div></div>
+      <div class="metric"><div class="metric-lbl">ส่วนลดรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalDisc).toLocaleString()}</div></div>
+    </div>`;
 
   // Breakdown by item name
   const byName={};
@@ -1050,7 +1054,6 @@ function gotoScreen(name,btn){
   document.getElementById("screen-"+name).classList.add("active");
   document.querySelectorAll(`[onclick*="gotoScreen(\'${name}\'"], [onclick*="gotoScreen('${name}'"]`).forEach(b=>b.classList.add("active"));
   if(name==="report"){
-    if(!dashFrom)setPreset("today",document.querySelector("#date-presets .preset-btn"));else renderDash();
     renderHistory();
     if(!profitFrom)setProfitPreset("today",document.querySelector("#profit-presets .preset-btn"));else renderProfit();
   }

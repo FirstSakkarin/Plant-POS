@@ -661,6 +661,14 @@
             gap: 8px
         }
 
+        /* 3 กล่องเล็กในแถวเดียว (ต้นไม้/บิล/ส่วนลด) */
+        .metric-trio {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(3,minmax(0,1fr));
+            gap: 8px
+        }
+
         .metric {
             background: var(--bg2);
             border-radius: var(--rad-lg);

@@ -113,10 +113,22 @@ function findProductForItem(it){
 
 // ── LOAD SALES (A=date,B=items,C=subtotal,D=discount,E=total,F=custName) ──
 // items format: name(lot)×qty×price×fahPct, ...
+
+// แปลงวันที่จาก Sheet — รองรับทั้ง ISO (YYYY-MM-DDTHH:MM) และรูปแบบเก่า (DD/MM/YYYY HH:MM)
+function parseSheetDate(str){
+  if(!str)return new Date(NaN);
+  const d=new Date(str);
+  if(!isNaN(d.getTime()))return d;
+  // รูปแบบเก่า: DD/MM/YYYY HH:MM หรือ D/M/YYYY H:MM
+  const m=str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
+  if(m)return new Date(+m[3],+m[2]-1,+m[1],+(m[4]||0),+(m[5]||0));
+  return new Date(NaN);
+}
+
 async function loadSales(){
   const rows=await sheetGet("Sales!A2:F");
   sales=rows.map(r=>({
-    date:new Date(r[0]),
+    date:parseSheetDate(r[0]),
     itemsStr:r[1]||"",
     items:(r[1]||"").split(",").map(s=>{
       const p=s.trim().split("×");
@@ -401,9 +413,9 @@ async function confirmSale(){
       const fahPct=payItemSplits[x.row]!==undefined?payItemSplits[x.row]:(x.defaultPct??50);
       return x.name+(x.lot?"("+x.lot+")":"")+"×"+x.qty+"×"+getItemPrice(x)+"×"+fahPct;
     }).join(", ");
-    const dd=now.getDate(),mm=now.getMonth()+1,yy=now.getFullYear();
-    const hh=String(now.getHours()).padStart(2,"0"),mn=String(now.getMinutes()).padStart(2,"0");
-    const dateStr=dd+"/"+mm+"/"+yy+" "+hh+":"+mn;
+    // ISO format: YYYY-MM-DDTHH:MM — JavaScript อ่านได้ทุก browser ไม่มีปัญหา Invalid Date
+    const pad=n=>String(n).padStart(2,"0");
+    const dateStr=now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate())+"T"+pad(now.getHours())+":"+pad(now.getMinutes());
     const custName=selectedCust?selectedCust.name:"";
     await scriptPost({action:"addSale",date:dateStr,items:itemStr,subtotal:sub,discount:disc,total,custName});
     let negativeWarn=false;
@@ -412,9 +424,11 @@ async function confirmSale(){
       if(p){
         p.stock-=x.qty;
         await scriptPost({action:"updateStock",row:p.row,stock:p.stock});
-        if(selectedSaleStore==="fah"){p.stockFah=(p.stockFah||0)-x.qty;}
-        else if(selectedSaleStore==="mom"){p.stockMom=(p.stockMom||0)-x.qty;}
-        if((p.stockFah||0)<0||(p.stockMom||0)<0)negativeWarn=true;
+        if(selectedSaleStore==="fah"){
+          p.stockFah=Math.max(0,(p.stockFah||0)-x.qty);
+        }else if(selectedSaleStore==="mom"){
+          p.stockMom=Math.max(0,(p.stockMom||0)-x.qty);
+        }
         await scriptPost({action:"updateStockLocations",row:p.row,stockFah:p.stockFah||0,stockMom:p.stockMom||0});
       }
     }

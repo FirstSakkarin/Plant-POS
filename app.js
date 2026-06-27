@@ -1016,12 +1016,12 @@ function renderProfit(){
     <div class="metric" data-accent="fah"><div class="metric-lbl">🩵 ยอดขายฟ้ารวม</div><div class="metric-val" style="font-size:17px;color:#88DBBD">฿${Math.round(fahTotal).toLocaleString()}</div></div>
     <div class="metric" data-accent="total"><div class="metric-lbl">ต้นทุนรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalCost).toLocaleString()}</div></div>
     <div class="metric" data-accent="fah"><div class="metric-lbl">💰 ต้นทุนฟ้า (Fah 100%)</div><div class="metric-val" style="font-size:17px">฿${Math.round(fahCost).toLocaleString()}</div></div>
-    ${totalExtraCost>0?`<div class="metric" data-accent="total"><div class="metric-lbl">📦 ต้นทุนอื่นๆ</div><div class="metric-val" style="font-size:17px;color:rgba(255,176,204,0.85)">฿${Math.round(totalExtraCost).toLocaleString()}</div></div>`:""}
     <div class="metric-trio">
       <div class="metric" data-accent="total"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
       <div class="metric" data-accent="total"><div class="metric-lbl">จำนวนบิล</div><div class="metric-val">${bills}</div><div class="metric-sub neu">บิล</div></div>
       <div class="metric" data-accent="total"><div class="metric-lbl">ส่วนลดรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalDisc).toLocaleString()}</div></div>
-    </div>`;
+    </div>
+    ${totalExtraCost>0?`<div class="metric" data-accent="total"><div class="metric-lbl">📦 ต้นทุนอื่นๆ</div><div class="metric-val" style="font-size:17px;color:rgba(255,176,204,0.85)">฿${Math.round(totalExtraCost).toLocaleString()}</div></div>`:""}`;
 
   // Breakdown by item name
   const byName={};

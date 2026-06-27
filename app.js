@@ -995,7 +995,7 @@ function renderProfit(){
   const momProfit=momTotal-momCost;
 
   document.getElementById("profit-metrics").innerHTML=`
-    <div class="metric" data-accent="total"><div class="metric-lbl">ยอดขายรวม</div><div class="metric-val">฿${Math.round(totalRev/1000*10)/10}k</div></div>
+    <div class="metric" data-accent="total"><div class="metric-lbl">ยอดขายรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalRev).toLocaleString()}</div></div>
     <div class="metric" data-accent="profit"><div class="metric-lbl">กำไรสุทธิ</div><div class="metric-val" style="font-size:17px;color:${netProfit>=0?"#F2C05A":"var(--r6)"}">฿${Math.round(netProfit).toLocaleString()}</div></div>
     <div class="metric" data-accent="mom"><div class="metric-lbl">🌸 กำไรแม่สุทธิ</div><div class="metric-val" style="font-size:17px;color:${momProfit>=0?"#FFB0CC":"var(--r6)"}">฿${Math.round(momProfit).toLocaleString()}</div></div>
     <div class="metric" data-accent="fah"><div class="metric-lbl">🌿 กำไรฟ้าสุทธิ</div><div class="metric-val" style="font-size:17px;color:${fahProfit>=0?"#88DBBD":"var(--r6)"}">฿${Math.round(fahProfit).toLocaleString()}</div></div>

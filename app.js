@@ -1073,25 +1073,25 @@ function renderProfit(){
       const rev=it.qty*(it.price||0);
       const fahPct=it.fahPct>=0?it.fahPct:50;
       const net=rev*(1-discRatio);
-      totalCost+=cost;
       totalItems+=it.qty;
       if(fahPct===0){
-        // ร้านแม่: ยอด/กำไร/ต้นทุน → แม่ทั้งหมด
+        // ร้านแม่: ยอด/กำไร/ต้นทุน → แม่, cost รวมใน totalCost
+        totalCost+=cost;
         momTotal+=net;
         momCost+=cost;
         momProfit+=net-cost;
       }else if(fahPct===100){
-        // ร้านฟ้า Fah 100%: ยอด/กำไร/ต้นทุน → ฟ้าทั้งหมด
+        // ร้านฟ้า Fah 100%: ต้นทุน → fahCost เท่านั้น ไม่รวม totalCost
         fahTotal+=net;
         fahCost+=cost;
         fahProfit+=net-cost;
       }else{
-        // ร้านฟ้า Fah X%: ยอด→ฟ้า, กำไรหาร, ต้นทุน→รวมเท่านั้น
+        // ร้านฟ้า Fah X%: ยอด→ฟ้า, กำไรหาร, ต้นทุน→ totalCost เท่านั้น
+        totalCost+=cost;
         const fPct=fahPct/100;
-        fahTotal+=net;           // ยอดเต็มเป็นของฟ้า
-        fahProfit+=net*fPct;     // กำไร % ของฟ้า
-        momProfit+=net*(1-fPct); // กำไรส่วนที่เหลือ → แม่
-        // cost ไม่แยก → อยู่ใน totalCost เท่านั้น
+        fahTotal+=net;
+        fahProfit+=net*fPct;
+        momProfit+=net*(1-fPct);
       }
     });
     totalExtraCost+=(s.extraCosts||[]).reduce((a,c)=>a+(c.amount||0),0);
@@ -1099,7 +1099,7 @@ function renderProfit(){
 
   const bills=ms.length;
   const avg=bills?Math.round(totalRev/bills):0;
-  const netProfit=totalRev-totalCost-totalExtraCost;
+  const netProfit=totalRev-totalCost-fahCost-totalExtraCost;
 
   document.getElementById("profit-metrics").innerHTML=`
     <div class="metric" data-accent="total"><div class="metric-lbl">ยอดขายรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalRev).toLocaleString()}</div></div>

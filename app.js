@@ -611,6 +611,7 @@ function renderProdList(){
         <div style="font-size:10px;color:${p.stock<=0?"var(--r6)":p.stock<=5?"var(--a6)":"var(--faint)"};margin-top:2px">${p.stock<=0?"หมดแล้ว":"คงเหลือ "+p.stock+" ต้น"}</div>
         <div style="font-size:10px;color:var(--m);margin-top:3px;line-height:1.5">🏡สวน ${garden} · 🔵ฟ้า ${fah} · 🟢แม่ ${mom}</div>
         <span class="pbadge" style="background:var(--g1);color:var(--g8);font-size:10px">Fah ${p.defaultPct??50}%</span>
+        ${p.cost>0?`<span class="pbadge" style="background:rgba(255,176,204,0.15);color:rgba(255,176,204,0.9);font-size:10px">ต้นทุน ฿${p.cost.toLocaleString()}</span>`:""}
         <div class="mcard-actions">
           <button class="mcard-btn" onclick="openTransferModal(${p.row})" title="ย้ายสต็อก"><i class="ti ti-arrows-exchange"></i></button>
           <button class="mcard-btn" onclick="openProductForm(${p.row})"><i class="ti ti-edit"></i></button>

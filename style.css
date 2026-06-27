@@ -785,6 +785,13 @@
             grid-template-columns: repeat(3,minmax(0,1fr));
             gap: 8px
         }
+        /* 4 กล่องเล็กในแถวเดียว */
+        .metric-quad {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(4,minmax(0,1fr));
+            gap: 6px
+        }
 
         .metric {
             background: var(--bg2);

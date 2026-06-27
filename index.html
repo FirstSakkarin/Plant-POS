@@ -79,13 +79,6 @@
         <div class="search-row">
           <div class="sbox"><i class="ti ti-search"></i><input type="text" placeholder="ค้นหาต้นไม้..." id="s-input" oninput="renderProds()"></div>
         </div>
-        <!-- Customer selector -->
-        <div class="cust-sel-bar">
-          <button class="cust-sel-btn" id="cust-sel-btn" onclick="openCustPicker()">
-            <i class="ti ti-user"></i><span id="cust-sel-label">เลือกลูกค้า (ไม่บังคับ)</span>
-          </button>
-          <div class="cust-clear-btn" id="cust-clear" onclick="clearSelectedCust()" style="display:none" title="ยกเลิก"><i class="ti ti-x" style="font-size:14px"></i></div>
-        </div>
         <div class="prod-area"><div class="prod-grid" id="prod-grid"></div></div>
         <div class="cart-panel">
           <div class="cart-hdr">
@@ -109,6 +102,13 @@
               <div class="total-orig" id="total-orig"></div>
               <div class="total-amt" id="total-amt">฿0</div>
             </div>
+          </div>
+          <!-- Customer selector — ย้ายเข้าตะกร้า -->
+          <div class="cust-sel-bar">
+            <button class="cust-sel-btn" id="cust-sel-btn" onclick="openCustPicker()">
+              <i class="ti ti-user"></i><span id="cust-sel-label">เลือกลูกค้า (ไม่บังคับ)</span>
+            </button>
+            <div class="cust-clear-btn" id="cust-clear" onclick="clearSelectedCust()" style="display:none" title="ยกเลิก"><i class="ti ti-x" style="font-size:14px"></i></div>
           </div>
           <button class="pay-btn" id="pay-btn" onclick="openPay()" disabled><i class="ti ti-cash" style="font-size:19px"></i> ชำระเงิน</button>
         </div>

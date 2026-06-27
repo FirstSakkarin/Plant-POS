@@ -501,6 +501,8 @@ async function confirmSale(){
     document.querySelectorAll("[id^='pos-fah'],[id^='pos-mom'],[id^='store-']").forEach(b=>b.classList.remove("active"));
     renderCart();renderProds();renderProdList();closePay();
     openReceipt(sales[0]);
+    // Reload silently เพื่อให้ sales ทุกรายการมี sheetRow ถูกต้อง (ใช้ลบ/แก้ไขได้)
+    loadSales();
     if(negativeWarn)toast("⚠️ สต็อกหน้าร้านติดลบ กรุณาตรวจสอบ/ย้ายสต็อก");
     else if(!hadCust)toast("✅ บันทึกลง Google Sheets แล้ว!");
   }catch(e){
@@ -1141,6 +1143,13 @@ function closeSaleDel(){document.getElementById("sale-del-overlay").classList.re
 async function confirmDeleteSale(){
   const s=sales[deletingSaleIdx];
   if(!s)return closeSaleDel();
+  if(!s.sheetRow){
+    // sheetRow ยังไม่ได้ sync — reload ก่อนแล้วลบ
+    await loadSales();
+    const updated=sales[deletingSaleIdx];
+    if(!updated?.sheetRow){sales.splice(deletingSaleIdx,1);closeSaleDel();renderHistory();renderProfit();toast("🗑 ลบแล้ว (local)");return;}
+    deletingSaleIdx=sales.indexOf(updated);
+  }
   try{
     await scriptPost({action:"deleteSaleByRow",sheetRow:s.sheetRow});
     sales.splice(deletingSaleIdx,1);

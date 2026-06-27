@@ -994,9 +994,11 @@ function renderProfit(){
   // ต้นทุนรวม แยกฟ้า/แม่ — เฉพาะ Fah 100% เท่านั้นถึงนับเป็น "ต้นทุนฟ้า"
   // ถ้า % ไม่ใช่ 100 → นับแค่ใน totalCost เท่านั้น ไม่แยกร้าน
   let totalCost=0, fahCost=0, momCost=0, totalExtraCost=0;
+  console.log("[DEBUG] ms.length=",ms.length,"products.length=",products.length);
   ms.forEach(s=>{
     s.items.forEach(it=>{
       const p=findProductForItem(it);
+      console.log("[DEBUG] item:",it.name,"lot:",it.lot,"fahPct:",it.fahPct,"found:",!!p,"cost:",p?.cost);
       const cost=(p?.cost||0)*it.qty;
       const fahPct=it.fahPct>=0?it.fahPct:50;
       totalCost+=cost;

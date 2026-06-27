@@ -979,16 +979,16 @@ function renderProfit(){
   const bills=ms.length;
   const avg=bills?Math.round(totalRev/bills):0;
 
-  // ต้นทุนรวม แยกฟ้า/แม่ — cost แบ่งตาม fahPct ของแต่ละรายการ
-  // เช่น สนใบพาย Fah 100% → ต้นทุนทั้งหมดเป็นของฟ้า
+  // ต้นทุนรวม แยกฟ้า/แม่ — เฉพาะ Fah 100% เท่านั้นถึงนับเป็น "ต้นทุนฟ้า"
+  // ถ้า % ไม่ใช่ 100 → นับแค่ใน totalCost เท่านั้น ไม่แยกร้าน
   let totalCost=0, fahCost=0, momCost=0;
   ms.forEach(s=>s.items.forEach(it=>{
     const p=findProductForItem(it);
     const cost=(p?.cost||0)*it.qty;
-    const fPct=(it.fahPct>=0?it.fahPct:50)/100;
+    const fahPct=it.fahPct>=0?it.fahPct:50;
     totalCost+=cost;
-    fahCost+=cost*fPct;
-    momCost+=cost*(1-fPct);
+    if(fahPct===100) fahCost+=cost;       // ต้นทุนฟ้า: เฉพาะ 100% เท่านั้น
+    else if(fahPct===0) momCost+=cost;    // ต้นทุนแม่: เฉพาะ 0% (mom 100%) เท่านั้น
   }));
   const netProfit=totalRev-totalCost;
   const fahProfit=fahTotal-fahCost;
@@ -1002,7 +1002,7 @@ function renderProfit(){
     <div class="metric" data-accent="mom"><div class="metric-lbl">🌸 ยอดขายแม่รวม</div><div class="metric-val" style="font-size:17px;color:#FFB0CC">฿${Math.round(momTotal).toLocaleString()}</div></div>
     <div class="metric" data-accent="fah"><div class="metric-lbl">🌿 ยอดขายฟ้ารวม</div><div class="metric-val" style="font-size:17px;color:#88DBBD">฿${Math.round(fahTotal).toLocaleString()}</div></div>
     <div class="metric" data-accent="total"><div class="metric-lbl">ต้นทุนรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalCost).toLocaleString()}</div></div>
-    <div class="metric" data-accent="fah"><div class="metric-lbl">💰 ต้นทุนฟ้ารวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(fahCost).toLocaleString()}</div></div>
+    <div class="metric" data-accent="fah"><div class="metric-lbl">💰 ต้นทุนฟ้า (Fah 100%)</div><div class="metric-val" style="font-size:17px">฿${Math.round(fahCost).toLocaleString()}</div></div>
     <div class="metric-trio">
       <div class="metric" data-accent="total"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
       <div class="metric" data-accent="total"><div class="metric-lbl">จำนวนบิล</div><div class="metric-val">${bills}</div><div class="metric-sub neu">บิล</div></div>

@@ -41,6 +41,7 @@ function doPost(e) {
       case "updateCustomer":    result = updateCustomer(ss, data); break;
       case "deleteSaleByRow":   result = deleteSaleByRow(ss, data); break;
       case "editSale":          result = editSale(ss, data); break;
+      case "updateSortOrder":   result = updateSortOrder(ss, data); break;
       case "uploadImage":       result = uploadImage(data); break;
       case "rebuildSummary":    result = (updateSummary(ss), {}); break;
       default:
@@ -256,6 +257,23 @@ function uploadImage(data) {
   const id = file.getId();
   // ใช้ thumbnail URL — เปิดได้ใน <img> tag โดยตรง
   return { url: "https://drive.google.com/thumbnail?id=" + id + "&sz=w600" };
+}
+
+/* ── บันทึกลำดับการแสดงสินค้า (column L = sortOrder) ─── */
+function updateSortOrder(ss, data) {
+  const sheet = ss.getSheetByName("Products");
+  const lastRow = sheet.getLastRow();
+  // ตรวจสอบว่ามี header "sortOrder" ใน L1 หรือยัง
+  if (lastRow >= 1 && sheet.getRange(1, 12).getValue() === "") {
+    sheet.getRange(1, 12).setValue("sortOrder");
+  }
+  (data.order || []).forEach(item => {
+    const row = parseInt(item.row);
+    if (row >= 2 && row <= lastRow) {
+      sheet.getRange(row, 12).setValue(parseInt(item.pos));
+    }
+  });
+  return {};
 }
 
 /* ── ลบบิล ─────────────────────────────────────────────── */

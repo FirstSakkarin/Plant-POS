@@ -88,17 +88,20 @@ async function syncAll(){
 // stockFah/stockMom = จำนวนต้นที่อยู่หน้าร้านฟ้า/ร้านแม่ (เป็นส่วนหนึ่งของ stock รวม ไม่ใช่แยกต่างหาก)
 // cost = ต้นทุนต่อต้น (บาท) — ใส่ 0 ได้ถ้าไม่มีต้นทุน ใช้คำนวณกำไร/ต้นทุนรวมในหน้ารายงาน
 async function loadProducts(){
-  const rows=await sheetGet("Products!A2:K");
+  const rows=await sheetGet("Products!A2:L");
   products=rows.map((r,i)=>({
     row:i+2,
     name:r[0]||"",lot:r[1]||"",cat:r[2]||"",
     price:parseFloat(r[3])||0,stock:parseInt(r[4])||0,
     emoji:r[5]||"🌿",imgUrl:r[6]||"",
-    defaultPct:parseFloat(r[7])>=0?parseFloat(r[7]):50,   // Fah's default %
+    defaultPct:parseFloat(r[7])>=0?parseFloat(r[7]):50,
     stockFah:parseInt(r[8])||0,
     stockMom:parseInt(r[9])||0,
-    cost:parseFloat(r[10])||0
+    cost:parseFloat(r[10])||0,
+    sortOrder:parseInt(r[11])||9999  // col L — ลำดับการแสดงผล
   })).filter(p=>p.name);
+  // เรียงตาม sortOrder ก่อนวาด
+  products.sort((a,b)=>(a.sortOrder||9999)-(b.sortOrder||9999));
   renderProds();renderProdList();
 }
 
@@ -218,14 +221,14 @@ function renderProds(){
           <span style="font-size:10px;color:${ss<=0?"var(--r6)":ss<=5?"var(--a6)":"var(--g7)"};font-weight:600">${ss<=0?"หมด":"คงเหลือ "+ss+" ต้น"}</span>
         </div>`;
       }).join("");
-      return`<div class="pcard" style="cursor:default">
+      return`<div class="pcard" data-row="${rep.row}" style="cursor:default">
         ${imgHtml}
         <div style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3">${rep.name}</div>
         <div style="font-size:13px;color:var(--g7);font-weight:600;margin-top:2px">฿${rep.price.toLocaleString()} <span style="font-size:10px;color:var(--m)">รวม ${totalStoreStock} ต้น</span></div>
         ${chips}
       </div>`;
     }
-    return`<div class="pcard${totalStoreStock<=0?" pcard-empty":""}" onclick="${totalStoreStock>0?`addCart(${rep.row})`:'toast("❌ สินค้าหมดในร้านนี้")'}">
+    return`<div class="pcard${totalStoreStock<=0?" pcard-empty":""}" data-row="${rep.row}" onclick="${totalStoreStock>0?`addCart(${rep.row})`:'toast("❌ สินค้าหมดในร้านนี้")'}">
       ${imgHtml}
       <div style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3">${rep.name}</div>
       <span class="pbadge" style="background:var(--bg2);color:var(--m);font-size:10px">${rep.lot?rep.lot+" · ":""}<span style="color:${fahColor(rep.defaultPct)};font-weight:700">Fah ${rep.defaultPct??50}%</span></span>
@@ -233,6 +236,7 @@ function renderProds(){
       <div style="font-size:10px;color:${totalStoreStock<=5&&totalStoreStock>0?"var(--r6)":"var(--faint)"};margin-top:2px">${totalStoreStock<=0?"หมดแล้ว":"คงเหลือ "+totalStoreStock+" ต้น"}</div>
     </div>`;
   }).join("");
+  initSortableGrid();
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -582,7 +586,8 @@ function renderProdList(){
         ?`<div style="position:relative;margin-bottom:6px"><img style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;background:var(--bg2)" src="${p.imgUrl}" loading="lazy" onerror="this.style.display='none'"><span style="position:absolute;bottom:4px;right:6px;font-size:16px;background:rgba(255,255,255,.85);border-radius:6px;padding:2px 4px;line-height:1">${p.emoji}</span></div>`
         :`<div style="font-size:26px;text-align:center;margin-bottom:5px;line-height:1">${p.emoji}</div>`;
       const fah=p.stockFah||0,mom=p.stockMom||0,garden=p.stock-fah-mom;
-      return`<div class="pcard mcard" style="cursor:default">
+      return`<div class="pcard mcard" data-row="${p.row}" style="cursor:default">
+        <div class="drag-handle" title="ลากเพื่อจัดเรียง"><i class="ti ti-grip-vertical"></i></div>
         ${imgHtml}
         <div style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3">${p.lot||name}</div>
         <div style="font-size:13px;color:var(--g7);font-weight:600;margin-top:2px">฿${p.price.toLocaleString()}</div>
@@ -598,6 +603,82 @@ function renderProdList(){
     }).join("");
     return headerHtml+cards;
   }).join("");
+  initSortableProdList();
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   DRAG-TO-REORDER — SortableJS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+let _sortGrid=null, _sortList=null;
+
+function initSortableGrid(){
+  if(!window.Sortable)return;
+  const el=document.getElementById("prod-grid");
+  if(!el)return;
+  if(_sortGrid)_sortGrid.destroy();
+  _sortGrid=Sortable.create(el,{
+    animation:200,
+    delay:350,            // long-press บนมือถือ (ms)
+    delayOnTouchOnly:true,
+    ghostClass:"sort-ghost",
+    chosenClass:"sort-chosen",
+    dragClass:"sort-drag",
+    filter:".pcard-empty",  // ไม่ drag การ์ดหมดสต็อก
+    onChoose:()=>navigator.vibrate&&navigator.vibrate(20),
+    onEnd:()=>saveSortOrder("grid")
+  });
+}
+
+function initSortableProdList(){
+  if(!window.Sortable)return;
+  const el=document.getElementById("prod-list");
+  if(!el)return;
+  if(_sortList)_sortList.destroy();
+  _sortList=Sortable.create(el,{
+    animation:200,
+    handle:".drag-handle",  // ลากผ่าน handle icon เท่านั้น
+    ghostClass:"sort-ghost",
+    chosenClass:"sort-chosen",
+    dragClass:"sort-drag",
+    filter:".prod-cat-hdr,.prod-group-header", // ไม่ drag header group
+    onEnd:()=>saveSortOrder("list")
+  });
+}
+
+async function saveSortOrder(source){
+  const order=[];
+  if(source==="grid"){
+    // POS grid: card = representative ของ group
+    // → เรียงลำดับทุก lot ของ group ตาม group order ใหม่
+    const cards=[...document.querySelectorAll("#prod-grid [data-row]")];
+    let pos=0;
+    cards.forEach(card=>{
+      const row=parseInt(card.dataset.row);
+      const rep=products.find(p=>p.row===row);
+      if(!rep)return;
+      // lot ทั้งหมดของ group นี้ได้ sortOrder ต่อเนื่อง
+      products.filter(p=>p.name===rep.name).forEach(lot=>{
+        lot.sortOrder=pos;
+        order.push({row:lot.row,pos:pos++});
+      });
+    });
+    // เรียง products array ใหม่ให้ตรง (prevents snap-back on re-render)
+    products.sort((a,b)=>a.sortOrder-b.sortOrder);
+  } else {
+    // Management list: individual lot cards
+    const cards=[...document.querySelectorAll("#prod-list [data-row]")];
+    cards.forEach((card,i)=>{
+      const row=parseInt(card.dataset.row);
+      const p=products.find(x=>x.row===row);
+      if(p){p.sortOrder=i;order.push({row,pos:i});}
+    });
+    products.sort((a,b)=>a.sortOrder-b.sortOrder);
+  }
+  if(!order.length)return;
+  try{
+    await scriptPost({action:"updateSortOrder",order});
+    toast("✅ บันทึกลำดับแล้ว");
+  }catch(e){toast("⚠️ บันทึกลำดับไม่ได้: "+e.message);}
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

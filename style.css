@@ -2067,7 +2067,37 @@
   color: rgba(255,255,255,0.7) !important;
 }
 
-/* ── 16. TOAST ── */
+/* ── 16. DRAG-TO-REORDER ── */
+.sort-ghost {
+  opacity: 0.25;
+  transform: scale(0.95);
+  border: 1.5px dashed var(--g7) !important;
+  background: rgba(140,222,33,0.06) !important;
+}
+[data-store="mom"] .sort-ghost { border-color: #4DBBFF !important; background: rgba(77,187,255,0.06) !important; }
+.sort-chosen {
+  box-shadow: 0 12px 36px rgba(0,0,0,0.45), 0 0 0 1.5px var(--g7) !important;
+  transform: scale(1.04);
+  z-index: 99;
+}
+[data-store="mom"] .sort-chosen { box-shadow: 0 12px 36px rgba(0,0,0,0.45), 0 0 0 1.5px #4DBBFF !important; }
+.sort-drag { opacity: 0.92; }
+/* Drag handle icon (หน้าจัดการสินค้า) */
+.drag-handle {
+  position: absolute;
+  top: 7px; right: 7px;
+  font-size: 15px;
+  color: rgba(255,255,255,0.2);
+  cursor: grab;
+  touch-action: none;
+  line-height: 1;
+  padding: 2px;
+}
+.drag-handle:active { cursor: grabbing; color: var(--g7); }
+[data-store="mom"] .drag-handle:active { color: #4DBBFF; }
+.mcard { position: relative; }
+
+/* ── 17. TOAST ── */
 .toast {
   background: rgba(10,20,8,0.9) !important;
   border: 0.5px solid rgba(255,255,255,0.14) !important;

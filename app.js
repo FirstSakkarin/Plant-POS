@@ -170,10 +170,8 @@ function selectPosStore(store,btn){
   selectedSaleStore=store;
   document.querySelectorAll("[id^='pos-fah'],[id^='pos-mom']").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
-  // sync ปุ่มใน checkout overlay ด้วย
-  document.querySelectorAll("[id^='store-']").forEach(b=>b.classList.remove("active"));
-  const ob=document.getElementById("store-"+store);
-  if(ob)ob.classList.add("active");
+  // เปลี่ยน theme accent ทั้งหน้าจอตามร้านที่เลือก
+  document.documentElement.dataset.store=store;
   renderProds();
 }
 
@@ -487,7 +485,8 @@ async function confirmSale(){
     clearSelectedCust();
     cart={};document.getElementById("disc-val").value="0";
     selectedSaleStore=null;
-    // reset ปุ่มเลือกร้านทั้ง POS และ overlay
+    // reset theme และปุ่มเลือกร้าน
+    delete document.documentElement.dataset.store;
     document.querySelectorAll("[id^='pos-fah'],[id^='pos-mom'],[id^='store-']").forEach(b=>b.classList.remove("active"));
     renderCart();renderProds();renderProdList();closePay();
     openReceipt(sales[0]);

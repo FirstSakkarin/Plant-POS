@@ -93,6 +93,26 @@
             }
         }
 
+/* ══ STORE THEME: ร้านแม่ → accent ฟ้า ══════════════════
+   เมื่อ <html data-store="mom"> → override accent ทั้งหน้า
+   ร้านฟ้า ใช้ theme เขียวเดิม (ไม่ต้อง override)
+════════════════════════════════════════════════════════ */
+[data-store="mom"] {
+  --g7: #4DBBFF;           /* accent หลัก → ฟ้า */
+  --g8: #1a8fcf;           /* accent เข้ม → ฟ้าเข้ม (ปุ่ม primary) */
+  --g9: #0a2a4a;           /* topbar/sidebar → navy */
+  --g3: rgba(77,187,255,0.35); /* ขอบ active */
+  --g2: rgba(77,187,255,0.18); /* bg active กดค้าง */
+  --g1: rgba(77,187,255,0.08); /* bg badge/chip เลือกอยู่ */
+}
+/* ตัวหนังสือบน dark topbar ต้องยังอ่านได้เมื่อ bg เป็น navy */
+[data-store="mom"] .topbar { background: var(--g9); }
+[data-store="mom"] #pos-mom.active { border-color:var(--g7); background:var(--g1); color:var(--g7); }
+/* ร้านฟ้าในสถานะ mom-theme ให้ดูเป็น inactive ชัด */
+[data-store="mom"] #pos-fah.active { border-color:var(--g7); background:var(--g1); color:var(--g7); }
+/* transition สีเวลาสลับร้าน */
+:root { transition: --g7 .2s, --g8 .2s, --g9 .2s; }
+
         .app {
             max-width: 430px;
             margin: 0 auto;
@@ -109,8 +129,13 @@
             background: var(--g9);
             padding: 12px 16px;
             padding-top: max(env(safe-area-inset-top,0px),12px);
-            flex-shrink: 0
+            flex-shrink: 0;
+            border-bottom: 2.5px solid transparent;
+            transition: background .25s, border-color .25s
         }
+        /* เส้นสีบอกร้านที่ใต้ topbar */
+        [data-store="fah"] .topbar { border-bottom-color: var(--g7) }
+        [data-store="mom"] .topbar { border-bottom-color: #4DBBFF }
 
         .topbar-row {
             display: flex;

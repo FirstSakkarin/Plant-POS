@@ -72,8 +72,8 @@
         <div class="pos-store-sel">
           <div class="pos-store-lbl"><i class="ti ti-building-store" style="font-size:13px;vertical-align:-1px"></i> ขายออกจากร้าน</div>
           <div style="display:flex;gap:8px;margin-top:6px">
-            <button class="ss-btn" id="pos-fah" style="flex:1" onclick="selectPosStore('fah',this)"><i class="ti ti-building-store" style="font-size:13px"></i> ร้านฟ้า</button>
-            <button class="ss-btn" id="pos-mom" style="flex:1" onclick="selectPosStore('mom',this)"><i class="ti ti-building-store" style="font-size:13px"></i> ร้านแม่</button>
+            <button class="ss-btn" id="pos-fah" style="flex:1" onclick="selectPosStore('fah',this)">🩵 ร้านฟ้า</button>
+            <button class="ss-btn" id="pos-mom" style="flex:1" onclick="selectPosStore('mom',this)">🩷 ร้านแม่</button>
           </div>
         </div>
         <div class="search-row">
@@ -256,11 +256,11 @@
     <div class="form-lbl">จำนวนที่อยู่หน้าร้าน (เป็นส่วนหนึ่งของสต็อกรวม)</div>
     <div style="display:flex;gap:8px;margin-bottom:4px">
       <div style="flex:1">
-        <div style="font-size:11px;color:var(--m);margin-bottom:3px">🌿 ร้านฟ้า</div>
+        <div style="font-size:11px;color:var(--m);margin-bottom:3px">🩵 ร้านฟ้า</div>
         <input class="form-inp" id="f-stock-fah" type="number" placeholder="0" inputmode="numeric" oninput="updateStockBreakdownHint(true)">
       </div>
       <div style="flex:1">
-        <div style="font-size:11px;color:var(--m);margin-bottom:3px">🌸 ร้านแม่</div>
+        <div style="font-size:11px;color:var(--m);margin-bottom:3px">🩷 ร้านแม่</div>
         <input class="form-inp" id="f-stock-mom" type="number" placeholder="0" inputmode="numeric" oninput="updateStockBreakdownHint(true)">
       </div>
     </div>
@@ -310,13 +310,13 @@
     <div class="form-lbl">จาก</div>
     <select class="form-inp" id="tr-from">
       <option value="garden">🏡 สวน</option>
-      <option value="fah">🔵 ร้านฟ้า</option>
-      <option value="mom">🟢 ร้านแม่</option>
+      <option value="fah">🩵 ร้านฟ้า</option>
+      <option value="mom">🩷 ร้านแม่</option>
     </select>
     <div class="form-lbl">ไปยัง</div>
     <select class="form-inp" id="tr-to">
-      <option value="fah">🔵 ร้านฟ้า</option>
-      <option value="mom">🟢 ร้านแม่</option>
+      <option value="fah">🩵 ร้านฟ้า</option>
+      <option value="mom">🩷 ร้านแม่</option>
       <option value="garden">🏡 สวน</option>
     </select>
     <div class="form-lbl">จำนวน (ต้น)</div>

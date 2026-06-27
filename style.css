@@ -646,7 +646,7 @@
         /* ปุ่ม "ชำระเงิน" สีเขียวเข้มเต็มความกว้าง */
         .pay-btn {
             width: 100%;
-            padding: 14px;          /* ขนาดกล่องปุ่ม (ความหนา) */
+            padding: 10px;          /* ขนาดกล่องปุ่ม (ความหนา) */
             background: var(--g8);  /* สีพื้นปุ่ม */
             color: #d4edaa;         /* สีตัวอักษร/ไอคอนในปุ่ม */
             border: none;
@@ -1777,7 +1777,7 @@
 /* ── TOUCH SIZES ──
    ปรับขนาดปุ่ม/ไอคอน/การ์ดให้กดง่ายขึ้นบนมือถือ (override ค่าด้านบน) */
         .qbtn{width:28px;height:28px;font-size:16px}
-        .pay-btn{padding:16px;font-size:16px}
+        .pay-btn{padding:11px;font-size:14px}
         .tab:not(.active) i{font-size:22px}
         .pcard{min-height:120px}
         .pli-btn{width:36px;height:36px;font-size:17px}
@@ -1854,6 +1854,15 @@
   background: rgba(255,255,255,0.05) !important;
   border: 0.5px solid rgba(255,255,255,0.1) !important;
   color: rgba(255,255,255,0.4) !important;
+}
+/* Pre-color store buttons even before selection */
+#pos-fah {
+  color: #88DBBD !important;
+  border-color: rgba(109,191,161,0.3) !important;
+}
+#pos-mom {
+  color: #FFB0CC !important;
+  border-color: rgba(255,176,204,0.3) !important;
 }
 .ss-btn.active, #pos-fah.active {
   background: rgba(109,191,161,0.14) !important;

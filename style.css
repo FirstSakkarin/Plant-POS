@@ -1468,7 +1468,8 @@
             }
 
         .pcard-empty {
-            opacity: .55
+            opacity: .45;
+            pointer-events: none;
         }
 
         .pcard-multi {

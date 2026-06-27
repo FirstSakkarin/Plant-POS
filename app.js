@@ -252,14 +252,20 @@ function renderProds(){
   const storeKey=selectedSaleStore==="fah"?"stockFah":"stockMom";
   const rawQ=(document.getElementById("topbar-search-input")?.value||"").toLowerCase();
   const tokens=rawQ.trim().split(/\s+/).filter(Boolean);
-  // กรองเฉพาะสินค้าที่มี stock ในร้านที่เลือก + multi-word search
+  // แสดงทุกสินค้า (รวม out-of-stock) — กรองเฉพาะ search
   const f=products.filter(p=>{
-    if((p[storeKey]||0)<=0)return false;
     if(!tokens.length)return true;
     const hay=(p.name+" "+(p.lot||"")).toLowerCase();
     return tokens.every(t=>hay.includes(t));
   });
-  if(!f.length){g.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--faint);font-size:13px;padding:24px">ไม่มีสินค้าในร้านนี้${q?" ที่ตรงกับคำค้นหา":""}</div>`;return}
+  // เรียง: มี stock ก่อน → หมด stock ไว้ท้าย
+  f.sort((a,b)=>{
+    const as=(a[storeKey]||0)>0?0:1;
+    const bs=(b[storeKey]||0)>0?0:1;
+    if(as!==bs)return as-bs;
+    return(a.sortOrder||9999)-(b.sortOrder||9999);
+  });
+  if(!f.length){g.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--faint);font-size:13px;padding:24px">ไม่มีสินค้าที่ตรงกับคำค้นหา</div>`;return}
 
   const grouped={};
   f.forEach(p=>{if(!grouped[p.name])grouped[p.name]=[];grouped[p.name].push(p);});
@@ -288,7 +294,7 @@ function renderProds(){
         ${chips}
       </div>`;
     }
-    return`<div class="pcard${totalStoreStock<=0?" pcard-empty":""}" data-row="${rep.row}" onclick="${totalStoreStock>0?`addCart(${rep.row})`:'toast("❌ สินค้าหมดในร้านนี้")'}">
+    return`<div class="pcard${totalStoreStock<=0?" pcard-empty":""}" data-row="${rep.row}" onclick="${totalStoreStock>0?`addCart(${rep.row})`:""}" >
       ${imgHtml}
       <div style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3">${rep.name}</div>
       <span class="pbadge" style="background:var(--bg2);color:var(--m);font-size:10px">${rep.lot?rep.lot+" · ":""}<span style="color:${fahColor(rep.defaultPct)};font-weight:700">Fah ${rep.defaultPct??50}%</span></span>

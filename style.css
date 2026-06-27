@@ -495,22 +495,33 @@
             margin-bottom: 7px;
             gap: 8px
         }
-        /* ปุ่มซ่อน/แสดงตะกร้า */
-        .cart-toggle-btn {
-            width: 26px; height: 26px; border-radius: 50%;
-            background: rgba(255,255,255,0.08); border: none;
-            color: rgba(255,255,255,0.5); cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0; transition: .2s; font-size: 14px
+        /* Drag handle — แถบจับที่เด่นชัด สำหรับซ่อน/แสดงตะกร้า */
+        .cart-drag-handle {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 5px; padding: 10px 0 6px;
+            cursor: pointer; user-select: none;
+            transition: opacity .15s
         }
-        .cart-toggle-btn i { transition: transform .25s; display: block }
-        .cart-collapsed .cart-toggle-btn i { transform: rotate(180deg) }
+        .cart-drag-handle:active { opacity: .6 }
+        .cart-drag-bar {
+            width: 44px; height: 4px; border-radius: 2px;
+            background: rgba(255,255,255,0.3);
+            transition: background .15s, width .15s
+        }
+        .cart-drag-handle:active .cart-drag-bar { background: rgba(255,255,255,0.6); width: 52px }
+        .cart-drag-lbl {
+            font-size: 10px; font-weight: 600; letter-spacing: .5px;
+            color: rgba(255,255,255,0.3); text-transform: uppercase
+        }
+        /* ซ่อนตะกร้า */
         .cart-collapsed .cart-scroll,
         .cart-collapsed .disc-row,
         .cart-collapsed .total-row,
         .cart-collapsed .cust-sel-bar { display: none !important }
-        .cart-collapsed { padding-bottom: 6px }
+        .cart-collapsed { padding-bottom: 4px }
         .cart-collapsed .cart-hdr { margin-bottom: 0 }
+        .cart-collapsed .cart-drag-bar { background: rgba(255,255,255,0.18) }
 
         .cart-title {
             font-size: 13px;
@@ -2216,6 +2227,41 @@
 .profit-line[data-accent="mom"] .p-lbl { color: rgba(255,176,204,0.8) !important; }
 .profit-line[data-accent="mom"] .p-val { color: #FFB0CC !important; }
 
+/* ── Date divider ── */
+.date-divider {
+  display: flex; align-items: center; gap: 8px;
+  margin: 14px 0 8px; font-size: 11px; font-weight: 600;
+  color: rgba(255,255,255,0.38); letter-spacing: .3px;
+}
+.date-divider::before, .date-divider::after {
+  content: ''; flex: 1; height: 0.5px;
+  background: rgba(255,255,255,0.1);
+}
+/* ── Extra cost tags (in pay overlay) ── */
+.extra-cost-tag {
+  display: flex; align-items: center; gap: 4px;
+  padding: 5px 10px; border-radius: 20px;
+  background: rgba(255,255,255,0.07); border: 0.5px solid rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.65); font-size: 12px;
+  font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+  cursor: pointer; transition: .15s;
+}
+.extra-cost-tag:active { background: rgba(255,255,255,0.14); }
+/* Extra cost entry row */
+.extra-cost-row {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+}
+.extra-cost-row-lbl {
+  flex: 1; font-size: 12px; color: rgba(255,255,255,0.6);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.extra-cost-remove {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(255,255,255,0.07); border: none;
+  color: rgba(255,255,255,0.45); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+}
 /* ── 13. SALE CARDS (history): glass ── */
 .sale-card {
   background: rgba(255,255,255,0.05) !important;

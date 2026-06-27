@@ -72,16 +72,18 @@
       <div class="pos-wrap">
         <!-- เลือกร้านก่อนขาย -->
         <div class="pos-store-sel">
-          <div class="pos-store-lbl"><i class="ti ti-building-store" style="font-size:13px;vertical-align:-1px"></i> ขายออกจากร้าน</div>
-          <div style="display:flex;gap:8px;margin-top:6px">
+          <div style="display:flex;gap:8px">
             <button class="ss-btn" id="pos-fah" style="flex:1" onclick="selectPosStore('fah',this)">🩵 ร้านฟ้า</button>
             <button class="ss-btn" id="pos-mom" style="flex:1" onclick="selectPosStore('mom',this)">🩷 ร้านแม่</button>
           </div>
         </div>
         <div class="prod-area"><div class="prod-grid" id="prod-grid"></div></div>
         <div class="cart-panel">
+          <div class="cart-drag-handle" id="cart-drag-handle" onclick="toggleCart()">
+            <div class="cart-drag-bar"></div>
+            <span class="cart-drag-lbl">ตะกร้า <span id="cart-count-handle"></span></span>
+          </div>
           <div class="cart-hdr">
-            <button class="cart-toggle-btn" onclick="toggleCart()" title="ซ่อน/แสดงตะกร้า"><i class="ti ti-chevron-down" id="cart-chevron"></i></button>
             <span class="cart-title"><i class="ti ti-shopping-cart" style="font-size:14px;vertical-align:-2px"></i> ตะกร้า (<span id="cart-count">0</span>)</span>
             <button class="clear-btn" onclick="clearCart()">ล้างทั้งหมด</button>
           </div>
@@ -93,7 +95,7 @@
               <button class="disc-tab active" onclick="setDiscMode('baht',this)">฿</button>
               <button class="disc-tab" onclick="setDiscMode('pct',this)">%</button>
             </div>
-            <input class="disc-input" type="number" id="disc-val" value="0" min="0" oninput="renderTotal()" placeholder="0">
+            <input class="disc-input" type="number" id="disc-val" value="0" min="0" oninput="renderTotal()" placeholder="0" inputmode="decimal">
             <span id="disc-unit" style="font-size:12px;color:var(--m)">บาท</span>
           </div>
           <div class="total-row">
@@ -190,6 +192,14 @@
     </div>
     <!-- % กำไรต่อรายการ -->
     <div id="pay-profit-splits" style="margin-bottom:10px"></div>
+    <!-- ต้นทุนอื่นๆ -->
+    <div class="form-lbl" style="margin-top:4px">ต้นทุนอื่นๆ <span style="font-weight:400;color:var(--faint)">(หักจากกำไร ไม่บวกยอดลูกค้า)</span></div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+      <button class="extra-cost-tag" onclick="addExtraCost('ค่าขนส่ง')"><i class="ti ti-truck" style="font-size:12px"></i> ค่าขนส่ง</button>
+      <button class="extra-cost-tag" onclick="addExtraCost('ค่าฝากขาย')"><i class="ti ti-building-store" style="font-size:12px"></i> ค่าฝากขาย</button>
+      <button class="extra-cost-tag" onclick="addExtraCost('อื่นๆ')"><i class="ti ti-plus" style="font-size:12px"></i> อื่นๆ</button>
+    </div>
+    <div id="extra-costs-list"></div>
     <div class="modal-total-box">
       <span class="modal-total-lbl">ยอดสุทธิ</span>
       <span class="modal-total-val" id="pay-total">฿0</span>

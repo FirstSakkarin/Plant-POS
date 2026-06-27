@@ -116,8 +116,8 @@ function updateStockLocations(ss, p) {
 }
 
 /* ───────────────────────────────────────────────
-   SALES  (ชีต "Sales", คอลัมน์ A-F)
-   A date | B items | C subtotal | D discount | E total | F custName
+   SALES  (ชีต "Sales", คอลัมน์ A-G)
+   A date | B items | C subtotal | D discount | E total | F custName | G extraCosts (JSON)
 ─────────────────────────────────────────────── */
 function addSale(ss, s) {
   const sheet = ss.getSheetByName("Sales");
@@ -127,7 +127,8 @@ function addSale(ss, s) {
     s.subtotal || 0,
     s.discount || 0,
     s.total || 0,
-    s.custName || ""
+    s.custName || "",
+    s.extraCosts || ""
   ]);
   updateSummary(ss); // อัปเดตชีตสรุปผลทุกครั้งที่มีการขาย
   return {};

@@ -133,7 +133,7 @@ function parseSheetDate(str){
 }
 
 async function loadSales(){
-  const rows=await sheetGet("Sales!A2:F");
+  const rows=await sheetGet("Sales!A2:G");
   sales=rows.map((r,i)=>({
     sheetRow:i+2,  // row 1 = header, i=0 → row 2
     date:parseSheetDate(r[0]),
@@ -146,6 +146,7 @@ async function loadSales(){
     discount:parseFloat(r[3])||0,
     total:parseFloat(r[4])||0,
     custName:r[5]||"",
+    extraCosts:r[6]?JSON.parse(r[6]):[],
     itemCount:(r[1]||"").split(",").reduce((a,s)=>{const p=s.split("×");return a+(parseInt(p[1])||1)},0)
   })).filter(s=>!isNaN(s.date.getTime())).reverse();
 }
@@ -466,7 +467,7 @@ async function confirmSale(){
     const pad=n=>String(n).padStart(2,"0");
     const dateStr=now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate())+"T"+pad(now.getHours())+":"+pad(now.getMinutes());
     const custName=selectedCust?selectedCust.name:"";
-    await scriptPost({action:"addSale",date:dateStr,items:itemStr,subtotal:sub,discount:disc,total,custName});
+    await scriptPost({action:"addSale",date:dateStr,items:itemStr,subtotal:sub,discount:disc,total,custName,extraCosts:JSON.stringify(extraCosts)});
     let negativeWarn=false;
     for(const x of items){
       const p=products.find(q=>q.row===x.row);
@@ -1021,7 +1022,7 @@ function renderProfit(){
       <div class="metric" data-accent="total"><div class="metric-lbl">จำนวนบิล</div><div class="metric-val">${bills}</div><div class="metric-sub neu">บิล</div></div>
       <div class="metric" data-accent="total"><div class="metric-lbl">ส่วนลดรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalDisc).toLocaleString()}</div></div>
     </div>
-    ${totalExtraCost>0?`<div class="metric" data-accent="total"><div class="metric-lbl">📦 ต้นทุนอื่นๆ</div><div class="metric-val" style="font-size:17px;color:rgba(255,176,204,0.85)">฿${Math.round(totalExtraCost).toLocaleString()}</div></div>`:""}`;
+    <div class="metric" data-accent="total"><div class="metric-lbl">📦 ต้นทุนอื่นๆ</div><div class="metric-val" style="font-size:17px;color:rgba(255,176,204,0.85)">฿${Math.round(totalExtraCost).toLocaleString()}</div></div>`;
 
   // Breakdown by item name
   const byName={};
@@ -1044,7 +1045,7 @@ function renderProfit(){
       <div class="profit-line" data-accent="fah"><span class="p-lbl">🩵 Fah ได้</span><span class="p-val pv-ts">฿${Math.round(fahTotal).toLocaleString()}</span></div>
       <div class="profit-line" data-accent="mom"><span class="p-lbl">🩷 แม่ได้</span><span class="p-val pv-snp">฿${Math.round(momTotal).toLocaleString()}</span></div>
       <div class="profit-line" data-accent="total"><span class="p-lbl">ต้นทุนรวม</span><span class="p-val">฿${Math.round(totalCost).toLocaleString()}</span></div>
-      ${totalExtraCost>0?`<div class="profit-line" data-accent="total"><span class="p-lbl">📦 ต้นทุนอื่นๆ</span><span class="p-val" style="color:rgba(255,176,204,0.85)">฿${Math.round(totalExtraCost).toLocaleString()}</span></div>`:""}
+      <div class="profit-line" data-accent="total"><span class="p-lbl">📦 ต้นทุนอื่นๆ</span><span class="p-val" style="color:rgba(255,176,204,0.85)">฿${Math.round(totalExtraCost).toLocaleString()}</span></div>
       <div class="profit-line" data-accent="profit"><span class="p-lbl">กำไรสุทธิ</span><span class="p-val" style="color:${netProfit>=0?"#F2C05A":"var(--r6)"}">฿${Math.round(netProfit).toLocaleString()}</span></div>
     </div>
     ${sorted.length?`<div class="profit-block">

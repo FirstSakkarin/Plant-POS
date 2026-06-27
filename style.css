@@ -41,14 +41,15 @@
            ถ้าอยากเปลี่ยน "สีธีม" ของแอป ให้แก้ค่าตรงนี้
            แล้วทุกที่ที่เรียกใช้ var(--xxx) จะเปลี่ยนตามทันที */
 :root {
-    /* โทนเขียว (สีหลักของร้าน / ปุ่มหลัก / ราคา) เลขสูง = เข้ม, เลขต่ำ = อ่อน */
-    --g9: #1e3a08; /* เขียวเข้มสุด: พื้นหลัง topbar/sidebar */
-    --g8: #2d5c0e; /* เขียวเข้ม: ปุ่มหลัก (pay-btn, btn-primary), ตัวเลขราคารวม */
-    --g7: #8CDE21; /* เขียวกลาง: ตัวหนังสือราคา, แท็บที่เลือก */
-    --g6: #4DBBFF; /* เขียวอ่อนกลาง (สำรอง) */
-    --g3: #97C459; /* เขียวอ่อน: ขอบ/border ของกล่องที่ถูกเลือก */
-    --g2: #C0DD97; /* เขียวอ่อนมาก: พื้นหลังเวลากด active */
-    --g1: #EAF3DE; /* เขียวพาสเทล: พื้นหลังป้าย/badge/การ์ดที่ถูกเลือก */
+    /* สี accent หลัก — ค่า default (ขาว) ใช้บนหน้าที่ยังไม่ได้เลือกร้าน
+       เมื่อ data-store="fah" → teal, data-store="mom" → ชมพู (override ด้านล่าง) */
+    --g9: #111111; /* topbar bg default (dark) */
+    --g8: rgba(255,255,255,0.6); /* accent เข้ม default */
+    --g7: rgba(255,255,255,0.88); /* accent หลัก default (ขาว) */
+    --g6: rgba(255,255,255,0.4); /* accent สำรอง */
+    --g3: rgba(255,255,255,0.25); /* ขอบ active */
+    --g2: rgba(255,255,255,0.1);  /* bg active */
+    --g1: rgba(255,255,255,0.05); /* bg badge */
     /* โทนส้ม/น้ำตาล (ใช้กับส่วนลด, แต้มสะสม, สถานะ Fah-individual) */
     --a8: #633806; /* น้ำตาลเข้ม: ตัวหนังสือในป้ายสีส้ม */
     --a6: #BA7517; /* น้ำตาลกลาง: ตัวเลขส่วนลด/แต้มสะสม */
@@ -1750,8 +1751,8 @@
         .pt-btn.individual.active{background:var(--a1);color:var(--a8);border-color:var(--a3);font-weight:700}
         .ss-btn{flex:1;padding:9px 4px;border-radius:8px;border:0.5px solid var(--bd);background:var(--bg2);font-size:11px;font-family:'Sukhumvit Set','Prompt','Sarabun',sans-serif;cursor:pointer;color:var(--m);font-weight:500;transition:.12s}
         .ss-btn.active{border-color:var(--g3);background:var(--g1);color:var(--g8);font-weight:700}
-        /* ร้านแม่ = ทีมสีฟ้า override */
-        #pos-mom.active{border-color:#4DBBFF;background:rgba(77,187,255,0.1);color:#4DBBFF}
+        /* ร้านแม่ = ชมพู override */
+        #pos-mom.active{border-color:#FFB0CC;background:rgba(255,176,204,0.1);color:#FFB0CC}
         /* ── PROFIT BADGE ── */
         .pbadge{display:inline-flex;align-items:center;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600;margin-top:2px;line-height:1.4}
         .pb-shared{background:#e8f0fe;color:#3c5aa6}
@@ -1790,10 +1791,13 @@
 
 /* ── 1. POS SCREEN: dark gradient background ── */
 #screen-pos {
-  background: radial-gradient(ellipse at 25% 0%, #183d0a 0%, #0d2706 40%, #060f04 100%) !important;
+  background: radial-gradient(ellipse at 25% 0%, #121212 0%, #080808 40%, #030303 100%) !important;
+}
+[data-store="fah"] #screen-pos {
+  background: radial-gradient(ellipse at 25% 0%, #0f2820 0%, #081a12 40%, #020d08 100%) !important;
 }
 [data-store="mom"] #screen-pos {
-  background: radial-gradient(ellipse at 25% 0%, #063050 0%, #03192e 40%, #010a18 100%) !important;
+  background: radial-gradient(ellipse at 25% 0%, #2a0f1a 0%, #180610 40%, #0c0208 100%) !important;
 }
 
 /* ── 2. PRODUCT CARDS: glass ── */
@@ -1805,14 +1809,19 @@
   -webkit-backdrop-filter: blur(10px);
 }
 .pcard:active {
-  background: rgba(140,222,33,0.14) !important;
-  border-color: rgba(140,222,33,0.35) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 0 12px rgba(140,222,33,0.1) !important;
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.3) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 0 12px rgba(255,255,255,0.05) !important;
+}
+[data-store="fah"] .pcard:active {
+  background: rgba(109,191,161,0.14) !important;
+  border-color: rgba(109,191,161,0.35) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 0 12px rgba(109,191,161,0.12) !important;
 }
 [data-store="mom"] .pcard:active {
-  background: rgba(77,187,255,0.14) !important;
-  border-color: rgba(77,187,255,0.35) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 0 12px rgba(77,187,255,0.1) !important;
+  background: rgba(255,176,204,0.14) !important;
+  border-color: rgba(255,176,204,0.35) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 0 12px rgba(255,176,204,0.12) !important;
 }
 .pcard-name { color: rgba(255,255,255,0.8) !important; }
 .pcard-stock { color: rgba(255,255,255,0.35) !important; }
@@ -1901,26 +1910,71 @@
 
 /* ── 6. TAB BAR: floating glass pill ── */
 .tab-bar {
-  background: rgba(8,14,6,0.72) !important;
-  border: 0.5px solid rgba(255,255,255,0.14) !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1) !important;
-  backdrop-filter: blur(28px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  background: rgba(10,10,10,0.65) !important;
+  border: 0.5px solid rgba(255,255,255,0.18) !important;
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    0 0 0 0.5px rgba(255,255,255,0.06) !important;
+  backdrop-filter: blur(36px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(200%) !important;
 }
-.tab { color: rgba(255,255,255,0.28) !important; background: none !important; }
+
+/* ── inactive tabs: ขาวหม่นมีแสงสลัว ── */
+.tab {
+  color: rgba(255,255,255,0.38) !important;
+  background: none !important;
+  text-shadow: 0 0 8px rgba(255,255,255,0.1) !important;
+  transition: color .2s, background .2s, box-shadow .2s, text-shadow .2s !important;
+}
+.tab i { transition: filter .2s !important; }
+
+/* ── active tab default (no store): ขาว glow ── */
 .tab.active {
-  background: rgba(255,255,255,0.09) !important;
-  color: rgba(255,255,255,0.9) !important;
+  background: rgba(255,255,255,0.11) !important;
+  color: #ffffff !important;
+  text-shadow:
+    0 0 12px rgba(255,255,255,0.9),
+    0 0 28px rgba(255,255,255,0.4),
+    0 0 48px rgba(255,255,255,0.15) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.28),
+    0 0 16px rgba(255,255,255,0.08) !important;
 }
+.tab.active i {
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.8)) !important;
+}
+
+/* ── active tab ร้านฟ้า: teal glow ── */
 [data-store="fah"] .tab.active {
-  background: rgba(109,191,161,0.18) !important;
+  background: rgba(109,191,161,0.16) !important;
   color: #88DBBD !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15) !important;
+  text-shadow:
+    0 0 12px rgba(136,219,189,0.9),
+    0 0 28px rgba(109,191,161,0.5),
+    0 0 48px rgba(109,191,161,0.2) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    0 0 18px rgba(109,191,161,0.12) !important;
 }
+[data-store="fah"] .tab.active i {
+  filter: drop-shadow(0 0 6px rgba(136,219,189,0.8)) !important;
+}
+
+/* ── active tab ร้านแม่: pink glow ── */
 [data-store="mom"] .tab.active {
-  background: rgba(255,176,204,0.18) !important;
+  background: rgba(255,176,204,0.16) !important;
   color: #FFB0CC !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15) !important;
+  text-shadow:
+    0 0 12px rgba(255,176,204,0.9),
+    0 0 28px rgba(255,176,204,0.5),
+    0 0 48px rgba(255,176,204,0.2) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    0 0 18px rgba(255,176,204,0.12) !important;
+}
+[data-store="mom"] .tab.active i {
+  filter: drop-shadow(0 0 6px rgba(255,176,204,0.8)) !important;
 }
 
 /* ── 7. TOPBAR: glass ── */
@@ -1960,8 +2014,12 @@
 }
 .form-inp::placeholder { color: rgba(255,255,255,0.25) !important; }
 .form-inp:focus {
-  border-color: rgba(140,222,33,0.5) !important;
-  box-shadow: 0 0 0 3px rgba(140,222,33,0.08) !important;
+  border-color: rgba(255,255,255,0.35) !important;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.06) !important;
+}
+[data-store="fah"] .form-inp:focus {
+  border-color: rgba(109,191,161,0.5) !important;
+  box-shadow: 0 0 0 3px rgba(109,191,161,0.08) !important;
 }
 [data-store="mom"] .form-inp:focus {
   border-color: rgba(255,176,204,0.5) !important;
@@ -1981,10 +2039,10 @@
 
 /* ── 9. BUTTONS: gradient glass ── */
 .btn-primary {
-  background: linear-gradient(148deg,rgba(158,230,38,0.92),rgba(106,172,18,0.88)) !important;
-  color: #162a04 !important;
-  border: none !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 4px 14px rgba(0,0,0,0.3) !important;
+  background: linear-gradient(148deg,rgba(255,255,255,0.14),rgba(255,255,255,0.07)) !important;
+  color: rgba(255,255,255,0.9) !important;
+  border: 0.5px solid rgba(255,255,255,0.2) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 4px 14px rgba(0,0,0,0.3) !important;
   font-weight: 700 !important;
 }
 .btn-primary:disabled {
@@ -2082,6 +2140,24 @@
 .metric[data-accent="total"] .metric-lbl { color: rgba(255,255,255,0.55) !important; }
 .metric[data-accent="total"] .metric-val { color: rgba(255,255,255,0.95) !important; }
 
+/* ── 12b-2. METRIC + PROFIT-LINE: กำไรสุทธิ → golden ── */
+.metric[data-accent="profit"] {
+  background: rgba(242,192,90,0.10) !important;
+  border-color: rgba(242,192,90,0.30) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,216,120,0.22),
+    0 0 18px rgba(242,192,90,0.10),
+    0 2px 8px rgba(0,0,0,0.22) !important;
+}
+.metric[data-accent="profit"] .metric-lbl { color: rgba(255,210,100,0.65) !important; }
+.metric[data-accent="profit"] .metric-val { color: #F2C05A !important; }
+
+.profit-line[data-accent="profit"] {
+  border-left: 2px solid rgba(242,192,90,0.65);
+  padding-left: 8px;
+}
+.profit-line[data-accent="profit"] .p-lbl { color: rgba(255,210,100,0.8) !important; }
+
 /* ── 12c. PROFIT-LINE: store accent left-border ── */
 .profit-line[data-accent="fah"] {
   border-left: 2px solid rgba(109,191,161,0.6);
@@ -2124,9 +2200,19 @@
   color: rgba(255,255,255,0.5) !important;
 }
 .pt-btn.active {
-  background: rgba(140,222,33,0.14) !important;
-  border-color: rgba(140,222,33,0.35) !important;
-  color: #8CDE21 !important;
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.3) !important;
+  color: rgba(255,255,255,0.9) !important;
+}
+[data-store="fah"] .pt-btn.active {
+  background: rgba(109,191,161,0.14) !important;
+  border-color: rgba(109,191,161,0.35) !important;
+  color: #88DBBD !important;
+}
+[data-store="mom"] .pt-btn.active {
+  background: rgba(255,176,204,0.14) !important;
+  border-color: rgba(255,176,204,0.35) !important;
+  color: #FFB0CC !important;
 }
 
 /* ── 15. QBTN (quantity buttons in cart): glass ── */
@@ -2140,8 +2226,8 @@
 .sort-ghost {
   opacity: 0.25;
   transform: scale(0.95);
-  border: 1.5px dashed var(--g7) !important;
-  background: rgba(140,222,33,0.06) !important;
+  border: 1.5px dashed rgba(255,255,255,0.4) !important;
+  background: rgba(255,255,255,0.04) !important;
 }
 [data-store="fah"] .sort-ghost { border-color: #88DBBD !important; background: rgba(109,191,161,0.06) !important; }
 [data-store="mom"] .sort-ghost { border-color: #FFB0CC !important; background: rgba(255,176,204,0.06) !important; }

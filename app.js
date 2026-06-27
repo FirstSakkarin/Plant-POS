@@ -411,13 +411,12 @@ function openPay(){
   document.getElementById("change-box").className="change-box";
   document.getElementById("pay-ok").disabled=true;
   payItemSplits={};
-  // แสดงชื่อร้านที่เลือกไว้แล้วใน badge
-  const storeName=selectedSaleStore==="fah"?"ร้านฟ้า 🌿":"ร้านแม่ 🌸";
-  const storeColor=selectedSaleStore==="fah"?"var(--g7)":"#4DBBFF";
-  const badge=document.getElementById("pay-store-badge");
-  const storeLbl=document.getElementById("pay-store-lbl");
-  if(badge)badge.style.borderLeft="3px solid "+storeColor;
-  if(storeLbl){storeLbl.textContent=storeName;storeLbl.style.color=storeColor;}
+  // Header ชื่อร้านโดดเด่นด้านบน popup
+  const isFah=selectedSaleStore==="fah";
+  const storeName=isFah?"🌿 ร้านฟ้า":"🌸 ร้านแม่";
+  const storeColor=isFah?"var(--g7)":"#4DBBFF";
+  const hdr=document.getElementById("pay-store-header");
+  if(hdr){hdr.textContent=storeName;hdr.style.color=storeColor;}
   syncModalCustBtn();
   renderPayProfitSplits();
   document.getElementById("pay-overlay").classList.add("show");

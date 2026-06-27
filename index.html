@@ -170,7 +170,11 @@
   <div class="sheet">
     <div class="sheet-handle"></div>
     <button class="sheet-close" onclick="closePay()"><i class="ti ti-x"></i></button>
-    <div class="sheet-title">ชำระเงิน</div>
+    <!-- Header ชำระเงิน + ชื่อร้านโดดเด่น -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--m);margin-bottom:3px">ชำระเงิน</div>
+      <div id="pay-store-header" style="font-size:20px;font-weight:800;letter-spacing:-.3px"></div>
+    </div>
     <div id="pay-summary" style="font-size:12px;color:var(--m);margin-bottom:8px;line-height:1.6"></div>
     <!-- Customer selector inside modal -->
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
@@ -182,11 +186,6 @@
     <div class="pts-preview" id="pts-preview" style="display:none">
       <i class="ti ti-star"></i>
       <span id="pts-preview-text"></span>
-    </div>
-    <!-- แสดงร้านที่เลือกไว้แล้วจากหน้า POS (ไม่ต้องเลือกซ้ำ) -->
-    <div id="pay-store-badge" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;padding:7px 10px;border-radius:8px;background:var(--bg2)">
-      <i class="ti ti-building-store" style="font-size:14px"></i>
-      <span id="pay-store-lbl" style="font-size:13px;font-weight:600"></span>
     </div>
     <!-- % กำไรต่อรายการ -->
     <div id="pay-profit-splits" style="margin-bottom:10px"></div>

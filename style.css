@@ -93,23 +93,31 @@
             }
         }
 
-/* ══ STORE THEME: ร้านแม่ → accent ฟ้า ══════════════════
-   เมื่อ <html data-store="mom"> → override accent ทั้งหน้า
-   ร้านฟ้า ใช้ theme เขียวเดิม (ไม่ต้อง override)
+/* ══ STORE THEME ══════════════════════════════════════
+   [data-store="fah"] → teal (#88DBBD palette)
+   [data-store="mom"] → soft pink (#FFB0CC palette)
 ════════════════════════════════════════════════════════ */
-[data-store="mom"] {
-  --g7: #4DBBFF;           /* accent หลัก → ฟ้า */
-  --g8: #1a8fcf;           /* accent เข้ม → ฟ้าเข้ม (ปุ่ม primary) */
-  --g9: #0a2a4a;           /* topbar/sidebar → navy */
-  --g3: rgba(77,187,255,0.35); /* ขอบ active */
-  --g2: rgba(77,187,255,0.18); /* bg active กดค้าง */
-  --g1: rgba(77,187,255,0.08); /* bg badge/chip เลือกอยู่ */
+[data-store="fah"] {
+  --g7: #88DBBD;                  /* teal อ่อน: text/accent */
+  --g8: #54967E;                  /* teal เข้ม: ปุ่ม primary */
+  --g9: #0d2520;                  /* teal เข้มสุด: topbar bg */
+  --g3: rgba(109,191,161,0.35);
+  --g2: rgba(109,191,161,0.18);
+  --g1: rgba(109,191,161,0.08);
 }
-/* ตัวหนังสือบน dark topbar ต้องยังอ่านได้เมื่อ bg เป็น navy */
+[data-store="mom"] {
+  --g7: #FFB0CC;                  /* ชมพูอ่อน: text/accent */
+  --g8: #C0607E;                  /* ชมพูเข้ม: ปุ่ม primary */
+  --g9: #2a0f1a;                  /* topbar/sidebar → dark rose */
+  --g3: rgba(255,176,204,0.35);
+  --g2: rgba(255,176,204,0.18);
+  --g1: rgba(255,176,204,0.08);
+}
+/* topbar bg เปลี่ยนตาม store */
+[data-store="fah"] .topbar { background: var(--g9); }
 [data-store="mom"] .topbar { background: var(--g9); }
+[data-store="fah"] #pos-fah.active,
 [data-store="mom"] #pos-mom.active { border-color:var(--g7); background:var(--g1); color:var(--g7); }
-/* ร้านฟ้าในสถานะ mom-theme ให้ดูเป็น inactive ชัด */
-[data-store="mom"] #pos-fah.active { border-color:var(--g7); background:var(--g1); color:var(--g7); }
 /* transition สีเวลาสลับร้าน */
 :root { transition: --g7 .2s, --g8 .2s, --g9 .2s; }
 
@@ -135,7 +143,7 @@
         }
         /* เส้นสีบอกร้านที่ใต้ topbar */
         [data-store="fah"] .topbar { border-bottom-color: var(--g7) }
-        [data-store="mom"] .topbar { border-bottom-color: #4DBBFF }
+        [data-store="mom"] .topbar { border-bottom-color: var(--g7) }
 
         .topbar-row {
             display: flex;
@@ -1759,7 +1767,7 @@
         .profit-line:last-child{border-bottom:none;font-weight:700;font-size:14px;padding-top:8px}
         .p-lbl{color:var(--m)}
         .p-val{font-weight:600;color:var(--t)}
-        .pv-snp{color:var(--p7)}.pv-ts{color:var(--g7)}
+        .pv-snp{color:#FFB0CC}.pv-ts{color:#88DBBD}
         
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    TOUCH-FRIENDLY SIZES
@@ -1839,16 +1847,16 @@
   color: rgba(255,255,255,0.4) !important;
 }
 .ss-btn.active, #pos-fah.active {
-  background: rgba(140,222,33,0.14) !important;
-  border-color: rgba(140,222,33,0.4) !important;
-  color: #8CDE21 !important;
-  box-shadow: 0 0 12px rgba(140,222,33,0.12), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+  background: rgba(109,191,161,0.14) !important;
+  border-color: rgba(109,191,161,0.4) !important;
+  color: #88DBBD !important;
+  box-shadow: 0 0 12px rgba(109,191,161,0.12), inset 0 1px 0 rgba(255,255,255,0.15) !important;
 }
 #pos-mom.active {
-  background: rgba(77,187,255,0.14) !important;
-  border-color: rgba(77,187,255,0.4) !important;
-  color: #4DBBFF !important;
-  box-shadow: 0 0 12px rgba(77,187,255,0.12), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+  background: rgba(255,176,204,0.14) !important;
+  border-color: rgba(255,176,204,0.4) !important;
+  color: #FFB0CC !important;
+  box-shadow: 0 0 12px rgba(255,176,204,0.12), inset 0 1px 0 rgba(255,255,255,0.15) !important;
 }
 .pos-store-lbl { color: rgba(255,255,255,0.3) !important; }
 
@@ -1867,7 +1875,7 @@
 .ci-custom { color: rgba(255,255,255,0.45) !important; }
 .cart-total-row .cart-total-lbl { color: rgba(255,255,255,0.45) !important; }
 .cart-total { color: var(--g7) !important; }
-[data-store="mom"] .cart-total { color: #4DBBFF !important; }
+[data-store="mom"] .cart-total { color: #FFB0CC !important; }
 .disc-row label { color: rgba(255,255,255,0.45) !important; }
 #disc-val, .disc-row input {
   background: rgba(255,255,255,0.07) !important;
@@ -1875,15 +1883,20 @@
   color: rgba(255,255,255,0.9) !important;
 }
 .pay-btn {
-  background: linear-gradient(150deg,#9fe025,#6daf14) !important;
-  color: #162a04 !important;
+  background: linear-gradient(150deg,rgba(255,255,255,0.1),rgba(255,255,255,0.04)) !important;
+  color: rgba(255,255,255,0.9) !important;
   border: none !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 6px 18px rgba(140,222,33,0.2) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 6px 18px rgba(0,0,0,0.2) !important;
+}
+[data-store="fah"] .pay-btn {
+  background: linear-gradient(150deg,#88DBBD,#54967E) !important;
+  color: #0a2218 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 6px 18px rgba(109,191,161,0.25) !important;
 }
 [data-store="mom"] .pay-btn {
-  background: linear-gradient(150deg,#60c8ff,#2d9be0) !important;
-  color: #01192e !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 6px 18px rgba(77,187,255,0.2) !important;
+  background: linear-gradient(150deg,#FFB0CC,#C0607E) !important;
+  color: #2a0f1a !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 6px 18px rgba(255,176,204,0.25) !important;
 }
 
 /* ── 6. TAB BAR: floating glass pill ── */
@@ -1900,13 +1913,13 @@
   color: rgba(255,255,255,0.9) !important;
 }
 [data-store="fah"] .tab.active {
-  background: rgba(140,222,33,0.18) !important;
-  color: #8CDE21 !important;
+  background: rgba(109,191,161,0.18) !important;
+  color: #88DBBD !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.15) !important;
 }
 [data-store="mom"] .tab.active {
-  background: rgba(77,187,255,0.18) !important;
-  color: #4DBBFF !important;
+  background: rgba(255,176,204,0.18) !important;
+  color: #FFB0CC !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.15) !important;
 }
 
@@ -1931,7 +1944,7 @@
   background: linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent);
   pointer-events: none;
 }
-[data-store="mom"] .sheet { background: rgba(2,8,18,0.9) !important; }
+[data-store="mom"] .sheet { background: rgba(18,5,12,0.9) !important; }
 .sheet-handle { background: rgba(255,255,255,0.15) !important; }
 .sheet-title { color: rgba(255,255,255,0.92) !important; }
 .sheet-close {
@@ -1951,8 +1964,8 @@
   box-shadow: 0 0 0 3px rgba(140,222,33,0.08) !important;
 }
 [data-store="mom"] .form-inp:focus {
-  border-color: rgba(77,187,255,0.5) !important;
-  box-shadow: 0 0 0 3px rgba(77,187,255,0.08) !important;
+  border-color: rgba(255,176,204,0.5) !important;
+  box-shadow: 0 0 0 3px rgba(255,176,204,0.08) !important;
 }
 .modal-total-box {
   background: rgba(255,255,255,0.06) !important;
@@ -1960,10 +1973,10 @@
 }
 .modal-total-lbl { color: rgba(255,255,255,0.45) !important; }
 .modal-total-val { color: var(--g7) !important; }
-[data-store="mom"] .modal-total-val { color: #4DBBFF !important; }
+[data-store="mom"] .modal-total-val { color: #FFB0CC !important; }
 .change-box { color: rgba(255,255,255,0.7) !important; }
 .change-ok { color: var(--g7) !important; }
-[data-store="mom"] .change-ok { color: #4DBBFF !important; }
+[data-store="mom"] .change-ok { color: #FFB0CC !important; }
 .change-err { color: #ff7b7b !important; }
 
 /* ── 9. BUTTONS: gradient glass ── */
@@ -1979,9 +1992,14 @@
   color: rgba(255,255,255,0.25) !important;
   box-shadow: none !important;
 }
+[data-store="fah"] .btn-primary:not(:disabled) {
+  background: linear-gradient(148deg,rgba(136,219,189,0.92),rgba(84,150,126,0.88)) !important;
+  color: #0a2218 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 4px 14px rgba(0,0,0,0.3) !important;
+}
 [data-store="mom"] .btn-primary:not(:disabled) {
-  background: linear-gradient(148deg,rgba(96,200,255,0.92),rgba(42,148,215,0.88)) !important;
-  color: #01192e !important;
+  background: linear-gradient(148deg,rgba(255,176,204,0.92),rgba(192,96,126,0.88)) !important;
+  color: #2a0f1a !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 4px 14px rgba(0,0,0,0.3) !important;
 }
 .btn-secondary {
@@ -1990,14 +2008,19 @@
   color: rgba(255,255,255,0.6) !important;
 }
 #pay-ok:not(:disabled) {
-  background: linear-gradient(148deg,#9fe025,#6daf14) !important;
-  color: #162a04 !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 6px 20px rgba(140,222,33,0.22) !important;
+  background: linear-gradient(148deg,rgba(255,255,255,0.12),rgba(255,255,255,0.05)) !important;
+  color: rgba(255,255,255,0.9) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 6px 20px rgba(0,0,0,0.2) !important;
+}
+[data-store="fah"] #pay-ok:not(:disabled) {
+  background: linear-gradient(148deg,#88DBBD,#54967E) !important;
+  color: #0a2218 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 6px 20px rgba(109,191,161,0.28) !important;
 }
 [data-store="mom"] #pay-ok:not(:disabled) {
-  background: linear-gradient(148deg,#60c8ff,#2d9be0) !important;
-  color: #01192e !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 6px 20px rgba(77,187,255,0.22) !important;
+  background: linear-gradient(148deg,#FFB0CC,#C0607E) !important;
+  color: #2a0f1a !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 6px 20px rgba(255,176,204,0.28) !important;
 }
 
 /* ── 10. PAY OVERLAY HEADER TEXT ── */
@@ -2030,6 +2053,49 @@
 .metric-lbl { color: rgba(255,255,255,0.42) !important; }
 .metric-val { color: rgba(255,255,255,0.92) !important; }
 .metric-sub { color: rgba(255,255,255,0.3) !important; }
+
+/* ── 12b. METRIC CARDS: store accent tint ── */
+/* ร้านฟ้า (teal) */
+.metric[data-accent="fah"] {
+  background: rgba(109,191,161,0.10) !important;
+  border-color: rgba(109,191,161,0.28) !important;
+  box-shadow: inset 0 1px 0 rgba(136,219,189,0.18), 0 2px 8px rgba(0,0,0,0.22) !important;
+}
+.metric[data-accent="fah"] .metric-lbl { color: rgba(136,219,189,0.65) !important; }
+.metric[data-accent="fah"] .metric-val { color: #88DBBD !important; }
+
+/* ร้านแม่ (soft pink) */
+.metric[data-accent="mom"] {
+  background: rgba(255,176,204,0.10) !important;
+  border-color: rgba(255,176,204,0.28) !important;
+  box-shadow: inset 0 1px 0 rgba(255,176,204,0.18), 0 2px 8px rgba(0,0,0,0.22) !important;
+}
+.metric[data-accent="mom"] .metric-lbl { color: rgba(255,176,204,0.65) !important; }
+.metric[data-accent="mom"] .metric-val { color: #FFB0CC !important; }
+
+/* ยอดรวม (white/neutral) */
+.metric[data-accent="total"] {
+  background: rgba(255,255,255,0.07) !important;
+  border-color: rgba(255,255,255,0.16) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.13), 0 2px 8px rgba(0,0,0,0.22) !important;
+}
+.metric[data-accent="total"] .metric-lbl { color: rgba(255,255,255,0.55) !important; }
+.metric[data-accent="total"] .metric-val { color: rgba(255,255,255,0.95) !important; }
+
+/* ── 12c. PROFIT-LINE: store accent left-border ── */
+.profit-line[data-accent="fah"] {
+  border-left: 2px solid rgba(109,191,161,0.6);
+  padding-left: 8px;
+}
+.profit-line[data-accent="fah"] .p-lbl { color: rgba(136,219,189,0.8) !important; }
+.profit-line[data-accent="fah"] .p-val { color: #88DBBD !important; }
+
+.profit-line[data-accent="mom"] {
+  border-left: 2px solid rgba(255,176,204,0.6);
+  padding-left: 8px;
+}
+.profit-line[data-accent="mom"] .p-lbl { color: rgba(255,176,204,0.8) !important; }
+.profit-line[data-accent="mom"] .p-val { color: #FFB0CC !important; }
 
 /* ── 13. SALE CARDS (history): glass ── */
 .sale-card {
@@ -2077,13 +2143,15 @@
   border: 1.5px dashed var(--g7) !important;
   background: rgba(140,222,33,0.06) !important;
 }
-[data-store="mom"] .sort-ghost { border-color: #4DBBFF !important; background: rgba(77,187,255,0.06) !important; }
+[data-store="fah"] .sort-ghost { border-color: #88DBBD !important; background: rgba(109,191,161,0.06) !important; }
+[data-store="mom"] .sort-ghost { border-color: #FFB0CC !important; background: rgba(255,176,204,0.06) !important; }
 .sort-chosen {
   box-shadow: 0 12px 36px rgba(0,0,0,0.45), 0 0 0 1.5px var(--g7) !important;
   transform: scale(1.04);
   z-index: 99;
 }
-[data-store="mom"] .sort-chosen { box-shadow: 0 12px 36px rgba(0,0,0,0.45), 0 0 0 1.5px #4DBBFF !important; }
+[data-store="fah"] .sort-chosen { box-shadow: 0 12px 36px rgba(0,0,0,0.45), 0 0 0 1.5px #88DBBD !important; }
+[data-store="mom"] .sort-chosen { box-shadow: 0 12px 36px rgba(0,0,0,0.45), 0 0 0 1.5px #FFB0CC !important; }
 .sort-drag { opacity: 0.92; }
 /* Drag handle icon (หน้าจัดการสินค้า) */
 .drag-handle {
@@ -2097,7 +2165,8 @@
   padding: 2px;
 }
 .drag-handle:active { cursor: grabbing; color: var(--g7); }
-[data-store="mom"] .drag-handle:active { color: #4DBBFF; }
+[data-store="fah"] .drag-handle:active { color: #88DBBD; }
+[data-store="mom"] .drag-handle:active { color: #FFB0CC; }
 .mcard { position: relative; }
 
 /* ── 17. TOAST ── */

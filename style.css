@@ -117,6 +117,43 @@
 /* topbar bg เปลี่ยนตาม store */
 [data-store="fah"] .topbar { background: var(--g9); }
 [data-store="mom"] .topbar { background: var(--g9); }
+/* store-name glow เปลี่ยนตามร้าน */
+[data-store="fah"] .store-name {
+  color: #88DBBD;
+  text-shadow: 0 0 14px rgba(109,191,161,0.9), 0 0 32px rgba(109,191,161,0.4);
+}
+[data-store="mom"] .store-name {
+  color: #FFB0CC;
+  text-shadow: 0 0 14px rgba(255,176,204,0.9), 0 0 32px rgba(255,176,204,0.4);
+}
+/* topbar search input */
+.topbar-search-input {
+  flex: 1;
+  background: rgba(255,255,255,0.09);
+  border: 0.5px solid rgba(255,255,255,0.18);
+  border-radius: 11px;
+  padding: 8px 14px;
+  color: #fff;
+  font-size: 15px;
+  font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+  outline: none;
+  display: none;
+}
+.topbar-search-input::placeholder { color: rgba(255,255,255,0.35); }
+/* topbar icon button (search toggle) */
+.topbar-icon-btn {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 0.5px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  transition: .15s;
+  flex-shrink: 0;
+}
+.topbar-icon-btn:active { background: rgba(255,255,255,0.15); }
 [data-store="fah"] #pos-fah.active,
 [data-store="mom"] #pos-mom.active { border-color:var(--g7); background:var(--g1); color:var(--g7); }
 /* transition สีเวลาสลับร้าน */
@@ -153,14 +190,16 @@
         }
 
         .store-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: #c8e89a
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 14px rgba(255,255,255,0.85), 0 0 32px rgba(255,255,255,0.3);
+            letter-spacing: 0.5px
         }
 
         .topbar-sub {
             font-size: 11px;
-            color: #7aaa3a;
+            color: rgba(255,255,255,0.4);
             margin-top: 1px
         }
 
@@ -453,8 +492,25 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 7px
+            margin-bottom: 7px;
+            gap: 8px
         }
+        /* ปุ่มซ่อน/แสดงตะกร้า */
+        .cart-toggle-btn {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: rgba(255,255,255,0.08); border: none;
+            color: rgba(255,255,255,0.5); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: .2s; font-size: 14px
+        }
+        .cart-toggle-btn i { transition: transform .25s; display: block }
+        .cart-collapsed .cart-toggle-btn i { transform: rotate(180deg) }
+        .cart-collapsed .cart-scroll,
+        .cart-collapsed .disc-row,
+        .cart-collapsed .total-row,
+        .cart-collapsed .cust-sel-bar { display: none !important }
+        .cart-collapsed { padding-bottom: 6px }
+        .cart-collapsed .cart-hdr { margin-bottom: 0 }
 
         .cart-title {
             font-size: 13px;

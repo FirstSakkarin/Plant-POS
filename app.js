@@ -193,11 +193,14 @@ function renderProds(){
   }
 
   const storeKey=selectedSaleStore==="fah"?"stockFah":"stockMom";
-  const q=(document.getElementById("s-input").value||"").toLowerCase();
-  // กรองเฉพาะสินค้าที่มี stock ในร้านที่เลือก
+  const rawQ=(document.getElementById("topbar-search-input")?.value||"").toLowerCase();
+  const tokens=rawQ.trim().split(/\s+/).filter(Boolean);
+  // กรองเฉพาะสินค้าที่มี stock ในร้านที่เลือก + multi-word search
   const f=products.filter(p=>{
     if((p[storeKey]||0)<=0)return false;
-    return(!q||p.name.toLowerCase().includes(q)||(p.lot||"").toLowerCase().includes(q));
+    if(!tokens.length)return true;
+    const hay=(p.name+" "+(p.lot||"")).toLowerCase();
+    return tokens.every(t=>hay.includes(t));
   });
   if(!f.length){g.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--faint);font-size:13px;padding:24px">ไม่มีสินค้าในร้านนี้${q?" ที่ตรงกับคำค้นหา":""}</div>`;return}
 
@@ -1254,12 +1257,48 @@ function gotoScreen(name,btn){
   document.querySelectorAll(".tab,.sb-btn").forEach(t=>t.classList.remove("active"));
   document.getElementById("screen-"+name).classList.add("active");
   document.querySelectorAll(`[onclick*="gotoScreen(\'${name}\'"], [onclick*="gotoScreen('${name}'"]`).forEach(b=>b.classList.add("active"));
+  // หน้าอื่นนอก POS ใช้ white theme เสมอ
+  if(name!=="pos"){
+    delete document.documentElement.dataset.store;
+    closeTopbarSearch();
+  } else if(selectedSaleStore){
+    document.documentElement.dataset.store=selectedSaleStore;
+  }
   if(name==="report"){
     renderHistory();
     if(!profitFrom)setProfitPreset("today",document.querySelector("#profit-presets .preset-btn"));else renderProfit();
   }
   if(name==="manage")renderProdList();
   if(name==="customers")renderCustList();
+}
+
+function toggleCart(){
+  document.querySelector(".cart-panel").classList.toggle("cart-collapsed");
+}
+
+function toggleTopbarSearch(){
+  const inp=document.getElementById("topbar-search-input");
+  const brand=document.getElementById("topbar-brand");
+  const btnI=document.querySelector("#topbar-search-btn i");
+  const open=inp.style.display==="block"||inp.style.display==="flex";
+  if(open){
+    inp.style.display="none"; inp.value="";
+    brand.style.display=""; if(btnI)btnI.className="ti ti-search";
+    renderProds();
+  } else {
+    inp.style.display="block";
+    brand.style.display="none"; if(btnI)btnI.className="ti ti-x";
+    inp.focus();
+  }
+}
+
+function closeTopbarSearch(){
+  const inp=document.getElementById("topbar-search-input");
+  const brand=document.getElementById("topbar-brand");
+  const btnI=document.querySelector("#topbar-search-btn i");
+  if(!inp)return;
+  inp.style.display="none"; inp.value="";
+  brand.style.display=""; if(btnI)btnI.className="ti ti-search";
 }
 
 function toast(msg){

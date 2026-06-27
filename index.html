@@ -34,8 +34,10 @@
   <!-- Topbar -->
   <div class="topbar">
     <div class="topbar-row">
-      <div><div class="store-name">TreeSiri</div><div class="topbar-sub">ขาย · รายงาน · คลังต้นไม้ · ลูกค้า</div></div>
-      <div style="display:flex;align-items:center;gap:6px">
+      <div id="topbar-brand"><div class="store-name">TreeSiri</div><div class="topbar-sub">ขาย · รายงาน · คลังต้นไม้ · ลูกค้า</div></div>
+      <input type="text" id="topbar-search-input" class="topbar-search-input" placeholder="ค้นหาต้นไม้..." oninput="renderProds()">
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <button class="topbar-icon-btn" id="topbar-search-btn" onclick="toggleTopbarSearch()"><i class="ti ti-search"></i></button>
         <a class="sheet-pill" href="https://docs.google.com/spreadsheets/d/1c_t89oC0p5setOKKu2vuPbkVb_NXPCJ8jh_O9pP4s-o" target="_blank" title="เปิด Google Sheet"><i class="ti ti-table-filled"></i></a>
         <button class="sync-pill" onclick="syncAll()"><span class="sdot" id="sdot"></span><span id="slbl">Sync</span></button>
       </div>
@@ -76,12 +78,10 @@
             <button class="ss-btn" id="pos-mom" style="flex:1" onclick="selectPosStore('mom',this)">🩷 ร้านแม่</button>
           </div>
         </div>
-        <div class="search-row">
-          <div class="sbox"><i class="ti ti-search"></i><input type="text" placeholder="ค้นหาต้นไม้..." id="s-input" oninput="renderProds()"></div>
-        </div>
         <div class="prod-area"><div class="prod-grid" id="prod-grid"></div></div>
         <div class="cart-panel">
           <div class="cart-hdr">
+            <button class="cart-toggle-btn" onclick="toggleCart()" title="ซ่อน/แสดงตะกร้า"><i class="ti ti-chevron-down" id="cart-chevron"></i></button>
             <span class="cart-title"><i class="ti ti-shopping-cart" style="font-size:14px;vertical-align:-2px"></i> ตะกร้า (<span id="cart-count">0</span>)</span>
             <button class="clear-btn" onclick="clearCart()">ล้างทั้งหมด</button>
           </div>

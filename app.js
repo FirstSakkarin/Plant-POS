@@ -421,15 +421,30 @@ function renderPayProfitSplits(){
   if(!el)return;
   const items=Object.values(cart);
   if(!items.length){el.innerHTML="";return}
+  const isMom=selectedSaleStore==="mom";
   el.innerHTML=
-    `<div style="font-size:12px;color:var(--m);font-weight:600;margin-bottom:5px">แบ่ง % กำไรต่อรายการ <span style="font-weight:400">(🩵 Fah ได้กี่ %)</span></div>`+
+    `<div style="font-size:12px;color:var(--m);font-weight:600;margin-bottom:5px">
+      แบ่ง % กำไรต่อรายการ
+      ${isMom?`<span style="color:#FFB0CC;font-weight:700"> — ร้านแม่: ฟ้าไม่ได้% ทุกรายการ</span>`:`<span style="font-weight:400">(🩵 Fah ได้กี่ %)</span>`}
+    </div>`+
     items.map(x=>{
-      // Default = product's defaultPct; override via payItemSplits
-      if(payItemSplits[x.row]===undefined) payItemSplits[x.row]=x.defaultPct??50;
-      const fahPct=payItemSplits[x.row];
+      // ร้านแม่ → fahPct = 0 เสมอ; ร้านฟ้า → ใช้ค่า default หรือที่ผู้ใช้เปลี่ยน
+      const fahPct=isMom?0:(payItemSplits[x.row]??x.defaultPct??50);
+      payItemSplits[x.row]=fahPct;
       const momPct=100-fahPct;
       const rev=getItemPrice(x)*x.qty;
       const thumb=x.imgUrl?`<img src="${x.imgUrl}" style="width:20px;height:20px;object-fit:cover;border-radius:4px">`:x.emoji;
+      if(isMom){
+        // ร้านแม่: แสดงแบบ read-only ไม่มี input
+        return`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd)">
+          <span style="font-size:15px;flex-shrink:0">${thumb}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:600;color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.name}${x.lot?" ("+x.lot+")":""}</div>
+            <div style="font-size:10px;color:var(--m)">฿${rev.toLocaleString()} · <span style="color:#FFB0CC">🩷 แม่ได้ทั้งหมด ฿${rev.toLocaleString()}</span></div>
+          </div>
+          <span style="font-size:11px;font-weight:700;color:#FFB0CC">แม่ 100%</span>
+        </div>`;
+      }
       return`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd)">
         <span style="font-size:15px;flex-shrink:0">${thumb}</span>
         <div style="flex:1;min-width:0">
@@ -495,6 +510,9 @@ function selectSaleStore(store,btn){
   document.querySelectorAll("[id^='store-']").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
   calcChange();
+  // reset splits ทุกครั้งที่เปลี่ยนร้าน เพื่อ re-apply rule (แม่=0%, ฟ้า=defaultPct)
+  payItemSplits={};
+  renderPayProfitSplits();
 }
 function calcChange(){
   const recv=parseFloat(document.getElementById("recv-inp").value)||0;
@@ -1036,45 +1054,52 @@ function renderProfit(){
   const toEnd=new Date(profitTo||from);toEnd.setHours(23,59,59,999);
   const ms=sales.filter(s=>{const d=new Date(s.date);return d>=from&&d<=toEnd;});
 
+  // ━━ คำนวณยอด / กำไร / ต้นทุน ตาม business rule ━━
+  // ร้านแม่ (fahPct=0):  ยอด→แม่, กำไร→แม่, ต้นทุน→แม่
+  // ร้านฟ้า 100%:         ยอด→ฟ้า, กำไร→ฟ้า, ต้นทุน→ฟ้า
+  // ร้านฟ้า X% (เช่น 50%): ยอด→ฟ้าทั้งหมด, กำไรหาร X%/(100-X%), ต้นทุน→รวมเท่านั้น
   let totalRev=0,fahTotal=0,momTotal=0,totalItems=0,totalDisc=0;
+  let totalCost=0,fahCost=0,momCost=0,totalExtraCost=0;
+  let fahProfit=0,momProfit=0;
+
   ms.forEach(s=>{
     totalRev+=s.total;
     totalDisc+=(s.discount||0);
-    // หักส่วนลดรายการ — กระจายส่วนลดของบิลตามสัดส่วนราคารายการ
-    // แล้วค่อยแบ่งฟ้า/แม่ตาม % ของรายการนั้น
-    // เช่น สนใบพาย Fah 100% → ส่วนลดตกไปที่ฟ้าทั้งหมด
     const sub=s.subtotal||0;
     const discRatio=sub>0?(s.discount||0)/sub:0;
     s.items.forEach(it=>{
+      const p=findProductForItem(it);
+      const cost=(p?.cost||0)*it.qty;
       const rev=it.qty*(it.price||0);
-      const fPct=(it.fahPct>=0?it.fahPct:50)/100;
-      const net=rev*(1-discRatio);   // รายได้สุทธิหลังหักส่วนลดของรายการนี้
-      fahTotal+=net*fPct;
-      momTotal+=net*(1-fPct);
+      const fahPct=it.fahPct>=0?it.fahPct:50;
+      const net=rev*(1-discRatio);
+      totalCost+=cost;
       totalItems+=it.qty;
+      if(fahPct===0){
+        // ร้านแม่: ยอด/กำไร/ต้นทุน → แม่ทั้งหมด
+        momTotal+=net;
+        momCost+=cost;
+        momProfit+=net-cost;
+      }else if(fahPct===100){
+        // ร้านฟ้า Fah 100%: ยอด/กำไร/ต้นทุน → ฟ้าทั้งหมด
+        fahTotal+=net;
+        fahCost+=cost;
+        fahProfit+=net-cost;
+      }else{
+        // ร้านฟ้า Fah X%: ยอด→ฟ้า, กำไรหาร, ต้นทุน→รวมเท่านั้น
+        const fPct=fahPct/100;
+        fahTotal+=net;           // ยอดเต็มเป็นของฟ้า
+        fahProfit+=net*fPct;     // กำไร % ของฟ้า
+        momProfit+=net*(1-fPct); // กำไรส่วนที่เหลือ → แม่
+        // cost ไม่แยก → อยู่ใน totalCost เท่านั้น
+      }
     });
+    totalExtraCost+=(s.extraCosts||[]).reduce((a,c)=>a+(c.amount||0),0);
   });
 
   const bills=ms.length;
   const avg=bills?Math.round(totalRev/bills):0;
-
-  // ต้นทุนรวม แยกฟ้า/แม่ — เฉพาะ Fah 100% เท่านั้นถึงนับเป็น "ต้นทุนฟ้า"
-  // ถ้า % ไม่ใช่ 100 → นับแค่ใน totalCost เท่านั้น ไม่แยกร้าน
-  let totalCost=0, fahCost=0, momCost=0, totalExtraCost=0;
-  ms.forEach(s=>{
-    s.items.forEach(it=>{
-      const p=findProductForItem(it);
-      const cost=(p?.cost||0)*it.qty;
-      const fahPct=it.fahPct>=0?it.fahPct:50;
-      totalCost+=cost;
-      if(fahPct===100) fahCost+=cost;
-      else if(fahPct===0) momCost+=cost;
-    });
-    totalExtraCost+=(s.extraCosts||[]).reduce((a,c)=>a+(c.amount||0),0);
-  });
   const netProfit=totalRev-totalCost-totalExtraCost;
-  const fahProfit=fahTotal-fahCost;
-  const momProfit=momTotal-momCost;
 
   document.getElementById("profit-metrics").innerHTML=`
     <div class="metric" data-accent="total"><div class="metric-lbl">ยอดขายรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalRev).toLocaleString()}</div></div>
@@ -1084,7 +1109,8 @@ function renderProfit(){
     <div class="metric" data-accent="mom"><div class="metric-lbl">🩷 ยอดขายแม่รวม</div><div class="metric-val" style="font-size:17px;color:#FFB0CC">฿${Math.round(momTotal).toLocaleString()}</div></div>
     <div class="metric" data-accent="fah"><div class="metric-lbl">🩵 ยอดขายฟ้ารวม</div><div class="metric-val" style="font-size:17px;color:#88DBBD">฿${Math.round(fahTotal).toLocaleString()}</div></div>
     <div class="metric" data-accent="total"><div class="metric-lbl">ต้นทุนรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalCost).toLocaleString()}</div></div>
-    <div class="metric" data-accent="fah"><div class="metric-lbl">💰 ต้นทุนฟ้า (Fah 100%)</div><div class="metric-val" style="font-size:17px">฿${Math.round(fahCost).toLocaleString()}</div></div>
+    <div class="metric" data-accent="fah"><div class="metric-lbl">💰 ต้นทุนฟ้า <span style="font-weight:400;font-size:10px;opacity:.6">(Fah 100%)</span></div><div class="metric-val" style="font-size:17px">฿${Math.round(fahCost).toLocaleString()}</div></div>
+    <div class="metric" data-accent="mom"><div class="metric-lbl">💰 ต้นทุนแม่ <span style="font-weight:400;font-size:10px;opacity:.6">(ร้านแม่)</span></div><div class="metric-val" style="font-size:17px">฿${Math.round(momCost).toLocaleString()}</div></div>
     <div class="metric-quad">
       <div class="metric" data-accent="total"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
       <div class="metric" data-accent="total"><div class="metric-lbl">จำนวนบิล</div><div class="metric-val">${bills}</div><div class="metric-sub neu">บิล</div></div>

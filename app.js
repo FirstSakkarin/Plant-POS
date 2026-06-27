@@ -1110,7 +1110,6 @@ function renderProfit(){
     <div class="metric" data-accent="fah"><div class="metric-lbl">🩵 ยอดขายฟ้ารวม</div><div class="metric-val" style="font-size:17px;color:#88DBBD">฿${Math.round(fahTotal).toLocaleString()}</div></div>
     <div class="metric" data-accent="total"><div class="metric-lbl">ต้นทุนรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalCost).toLocaleString()}</div></div>
     <div class="metric" data-accent="fah"><div class="metric-lbl">💰 ต้นทุนฟ้า <span style="font-weight:400;font-size:10px;opacity:.6">(Fah 100%)</span></div><div class="metric-val" style="font-size:17px">฿${Math.round(fahCost).toLocaleString()}</div></div>
-    <div class="metric" data-accent="mom"><div class="metric-lbl">💰 ต้นทุนแม่ <span style="font-weight:400;font-size:10px;opacity:.6">(ร้านแม่)</span></div><div class="metric-val" style="font-size:17px">฿${Math.round(momCost).toLocaleString()}</div></div>
     <div class="metric-quad">
       <div class="metric" data-accent="total"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
       <div class="metric" data-accent="total"><div class="metric-lbl">จำนวนบิล</div><div class="metric-val">${bills}</div><div class="metric-sub neu">บิล</div></div>

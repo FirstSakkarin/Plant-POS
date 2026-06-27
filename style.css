@@ -1859,22 +1859,28 @@
 #pos-fah {
   color: #88DBBD !important;
   border-color: rgba(109,191,161,0.3) !important;
+  box-shadow: 0 0 10px rgba(109,191,161,0.15), inset 0 1px 0 rgba(109,191,161,0.1) !important;
+  text-shadow: 0 0 10px rgba(109,191,161,0.5) !important;
 }
 #pos-mom {
   color: #FFB0CC !important;
   border-color: rgba(255,176,204,0.3) !important;
+  box-shadow: 0 0 10px rgba(255,176,204,0.15), inset 0 1px 0 rgba(255,176,204,0.1) !important;
+  text-shadow: 0 0 10px rgba(255,176,204,0.5) !important;
 }
 .ss-btn.active, #pos-fah.active {
   background: rgba(109,191,161,0.14) !important;
-  border-color: rgba(109,191,161,0.4) !important;
+  border-color: rgba(109,191,161,0.5) !important;
   color: #88DBBD !important;
-  box-shadow: 0 0 12px rgba(109,191,161,0.12), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+  box-shadow: 0 0 18px rgba(109,191,161,0.35), 0 0 6px rgba(109,191,161,0.2), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+  text-shadow: 0 0 12px rgba(109,191,161,0.8), 0 0 24px rgba(109,191,161,0.3) !important;
 }
 #pos-mom.active {
   background: rgba(255,176,204,0.14) !important;
-  border-color: rgba(255,176,204,0.4) !important;
+  border-color: rgba(255,176,204,0.5) !important;
   color: #FFB0CC !important;
-  box-shadow: 0 0 12px rgba(255,176,204,0.12), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+  box-shadow: 0 0 18px rgba(255,176,204,0.35), 0 0 6px rgba(255,176,204,0.2), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+  text-shadow: 0 0 12px rgba(255,176,204,0.8), 0 0 24px rgba(255,176,204,0.3) !important;
 }
 .pos-store-lbl { color: rgba(255,255,255,0.3) !important; }
 
@@ -1906,15 +1912,17 @@
   border: none !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 6px 18px rgba(0,0,0,0.2) !important;
 }
-[data-store="fah"] .pay-btn {
+[data-store="fah"] .pay-btn:not(:disabled) {
   background: linear-gradient(150deg,#88DBBD,#54967E) !important;
   color: #0a2218 !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 6px 18px rgba(109,191,161,0.25) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 8px 24px rgba(109,191,161,0.4), 0 0 40px rgba(109,191,161,0.15) !important;
+  text-shadow: 0 0 10px rgba(255,255,255,0.3) !important;
 }
-[data-store="mom"] .pay-btn {
+[data-store="mom"] .pay-btn:not(:disabled) {
   background: linear-gradient(150deg,#FFB0CC,#C0607E) !important;
   color: #2a0f1a !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 6px 18px rgba(255,176,204,0.25) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 8px 24px rgba(255,176,204,0.4), 0 0 40px rgba(255,176,204,0.15) !important;
+  text-shadow: 0 0 10px rgba(255,255,255,0.3) !important;
 }
 
 /* ── 6. TAB BAR: floating glass pill ── */

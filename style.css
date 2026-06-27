@@ -1945,37 +1945,7 @@
   filter: drop-shadow(0 0 6px rgba(255,255,255,0.8)) !important;
 }
 
-/* ── active tab ร้านฟ้า: teal glow ── */
-[data-store="fah"] .tab.active {
-  background: rgba(109,191,161,0.16) !important;
-  color: #88DBBD !important;
-  text-shadow:
-    0 0 12px rgba(136,219,189,0.9),
-    0 0 28px rgba(109,191,161,0.5),
-    0 0 48px rgba(109,191,161,0.2) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.2),
-    0 0 18px rgba(109,191,161,0.12) !important;
-}
-[data-store="fah"] .tab.active i {
-  filter: drop-shadow(0 0 6px rgba(136,219,189,0.8)) !important;
-}
-
-/* ── active tab ร้านแม่: pink glow ── */
-[data-store="mom"] .tab.active {
-  background: rgba(255,176,204,0.16) !important;
-  color: #FFB0CC !important;
-  text-shadow:
-    0 0 12px rgba(255,176,204,0.9),
-    0 0 28px rgba(255,176,204,0.5),
-    0 0 48px rgba(255,176,204,0.2) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.2),
-    0 0 18px rgba(255,176,204,0.12) !important;
-}
-[data-store="mom"] .tab.active i {
-  filter: drop-shadow(0 0 6px rgba(255,176,204,0.8)) !important;
-}
+/* ── tab bar คงขาว glow ทุกโหมด ไม่เปลี่ยนตามร้าน ── */
 
 /* ── 7. TOPBAR: glass ── */
 .topbar {

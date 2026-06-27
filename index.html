@@ -67,6 +67,14 @@
     <!-- POS -->
     <div id="screen-pos" class="screen active">
       <div class="pos-wrap">
+        <!-- เลือกร้านก่อนขาย -->
+        <div class="pos-store-sel">
+          <div class="pos-store-lbl"><i class="ti ti-building-store" style="font-size:13px;vertical-align:-1px"></i> ขายออกจากร้าน</div>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button class="ss-btn" id="pos-fah" style="flex:1" onclick="selectPosStore('fah',this)"><i class="ti ti-building-store" style="font-size:13px"></i> ร้านฟ้า</button>
+            <button class="ss-btn" id="pos-mom" style="flex:1" onclick="selectPosStore('mom',this)"><i class="ti ti-building-store" style="font-size:13px"></i> ร้านแม่</button>
+          </div>
+        </div>
         <div class="search-row">
           <div class="sbox"><i class="ti ti-search"></i><input type="text" placeholder="ค้นหาต้นไม้..." id="s-input" oninput="renderProds()"></div>
         </div>

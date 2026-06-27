@@ -162,43 +162,74 @@ function fahColor(pct){
 // หมายเหตุ: สี/ขนาดบางส่วนของการ์ดถูกกำหนดแบบ inline style ในฟังก์ชันนี้
 // (เช่น font-size:26px ของอิโมจิ, สี var(--g7) ของราคา) — ถ้าจะแก้สี/ขนาดเหล่านี้
 // ให้แก้ตรงนี้ หรือย้ายไปใช้ class .pcard-emoji / .pcard-price ใน style.css แทน
+// เลือกร้านในหน้า POS (ก่อนเริ่มขาย)
+function selectPosStore(store,btn){
+  selectedSaleStore=store;
+  document.querySelectorAll("[id^='pos-fah'],[id^='pos-mom']").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  // sync ปุ่มใน checkout overlay ด้วย
+  document.querySelectorAll("[id^='store-']").forEach(b=>b.classList.remove("active"));
+  const ob=document.getElementById("store-"+store);
+  if(ob)ob.classList.add("active");
+  renderProds();
+}
+
 function renderProds(){
-  const q=(document.getElementById("s-input").value||"").toLowerCase();
-  const f=products.filter(p=>(!q||p.name.toLowerCase().includes(q)||(p.lot||"").toLowerCase().includes(q)));
   const g=document.getElementById("prod-grid");
   if(!products.length){g.innerHTML=`<div style="grid-column:1/-1"><div class="empty-state"><i class="ti ti-refresh spin-icon"></i><p>กำลังโหลดจาก Google Sheets...</p></div></div>`;return}
-  if(!f.length){g.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--faint);font-size:13px;padding:24px">ไม่พบสินค้า</div>`;return}
+
+  // ยังไม่เลือกร้าน → แสดง prompt
+  if(!selectedSaleStore){
+    g.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:44px 20px 20px">
+      <div style="font-size:38px;margin-bottom:12px">🏪</div>
+      <div style="font-size:14px;font-weight:700;color:var(--t)">เลือกร้านก่อนเริ่มขาย</div>
+      <div style="font-size:12px;color:var(--m);margin-top:6px">กดปุ่ม ร้านฟ้า หรือ ร้านแม่ ด้านบน</div>
+    </div>`;
+    return;
+  }
+
+  const storeKey=selectedSaleStore==="fah"?"stockFah":"stockMom";
+  const q=(document.getElementById("s-input").value||"").toLowerCase();
+  // กรองเฉพาะสินค้าที่มี stock ในร้านที่เลือก
+  const f=products.filter(p=>{
+    if((p[storeKey]||0)<=0)return false;
+    return(!q||p.name.toLowerCase().includes(q)||(p.lot||"").toLowerCase().includes(q));
+  });
+  if(!f.length){g.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--faint);font-size:13px;padding:24px">ไม่มีสินค้าในร้านนี้${q?" ที่ตรงกับคำค้นหา":""}</div>`;return}
 
   const grouped={};
   f.forEach(p=>{if(!grouped[p.name])grouped[p.name]=[];grouped[p.name].push(p);});
 
   g.innerHTML=Object.values(grouped).map(lots=>{
     const rep=lots[0];
-    const totalStock=lots.reduce((s,p)=>s+p.stock,0);
+    // ใช้ stock ของร้านที่เลือกเท่านั้น
+    const totalStoreStock=lots.reduce((s,p)=>s+(p[storeKey]||0),0);
     const imgHtml=rep.imgUrl
       ?`<div style="position:relative;margin-bottom:6px"><img style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;background:var(--bg2)" src="${rep.imgUrl}" loading="lazy" onerror="this.style.display='none'"><span style="position:absolute;bottom:4px;right:6px;font-size:16px;background:rgba(255,255,255,.85);border-radius:6px;padding:2px 4px;line-height:1">${rep.emoji}</span></div>`
       :`<div style="font-size:26px;text-align:center;margin-bottom:5px;line-height:1">${rep.emoji}</div>`;
 
     if(lots.length>1){
-      const chips=lots.map(p=>`
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:7px;background:${p.stock<=0?"var(--bg3)":"var(--g1)"};border:0.5px solid ${p.stock<=0?"var(--bd)":"var(--g3)"};cursor:${p.stock>0?"pointer":"not-allowed"};margin-top:4px;opacity:${p.stock<=0?.55:1}"
-             onclick="event.stopPropagation();${p.stock>0?`addCart(${p.row})`:`toast('❌ Lot นี้หมดแล้ว')`}">
-          <span style="font-size:11px;font-weight:600;color:${p.stock<=0?"var(--faint)":"var(--g8)"}">${p.lot||"–"} <span style="color:${fahColor(p.defaultPct)}">Fah ${p.defaultPct??50}%</span></span>
-          <span style="font-size:10px;color:${p.stock<=0?"var(--r6)":p.stock<=5?"var(--a6)":"var(--g7)"};font-weight:600">${p.stock<=0?"หมด":"คงเหลือ "+p.stock+" ต้น"}</span>
-        </div>`).join("");
+      const chips=lots.map(p=>{
+        const ss=p[storeKey]||0;
+        return`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:7px;background:${ss<=0?"var(--bg3)":"var(--g1)"};border:0.5px solid ${ss<=0?"var(--bd)":"var(--g3)"};cursor:${ss>0?"pointer":"not-allowed"};margin-top:4px;opacity:${ss<=0?.55:1}"
+             onclick="event.stopPropagation();${ss>0?`addCart(${p.row})`:`toast('❌ Lot นี้หมดในร้านนี้')`}">
+          <span style="font-size:11px;font-weight:600;color:${ss<=0?"var(--faint)":"var(--g8)"}">${p.lot||"–"} <span style="color:${fahColor(p.defaultPct)}">Fah ${p.defaultPct??50}%</span></span>
+          <span style="font-size:10px;color:${ss<=0?"var(--r6)":ss<=5?"var(--a6)":"var(--g7)"};font-weight:600">${ss<=0?"หมด":"คงเหลือ "+ss+" ต้น"}</span>
+        </div>`;
+      }).join("");
       return`<div class="pcard" style="cursor:default">
         ${imgHtml}
         <div style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3">${rep.name}</div>
-        <div style="font-size:13px;color:var(--g7);font-weight:600;margin-top:2px">฿${rep.price.toLocaleString()} <span style="font-size:10px;color:var(--m)">รวม ${totalStock} ต้น</span></div>
+        <div style="font-size:13px;color:var(--g7);font-weight:600;margin-top:2px">฿${rep.price.toLocaleString()} <span style="font-size:10px;color:var(--m)">รวม ${totalStoreStock} ต้น</span></div>
         ${chips}
       </div>`;
     }
-    return`<div class="pcard${totalStock<=0?" pcard-empty":""}" onclick="${totalStock>0?`addCart(${rep.row})`:'toast("❌ สินค้าหมดแล้ว")'}">
+    return`<div class="pcard${totalStoreStock<=0?" pcard-empty":""}" onclick="${totalStoreStock>0?`addCart(${rep.row})`:'toast("❌ สินค้าหมดในร้านนี้")'}">
       ${imgHtml}
       <div style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3">${rep.name}</div>
       <span class="pbadge" style="background:var(--bg2);color:var(--m);font-size:10px">${rep.lot?rep.lot+" · ":""}<span style="color:${fahColor(rep.defaultPct)};font-weight:700">Fah ${rep.defaultPct??50}%</span></span>
       <div style="font-size:13px;color:var(--g7);font-weight:600;margin-top:2px">฿${rep.price.toLocaleString()}</div>
-      <div style="font-size:10px;color:${totalStock<=5&&totalStock>0?"var(--r6)":"var(--faint)"};margin-top:2px">${totalStock<=0?"หมดแล้ว":"คงเหลือ "+totalStock+" ต้น"}</div>
+      <div style="font-size:10px;color:${totalStoreStock<=5&&totalStoreStock>0?"var(--r6)":"var(--faint)"};margin-top:2px">${totalStoreStock<=0?"หมดแล้ว":"คงเหลือ "+totalStoreStock+" ต้น"}</div>
     </div>`;
   }).join("");
 }
@@ -209,9 +240,12 @@ function renderProds(){
 // ── CART ──────────────────────────────────────────────────
 function addCart(rowId){
   const p=products.find(x=>x.row===rowId);
-  if(!p||p.stock<=0)return;
+  if(!p)return;
+  if(!selectedSaleStore){toast("❌ กรุณาเลือกร้านก่อน");return;}
+  const storeStock=selectedSaleStore==="fah"?(p.stockFah||0):(p.stockMom||0);
+  if(storeStock<=0){toast("❌ สินค้าหมดในร้านนี้");return;}
   if(!cart[rowId])cart[rowId]={...p,customPrice:null,qty:0};
-  if(cart[rowId].qty>=p.stock)return;
+  if(cart[rowId].qty>=storeStock){toast("❌ เกินสต็อกของร้านนี้ ("+storeStock+" ต้น)");return;}
   cart[rowId].qty++;renderCart();
 }
 function chgQty(rowId,d){
@@ -376,8 +410,9 @@ function openPay(){
   document.getElementById("change-box").className="change-box";
   document.getElementById("pay-ok").disabled=true;
   payItemSplits={};
-  selectedSaleStore=null;
+  // store ถูกเลือกไว้แล้วจากหน้า POS — sync ปุ่มใน overlay ให้ตรงกัน
   document.querySelectorAll("[id^='store-']").forEach(b=>b.classList.remove("active"));
+  if(selectedSaleStore){const ob=document.getElementById("store-"+selectedSaleStore);if(ob)ob.classList.add("active");}
   syncModalCustBtn();
   renderPayProfitSplits();
   document.getElementById("pay-overlay").classList.add("show");
@@ -447,6 +482,8 @@ async function confirmSale(){
     clearSelectedCust();
     cart={};document.getElementById("disc-val").value="0";
     selectedSaleStore=null;
+    // reset ปุ่มเลือกร้านทั้ง POS และ overlay
+    document.querySelectorAll("[id^='pos-fah'],[id^='pos-mom'],[id^='store-']").forEach(b=>b.classList.remove("active"));
     renderCart();renderProds();renderProdList();closePay();
     openReceipt(sales[0]);
     if(negativeWarn)toast("⚠️ สต็อกหน้าร้านติดลบ กรุณาตรวจสอบ/ย้ายสต็อก");

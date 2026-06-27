@@ -1508,6 +1508,22 @@
             white-space: nowrap
         }
         /* Customer selector on POS */
+        /* ── POS store selector ── */
+        .pos-store-sel {
+            padding: 10px 12px 8px;
+            border-bottom: 0.5px solid var(--bd);
+            background: var(--bg);
+            flex-shrink: 0
+        }
+
+        .pos-store-lbl {
+            font-size: 10px;
+            color: var(--m);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .4px
+        }
+
         .cust-sel-bar {
             display: flex;
             align-items: center;

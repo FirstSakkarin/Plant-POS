@@ -541,15 +541,21 @@ function setDefaultPct(pct, btn){
   syncDefaultPctBtns(pct);
 }
 // ── สต็อกแยกตามร้าน: แสดงจำนวนที่เหลือในสวน = รวม - ฟ้า - แม่ ──
-function updateStockBreakdownHint(){
+function updateStockBreakdownHint(autoFillTotal=false){
   const hint=document.getElementById("stock-breakdown-hint");
   if(!hint)return;
-  const total=parseInt(document.getElementById("f-stock").value)||0;
+  const stockEl=document.getElementById("f-stock");
   const fah=parseInt(document.getElementById("f-stock-fah").value)||0;
   const mom=parseInt(document.getElementById("f-stock-mom").value)||0;
+  const currentTotal=parseInt(stockEl.value)||0;
+  // auto-fill ยอดรวม ถ้า caller เป็น fah/mom input และ total ยังเป็น 0
+  if(autoFillTotal && currentTotal===0 && (fah+mom)>0){
+    stockEl.value=fah+mom;
+  }
+  const total=parseInt(stockEl.value)||0;
   const garden=total-fah-mom;
   if(garden<0){
-    hint.textContent=`⚠️ ฟ้า+แม่ (${fah+mom}) เกินสต็อกรวม (${total}) อยู่ ${-garden} ต้น — แก้ให้ตรงกันก่อนบันทึก`;
+    hint.textContent=`⚠️ ฟ้า+แม่ (${fah+mom}) เกินสต็อกรวม (${total}) อยู่ ${-garden} ต้น`;
     hint.style.color="var(--r6)";
   }else{
     hint.textContent=`🏡 เหลือในสวน: ${garden} ต้น`;
@@ -589,7 +595,7 @@ function renderProdList(){
       return`<div class="pcard mcard" data-row="${p.row}" style="cursor:default">
         <div class="drag-handle" title="ลากเพื่อจัดเรียง"><i class="ti ti-grip-vertical"></i></div>
         ${imgHtml}
-        <div style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3">${p.lot||name}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3">${name}${p.lot?`<div style="font-size:10px;font-weight:400;color:var(--m);margin-top:1px">${p.lot}</div>`:""}</div>
         <div style="font-size:13px;color:var(--g7);font-weight:600;margin-top:2px">฿${p.price.toLocaleString()}</div>
         <div style="font-size:10px;color:${p.stock<=0?"var(--r6)":p.stock<=5?"var(--a6)":"var(--faint)"};margin-top:2px">${p.stock<=0?"หมดแล้ว":"คงเหลือ "+p.stock+" ต้น"}</div>
         <div style="font-size:10px;color:var(--m);margin-top:3px;line-height:1.5">🏡สวน ${garden} · 🔵ฟ้า ${fah} · 🟢แม่ ${mom}</div>

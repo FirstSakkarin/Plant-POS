@@ -39,6 +39,8 @@ let _custPickerFromModal=false;
 let payItemSplits={};
 // ร้านที่ขายออก ในบิลนี้ ("fah" | "mom")
 let selectedSaleStore=null;
+// ประวัติที่กำลังแก้ไข/ลบ
+let editingSaleIdx=null, deletingSaleIdx=null;
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    SHEETS API  — อ่าน/เขียน Google Sheets
@@ -127,7 +129,8 @@ function parseSheetDate(str){
 
 async function loadSales(){
   const rows=await sheetGet("Sales!A2:F");
-  sales=rows.map(r=>({
+  sales=rows.map((r,i)=>({
+    sheetRow:i+2,  // row 1 = header, i=0 → row 2
     date:parseSheetDate(r[0]),
     itemsStr:r[1]||"",
     items:(r[1]||"").split(",").map(s=>{
@@ -410,9 +413,13 @@ function openPay(){
   document.getElementById("change-box").className="change-box";
   document.getElementById("pay-ok").disabled=true;
   payItemSplits={};
-  // store ถูกเลือกไว้แล้วจากหน้า POS — sync ปุ่มใน overlay ให้ตรงกัน
-  document.querySelectorAll("[id^='store-']").forEach(b=>b.classList.remove("active"));
-  if(selectedSaleStore){const ob=document.getElementById("store-"+selectedSaleStore);if(ob)ob.classList.add("active");}
+  // แสดงชื่อร้านที่เลือกไว้แล้วใน badge
+  const storeName=selectedSaleStore==="fah"?"ร้านฟ้า 🌿":"ร้านแม่ 🌸";
+  const storeColor=selectedSaleStore==="fah"?"var(--g7)":"#4DBBFF";
+  const badge=document.getElementById("pay-store-badge");
+  const storeLbl=document.getElementById("pay-store-lbl");
+  if(badge)badge.style.borderLeft="3px solid "+storeColor;
+  if(storeLbl){storeLbl.textContent=storeName;storeLbl.style.color=storeColor;}
   syncModalCustBtn();
   renderPayProfitSplits();
   document.getElementById("pay-overlay").classList.add("show");
@@ -429,11 +436,9 @@ function calcChange(){
   const recv=parseFloat(document.getElementById("recv-inp").value)||0;
   const total=getFinalTotal();
   const el=document.getElementById("change-box"),btn=document.getElementById("pay-ok");
-  const ready=!!selectedSaleStore;
-  if(recv>=total){el.textContent="เงินทอน ฿"+(recv-total).toLocaleString();el.className="change-box change-ok";btn.disabled=!ready;}
+  if(recv>=total){el.textContent="เงินทอน ฿"+(recv-total).toLocaleString();el.className="change-box change-ok";btn.disabled=false;}
   else if(recv>0){el.textContent="ขาดอีก ฿"+(total-recv).toLocaleString();el.className="change-box change-err";btn.disabled=true;}
   else{el.textContent="";el.className="change-box";btn.disabled=true;}
-  if(recv>=total&&!ready)el.textContent+=" · กรุณาเลือกร้านที่ขายออก";
 }
 
 // ── PAYMENT CONFIRM ─────────────────────────────────────
@@ -907,10 +912,10 @@ function renderProfit(){
   document.getElementById("profit-metrics").innerHTML=`
     <div class="metric"><div class="metric-lbl">ยอดขายรวม</div><div class="metric-val">฿${Math.round(totalRev/1000*10)/10}k</div></div>
     <div class="metric"><div class="metric-lbl">กำไรสุทธิ</div><div class="metric-val" style="font-size:17px;color:${netProfit>=0?"var(--g7)":"var(--r6)"}">฿${Math.round(netProfit).toLocaleString()}</div></div>
-    <div class="metric"><div class="metric-lbl">🌸 กำไรแม่สุทธิ</div><div class="metric-val" style="font-size:17px;color:${momProfit>=0?"var(--p7)":"var(--r6)"}">฿${Math.round(momProfit).toLocaleString()}</div></div>
-    <div class="metric"><div class="metric-lbl">🌿 กำไรฟ้าสุทธิ</div><div class="metric-val" style="font-size:17px;color:${fahProfit>=0?"#4DBBFF":"var(--r6)"}">฿${Math.round(fahProfit).toLocaleString()}</div></div>
-    <div class="metric"><div class="metric-lbl">🌸 ยอดขายแม่รวม</div><div class="metric-val" style="font-size:17px;color:var(--p7)">฿${Math.round(momTotal).toLocaleString()}</div></div>
-    <div class="metric"><div class="metric-lbl">🌿 ยอดขายฟ้ารวม</div><div class="metric-val" style="font-size:17px;color:#4DBBFF">฿${Math.round(fahTotal).toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-lbl">🌸 กำไรแม่สุทธิ</div><div class="metric-val" style="font-size:17px;color:${momProfit>=0?"#4DBBFF":"var(--r6)"}">฿${Math.round(momProfit).toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-lbl">🌿 กำไรฟ้าสุทธิ</div><div class="metric-val" style="font-size:17px;color:${fahProfit>=0?"var(--g7)":"var(--r6)"}">฿${Math.round(fahProfit).toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-lbl">🌸 ยอดขายแม่รวม</div><div class="metric-val" style="font-size:17px;color:#4DBBFF">฿${Math.round(momTotal).toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-lbl">🌿 ยอดขายฟ้ารวม</div><div class="metric-val" style="font-size:17px;color:var(--g7)">฿${Math.round(fahTotal).toLocaleString()}</div></div>
     <div class="metric"><div class="metric-lbl">ต้นทุนรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalCost).toLocaleString()}</div></div>
     <div class="metric"><div class="metric-lbl">💰 ต้นทุนฟ้ารวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(fahCost).toLocaleString()}</div></div>
     <div class="metric-trio">
@@ -983,9 +988,64 @@ function renderHistory(){
       <div class="sale-items-txt">${s.custName?`👤 ${s.custName} · `:""}${s.items.map(x=>`${x.emoji||"🌿"}${x.name}×${x.qty}`).join(" · ")}${discTxt?` · ${discTxt}`:""}</div>
       <div class="sale-foot">
         <div class="sale-total">฿${Math.round(s.total).toLocaleString()}</div>
-        <button class="sale-print-btn" onclick="openReceipt(sales[${i}])" title="ออกบิล / พิมพ์"><i class="ti ti-printer"></i></button>
+        <div style="display:flex;gap:5px">
+          <button class="sale-print-btn" onclick="openReceipt(sales[${i}])" title="ออกบิล / พิมพ์"><i class="ti ti-printer"></i></button>
+          <button class="sale-print-btn" onclick="openSaleEdit(${i})" title="แก้ไข" style="color:var(--g7)"><i class="ti ti-edit"></i></button>
+          <button class="sale-print-btn" onclick="openSaleDel(${i})" title="ลบ" style="color:var(--r6)"><i class="ti ti-trash"></i></button>
+        </div>
       </div>
     </div>`}).join("");
+}
+
+/* ── แก้ไขประวัติการขาย ─── */
+function openSaleEdit(idx){
+  editingSaleIdx=idx;
+  const s=sales[idx];
+  if(!s)return;
+  document.getElementById("se-cust").value=s.custName||"";
+  document.getElementById("se-discount").value=s.discount||0;
+  document.getElementById("sale-edit-items").innerHTML=
+    s.items.map(x=>`${x.emoji||"🌿"} ${x.name}${x.lot?" ("+x.lot+")":""} ×${x.qty} · ฿${(x.price*x.qty).toLocaleString()}`).join("<br>");
+  document.getElementById("sale-edit-overlay").classList.add("show");
+}
+function closeSaleEdit(){document.getElementById("sale-edit-overlay").classList.remove("show");editingSaleIdx=null;}
+async function saveSaleEdit(){
+  const s=sales[editingSaleIdx];
+  if(!s)return closeSaleEdit();
+  const newDiscount=parseFloat(document.getElementById("se-discount").value)||0;
+  const newCust=document.getElementById("se-cust").value.trim();
+  const newTotal=Math.max(0,(s.subtotal||0)-newDiscount);
+  try{
+    await scriptPost({action:"editSale",sheetRow:s.sheetRow,discount:newDiscount,custName:newCust,total:newTotal});
+    s.discount=newDiscount;s.custName=newCust;s.total=newTotal;
+    closeSaleEdit();renderHistory();renderProfit();
+    toast("✅ แก้ไขแล้ว");
+  }catch(e){toast("❌ "+e.message);}
+}
+
+/* ── ลบประวัติการขาย ─── */
+function openSaleDel(idx){
+  deletingSaleIdx=idx;
+  const s=sales[idx];
+  if(!s)return;
+  const d=new Date(s.date);
+  const ds=`${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  document.getElementById("sale-del-info").innerHTML=
+    `<b>${ds}</b><br>${s.items.map(x=>`${x.emoji||"🌿"} ${x.name} ×${x.qty}`).join(" · ")}<br>ยอด ฿${Math.round(s.total).toLocaleString()}`;
+  document.getElementById("sale-del-overlay").classList.add("show");
+}
+function closeSaleDel(){document.getElementById("sale-del-overlay").classList.remove("show");deletingSaleIdx=null;}
+async function confirmDeleteSale(){
+  const s=sales[deletingSaleIdx];
+  if(!s)return closeSaleDel();
+  try{
+    await scriptPost({action:"deleteSaleByRow",sheetRow:s.sheetRow});
+    sales.splice(deletingSaleIdx,1);
+    // adjust sheetRow ของแถวที่อยู่หลัง (ทุกแถวถัดไปเลื่อนขึ้น 1)
+    sales.forEach(x=>{if(x.sheetRow>s.sheetRow)x.sheetRow--;});
+    closeSaleDel();renderHistory();renderProfit();
+    toast("🗑 ลบแล้ว");
+  }catch(e){toast("❌ "+e.message);}
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

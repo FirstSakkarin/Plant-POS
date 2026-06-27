@@ -183,11 +183,10 @@
       <i class="ti ti-star"></i>
       <span id="pts-preview-text"></span>
     </div>
-    <!-- เลือกร้านที่ขายออก -->
-    <div class="form-lbl">ขายออกจากร้าน *</div>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <button class="ss-btn" id="store-fah" style="flex:1" onclick="selectSaleStore('fah',this)"><i class="ti ti-building-store" style="font-size:13px"></i> ร้านฟ้า</button>
-      <button class="ss-btn" id="store-mom" style="flex:1" onclick="selectSaleStore('mom',this)"><i class="ti ti-building-store" style="font-size:13px"></i> ร้านแม่</button>
+    <!-- แสดงร้านที่เลือกไว้แล้วจากหน้า POS (ไม่ต้องเลือกซ้ำ) -->
+    <div id="pay-store-badge" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;padding:7px 10px;border-radius:8px;background:var(--bg2)">
+      <i class="ti ti-building-store" style="font-size:14px"></i>
+      <span id="pay-store-lbl" style="font-size:13px;font-weight:600"></span>
     </div>
     <!-- % กำไรต่อรายการ -->
     <div id="pay-profit-splits" style="margin-bottom:10px"></div>
@@ -201,6 +200,39 @@
     <div class="sheet-btns">
       <button class="btn-secondary" onclick="closePay()">ยกเลิก</button>
       <button class="btn-primary" id="pay-ok" onclick="confirmSale()" disabled>ยืนยันการขาย</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ POPUP: แก้ไขประวัติการขาย ════ -->
+<div class="overlay" id="sale-edit-overlay" data-close="closeSaleEdit">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeSaleEdit()"><i class="ti ti-x"></i></button>
+    <div class="sheet-title">แก้ไขประวัติการขาย</div>
+    <div id="sale-edit-items" style="font-size:12px;color:var(--m);line-height:1.7;margin-bottom:12px;padding:8px 10px;background:var(--bg2);border-radius:8px"></div>
+    <div class="form-lbl">ชื่อลูกค้า</div>
+    <input class="form-inp" id="se-cust" placeholder="ไม่บังคับ" style="margin-bottom:10px">
+    <div class="form-lbl">ส่วนลด (฿)</div>
+    <input class="form-inp" id="se-discount" type="number" min="0" inputmode="decimal" value="0" style="margin-bottom:8px">
+    <div style="font-size:11px;color:var(--m);margin-bottom:16px">⚠️ หากต้องการแก้รายการสินค้า ให้ลบบิลนี้แล้วบันทึกใหม่</div>
+    <div class="sheet-btns">
+      <button class="btn-secondary" onclick="closeSaleEdit()">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveSaleEdit()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ POPUP: ยืนยันลบประวัติการขาย ════ -->
+<div class="overlay" id="sale-del-overlay" data-close="closeSaleDel">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" style="color:var(--r6)"><i class="ti ti-trash" style="font-size:16px;vertical-align:-2px"></i> ลบประวัติการขาย</div>
+    <div id="sale-del-info" style="font-size:13px;color:var(--m);margin-bottom:20px;line-height:1.7;padding:10px;background:var(--bg2);border-radius:8px"></div>
+    <div style="font-size:12px;color:var(--r6);margin-bottom:16px">⚠️ ไม่สามารถเรียกคืนได้ และจะถูกลบออกจาก Google Sheet ด้วย</div>
+    <div class="sheet-btns">
+      <button class="btn-secondary" onclick="closeSaleDel()">ยกเลิก</button>
+      <button class="btn-primary" style="background:var(--r6);border-color:var(--r6)" onclick="confirmDeleteSale()">ลบ</button>
     </div>
   </div>
 </div>

@@ -37,10 +37,12 @@ function doPost(e) {
       case "addProduct":      result = addProduct(ss, data); break;
       case "updateProduct":   result = updateProduct(ss, data); break;
       case "deleteProduct":   result = deleteProduct(ss, data); break;
-      case "addCustomer":     result = addCustomer(ss, data); break;
-      case "updateCustomer":  result = updateCustomer(ss, data); break;
-      case "uploadImage":     result = uploadImage(data); break;
-      case "rebuildSummary":  result = (updateSummary(ss), {}); break;
+      case "addCustomer":       result = addCustomer(ss, data); break;
+      case "updateCustomer":    result = updateCustomer(ss, data); break;
+      case "deleteSaleByRow":   result = deleteSaleByRow(ss, data); break;
+      case "editSale":          result = editSale(ss, data); break;
+      case "uploadImage":       result = uploadImage(data); break;
+      case "rebuildSummary":    result = (updateSummary(ss), {}); break;
       default:
         return jsonOut({ ok: false, error: "Unknown action: " + data.action });
     }
@@ -254,6 +256,31 @@ function uploadImage(data) {
   const id = file.getId();
   // ใช้ thumbnail URL — เปิดได้ใน <img> tag โดยตรง
   return { url: "https://drive.google.com/thumbnail?id=" + id + "&sz=w600" };
+}
+
+/* ── ลบบิล ─────────────────────────────────────────────── */
+function deleteSaleByRow(ss, data) {
+  const sheet = ss.getSheetByName("Sales");
+  const row = parseInt(data.sheetRow);
+  if (!row || row < 2) throw new Error("Invalid sheetRow: " + data.sheetRow);
+  sheet.deleteRow(row);
+  updateSummary(ss);
+  return {};
+}
+
+/* ── แก้ไขบิล (discount / custName เท่านั้น) ──────────── */
+function editSale(ss, data) {
+  const sheet = ss.getSheetByName("Sales");
+  const row = parseInt(data.sheetRow);
+  if (!row || row < 2) throw new Error("Invalid sheetRow: " + data.sheetRow);
+  const subtotal = sheet.getRange(row, 3).getValue();  // C = subtotal
+  const newDiscount = parseFloat(data.discount) || 0;
+  const newTotal = Math.max(0, subtotal - newDiscount);
+  sheet.getRange(row, 4).setValue(newDiscount);        // D = discount
+  sheet.getRange(row, 5).setValue(newTotal);           // E = total
+  sheet.getRange(row, 6).setValue(data.custName || ""); // F = custName
+  updateSummary(ss);
+  return { newTotal };
 }
 
 function addCustomer(ss, c) {

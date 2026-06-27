@@ -1719,6 +1719,8 @@
         .pt-btn.individual.active{background:var(--a1);color:var(--a8);border-color:var(--a3);font-weight:700}
         .ss-btn{flex:1;padding:9px 4px;border-radius:8px;border:0.5px solid var(--bd);background:var(--bg2);font-size:11px;font-family:'Sarabun',sans-serif;cursor:pointer;color:var(--m);font-weight:500;transition:.12s}
         .ss-btn.active{border-color:var(--g3);background:var(--g1);color:var(--g8);font-weight:700}
+        /* ร้านแม่ = ทีมสีฟ้า override */
+        #pos-mom.active{border-color:#4DBBFF;background:rgba(77,187,255,0.1);color:#4DBBFF}
         /* ── PROFIT BADGE ── */
         .pbadge{display:inline-flex;align-items:center;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600;margin-top:2px;line-height:1.4}
         .pb-shared{background:#e8f0fe;color:#3c5aa6}

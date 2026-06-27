@@ -62,6 +62,56 @@ async function scriptPost(data){
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OFFLINE QUEUE — localStorage queue สำหรับ sync
+   UI อัปเดตทันที, ส่ง Google Sheet ใน background
+   ถ้า net ล้ม → queue รอ online กลับมาแล้ว sync เอง
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const Q_KEY="treesiri_opqueue";
+function qGet(){try{return JSON.parse(localStorage.getItem(Q_KEY)||"[]");}catch{return[];}}
+function qSave(q){try{localStorage.setItem(Q_KEY,JSON.stringify(q));}catch(e){console.warn("queue save failed",e);}}
+function qEnqueue(action,payload){
+  const q=qGet();
+  q.push({id:Date.now()+"_"+Math.random().toString(36).slice(2,6),action,payload});
+  qSave(q);qUpdateBadge();
+}
+
+let _qFlushing=false;
+async function qFlush(){
+  if(_qFlushing)return;
+  const pending=qGet().filter(op=>!op.done);
+  if(!pending.length){qUpdateBadge();return;}
+  if(!navigator.onLine){qUpdateBadge();return;}
+  _qFlushing=true;qUpdateBadge();
+  for(const op of pending){
+    try{
+      await scriptPost({action:op.action,...op.payload});
+      const all=qGet(),i=all.findIndex(x=>x.id===op.id);
+      if(i>=0){all[i].done=true;qSave(all);}
+    }catch(e){
+      console.warn("qFlush stopped:",op.action,e.message);
+      break; // หยุดทันทีถ้า network ล้ม รอ online event
+    }
+  }
+  qSave(qGet().filter(op=>!op.done));
+  _qFlushing=false;qUpdateBadge();
+  // reload sales หลัง sync เสร็จ เพื่อให้ sheetRow ถูกต้อง (ใช้ลบบิลได้)
+  if(!qGet().length) loadSales().catch(()=>{});
+}
+
+function qUpdateBadge(){
+  const pending=qGet().filter(op=>!op.done).length;
+  const el=document.getElementById("q-badge");
+  if(!el)return;
+  if(pending===0){el.style.display="none";}
+  else{el.style.display="inline-flex";el.textContent=(_qFlushing?"⬆ ":"⏳ ")+pending;el.title="รอ sync "+pending+" รายการไปยัง Google Sheet";}
+}
+
+// sync อัตโนมัติเมื่อ internet กลับมา
+window.addEventListener("online",()=>{toast("🌐 Online แล้ว — กำลัง sync...");qFlush();});
+// flush ทุกครั้งที่เปิดแอป (กรณี queue ค้างจากครั้งก่อน)
+window.addEventListener("load",()=>setTimeout(qFlush,2000));
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    SYNC
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // ── SYNC ──────────────────────────────────────────────────
@@ -455,65 +505,78 @@ function calcChange(){
   else{el.textContent="";el.className="change-box";btn.disabled=true;}
 }
 
-// ── PAYMENT CONFIRM ─────────────────────────────────────
+// ── PAYMENT CONFIRM (Optimistic + Offline Queue) ────────
 async function confirmSale(){
   const items=Object.values(cart);
   const sub=getSubtotal(),disc=getDiscount(),total=getFinalTotal();
   const now=new Date();
   const btn=document.getElementById("pay-ok");
   btn.disabled=true;btn.textContent="กำลังบันทึก...";
-  try{
-    const itemStr=items.map(x=>{
-      const fahPct=payItemSplits[x.row]!==undefined?payItemSplits[x.row]:(x.defaultPct??50);
-      return x.name+(x.lot?"("+x.lot+")":"")+"×"+x.qty+"×"+getItemPrice(x)+"×"+fahPct;
-    }).join(", ");
-    // ISO format: YYYY-MM-DDTHH:MM — JavaScript อ่านได้ทุก browser ไม่มีปัญหา Invalid Date
-    const pad=n=>String(n).padStart(2,"0");
-    const dateStr=now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate())+"T"+pad(now.getHours())+":"+pad(now.getMinutes());
-    const custName=selectedCust?selectedCust.name:"";
-    await scriptPost({action:"addSale",date:dateStr,items:itemStr,subtotal:sub,discount:disc,total,custName,extraCosts:JSON.stringify(extraCosts)});
-    let negativeWarn=false;
-    for(const x of items){
-      const p=products.find(q=>q.row===x.row);
-      if(p){
-        p.stock-=x.qty;
-        await scriptPost({action:"updateStock",row:p.row,stock:p.stock});
-        if(selectedSaleStore==="fah"){
-          p.stockFah=Math.max(0,(p.stockFah||0)-x.qty);
-        }else if(selectedSaleStore==="mom"){
-          p.stockMom=Math.max(0,(p.stockMom||0)-x.qty);
-        }
-        await scriptPost({action:"updateStockLocations",row:p.row,stockFah:p.stockFah||0,stockMom:p.stockMom||0});
-      }
+
+  // ── เตรียมข้อมูล ──
+  const fPct=payItemSplits;
+  const pad=n=>String(n).padStart(2,"0");
+  const dateStr=now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate())+"T"+pad(now.getHours())+":"+pad(now.getMinutes());
+  const custName=selectedCust?selectedCust.name:"";
+  const itemStr=items.map(x=>{
+    const fahPct=fPct[x.row]!==undefined?fPct[x.row]:(x.defaultPct??50);
+    return x.name+(x.lot?"("+x.lot+")":"")+"×"+x.qty+"×"+getItemPrice(x)+"×"+fahPct;
+  }).join(", ");
+
+  // ── 1. อัปเดต in-memory ทันที (ไม่รอ network) ──
+  let negativeWarn=false;
+  for(const x of items){
+    const p=products.find(q=>q.row===x.row);
+    if(p){
+      p.stock-=x.qty;
+      if(selectedSaleStore==="fah") p.stockFah=Math.max(0,(p.stockFah||0)-x.qty);
+      else if(selectedSaleStore==="mom") p.stockMom=Math.max(0,(p.stockMom||0)-x.qty);
+      if(p.stock<0) negativeWarn=true;
     }
-    if(selectedCust){
-      const earned=Math.floor(total/10);
-      const newPts=selectedCust.points+earned;
-      const newSpent=(selectedCust.totalSpent||0)+total;
-      const c=customers.find(q=>q.row===selectedCust.row);
-      if(c){c.points=newPts;c.totalSpent=newSpent;}
-      await scriptPost({action:"updateCustomer",row:selectedCust.row,name:selectedCust.name,phone:selectedCust.phone,points:newPts,note:selectedCust.note||"",totalSpent:newSpent});
-      toast("✅ บันทึกแล้ว · "+selectedCust.name+" +"+earned+" แต้ม!");
-    }
-    const fPct=payItemSplits;
-    sales.unshift({date:now,items:items.map(x=>({name:x.name,emoji:x.emoji,lot:x.lot,price:getItemPrice(x),qty:x.qty,fahPct:fPct[x.row]!==undefined?fPct[x.row]:(x.defaultPct??50)})),subtotal:sub,discount:disc,total,custName:selectedCust?selectedCust.name:"",itemCount:items.reduce((s,x)=>s+x.qty,0),extraCosts:[...extraCosts]});
-    const hadCust=!!selectedCust;
-    clearSelectedCust();
-    cart={};document.getElementById("disc-val").value="0";
-    selectedSaleStore=null;
-    // reset theme และปุ่มเลือกร้าน
-    delete document.documentElement.dataset.store;
-    document.querySelectorAll("[id^='pos-fah'],[id^='pos-mom'],[id^='store-']").forEach(b=>b.classList.remove("active"));
-    renderCart();renderProds();renderProdList();closePay();
-    openReceipt(sales[0]);
-    // Reload silently เพื่อให้ sales ทุกรายการมี sheetRow ถูกต้อง (ใช้ลบ/แก้ไขได้)
-    loadSales();
-    if(negativeWarn)toast("⚠️ สต็อกหน้าร้านติดลบ กรุณาตรวจสอบ/ย้ายสต็อก");
-    else if(!hadCust)toast("✅ บันทึกลง Google Sheets แล้ว!");
-  }catch(e){
-    toast("❌ บันทึกไม่สำเร็จ: "+e.message);
-    btn.disabled=false;btn.textContent="ยืนยันการขาย";
   }
+  let custEarned=0,savedCust=null;
+  if(selectedCust){
+    custEarned=Math.floor(total/10);
+    const newPts=selectedCust.points+custEarned;
+    const newSpent=(selectedCust.totalSpent||0)+total;
+    const c=customers.find(q=>q.row===selectedCust.row);
+    if(c){c.points=newPts;c.totalSpent=newSpent;}
+    savedCust={...selectedCust,newPts,newSpent};
+  }
+  sales.unshift({
+    date:now,
+    items:items.map(x=>({name:x.name,emoji:x.emoji,lot:x.lot,price:getItemPrice(x),qty:x.qty,
+      fahPct:fPct[x.row]!==undefined?fPct[x.row]:(x.defaultPct??50)})),
+    subtotal:sub,discount:disc,total,custName,
+    itemCount:items.reduce((s,x)=>s+x.qty,0),extraCosts:[...extraCosts]
+  });
+
+  // ── 2. แสดง UI + ใบเสร็จทันที ──
+  clearSelectedCust();
+  cart={};document.getElementById("disc-val").value="0";
+  selectedSaleStore=null;
+  delete document.documentElement.dataset.store;
+  document.querySelectorAll("[id^='pos-fah'],[id^='pos-mom'],[id^='store-']").forEach(b=>b.classList.remove("active"));
+  renderCart();renderProds();renderProdList();closePay();
+  openReceipt(sales[0]);
+  btn.disabled=false;btn.textContent="ยืนยันการขาย";
+  if(savedCust) toast("✅ "+savedCust.name+" +"+custEarned+" แต้ม!");
+  if(negativeWarn) toast("⚠️ สต็อกหน้าร้านติดลบ กรุณาตรวจสอบ/ย้ายสต็อก");
+
+  // ── 3. Queue operations → sync to Google Sheet ──
+  qEnqueue("addSale",{date:dateStr,items:itemStr,subtotal:sub,discount:disc,total,custName,extraCosts:JSON.stringify(extraCosts)});
+  for(const x of items){
+    const p=products.find(q=>q.row===x.row);
+    if(p){
+      qEnqueue("updateStock",{row:p.row,stock:p.stock});
+      qEnqueue("updateStockLocations",{row:p.row,stockFah:p.stockFah||0,stockMom:p.stockMom||0});
+    }
+  }
+  if(savedCust){
+    qEnqueue("updateCustomer",{row:savedCust.row,name:savedCust.name,phone:savedCust.phone,
+      points:savedCust.newPts,note:savedCust.note||"",totalSpent:savedCust.newSpent});
+  }
+  qFlush(); // background sync — ไม่ await
 }
 
 function setImgTab(mode,btn){

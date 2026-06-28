@@ -331,7 +331,19 @@ function chgQty(rowId,d){
   if(cart[rowId].qty<=0)delete cart[rowId];
   renderCart();
 }
-function clearCart(){cart={};payItemSplits={};document.getElementById("disc-val").value="0";renderCart();}
+function clearCart(){
+  cart={};payItemSplits={};
+  document.getElementById("disc-val").value="0";
+  // reset ส่วนลดให้กลับเป็นโหมดบาทเสมอ
+  if(discMode!=="baht"){
+    discMode="baht";
+    document.querySelectorAll(".disc-tab").forEach(b=>b.classList.remove("active"));
+    const bahtTab=document.querySelector(".disc-tab[onclick*=\"'baht'\"]");
+    if(bahtTab)bahtTab.classList.add("active");
+    document.getElementById("disc-unit").textContent="บาท";
+  }
+  renderCart();
+}
 function getItemPrice(item){return item.customPrice!==null?item.customPrice:item.price}
 function getSubtotal(){return Object.values(cart).reduce((s,x)=>s+getItemPrice(x)*x.qty,0)}
 function getDiscount(){
@@ -557,10 +569,10 @@ async function confirmSale(){
   for(const x of items){
     const p=products.find(q=>q.row===x.row);
     if(p){
-      p.stock-=x.qty;
+      p.stock=Math.max(0,(p.stock||0)-x.qty);
       if(selectedSaleStore==="fah") p.stockFah=Math.max(0,(p.stockFah||0)-x.qty);
       else if(selectedSaleStore==="mom") p.stockMom=Math.max(0,(p.stockMom||0)-x.qty);
-      if(p.stock<0) negativeWarn=true;
+      if(p.stock<=0) negativeWarn=true;
     }
   }
   let custEarned=0,savedCust=null;
@@ -582,7 +594,13 @@ async function confirmSale(){
 
   // ── 2. แสดง UI + ใบเสร็จทันที ──
   clearSelectedCust();
-  cart={};document.getElementById("disc-val").value="0";
+  cart={};payItemSplits={};document.getElementById("disc-val").value="0";
+  // reset ส่วนลดกลับเป็นโหมดบาท
+  discMode="baht";
+  document.querySelectorAll(".disc-tab").forEach(b=>b.classList.remove("active"));
+  const bahtTab=document.querySelector(".disc-tab[onclick*=\"'baht'\"]");
+  if(bahtTab)bahtTab.classList.add("active");
+  document.getElementById("disc-unit").textContent="บาท";
   selectedSaleStore=null;
   delete document.documentElement.dataset.store;
   document.querySelectorAll("[id^='pos-fah'],[id^='pos-mom'],[id^='store-']").forEach(b=>b.classList.remove("active"));
@@ -823,7 +841,7 @@ async function confirmTransfer(){
   let fah=p.stockFah||0,mom=p.stockMom||0;
   const garden=()=>p.stock-fah-mom;
   const get=loc=>loc==="garden"?garden():loc==="fah"?fah:mom;
-  if(get(from)<qty){toast(`⚠️ ต้นทางมีไม่พอ (มี ${get(from)} ต้น) แต่จะย้ายให้ตามจำนวนที่ระบุ`);}
+  if(get(from)<qty){toast(`❌ ต้นทางมีไม่พอ (มี ${get(from)} ต้น) กรุณาแก้ไขจำนวน`);return;}
   // ลดจากต้นทาง / เพิ่มที่ปลายทาง — garden คำนวณจาก stock-fah-mom จึงไม่ต้องเก็บค่าตรง
   if(from==="fah")fah-=qty; else if(from==="mom")mom-=qty;
   if(to==="fah")fah+=qty; else if(to==="mom")mom+=qty;
@@ -978,10 +996,11 @@ function setPreset(preset,btn){
   else if(preset==="custom")return;
   renderDash();
 }
+function parseLocalDate(s){const p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2]);}
 function renderDash(){
   if(document.getElementById("custom-range")?.style.display==="flex"){
     const f=document.getElementById("date-from")?.value,t=document.getElementById("date-to")?.value;
-    if(f)dashFrom=new Date(f);if(t)dashTo=new Date(t);
+    if(f)dashFrom=parseLocalDate(f);if(t)dashTo=parseLocalDate(t);
   }
   const from=dashFrom||new Date(new Date().setHours(0,0,0,0));
   const toEnd=new Date(dashTo||from);toEnd.setHours(23,59,59,999);
@@ -1051,8 +1070,8 @@ function setProfitPreset(preset,btn){
     // อ่านค่าจาก input ถ้ามี
     const f=document.getElementById("profit-date-from")?.value;
     const t=document.getElementById("profit-date-to")?.value;
-    if(f)profitFrom=new Date(f);
-    if(t)profitTo=new Date(t);
+    if(f)profitFrom=parseLocalDate(f);
+    if(t)profitTo=parseLocalDate(t);
   } else {
     if(cr)cr.style.display="none";
     if(preset==="today"){profitFrom=profitTo=today;}
@@ -1068,8 +1087,8 @@ function renderProfit(){
   if(document.getElementById("profit-custom-range")?.style.display==="flex"){
     const f=document.getElementById("profit-date-from")?.value;
     const t=document.getElementById("profit-date-to")?.value;
-    if(f)profitFrom=new Date(f);
-    if(t)profitTo=new Date(t);
+    if(f)profitFrom=parseLocalDate(f);
+    if(t)profitTo=parseLocalDate(t);
   }
   const from=profitFrom||new Date(new Date().setHours(0,0,0,0));
   const toEnd=new Date(profitTo||from);toEnd.setHours(23,59,59,999);
@@ -1240,6 +1259,13 @@ function closeSaleEdit(){document.getElementById("sale-edit-overlay").classList.
 async function saveSaleEdit(){
   const s=sales[editingSaleIdx];
   if(!s)return closeSaleEdit();
+  // ถ้ายังไม่ได้ sync กับ Sheets (sheetRow ยังว่าง) ให้ reload ก่อนแล้วค่อยแก้
+  if(!s.sheetRow){
+    await loadSales();
+    const updated=sales[editingSaleIdx];
+    if(!updated?.sheetRow){toast("❌ ยังไม่ได้ sync กับ Sheets กรุณารอสักครู่แล้วลองใหม่");return;}
+    editingSaleIdx=sales.indexOf(updated);
+  }
   const newDiscount=parseFloat(document.getElementById("se-discount").value)||0;
   const newCust=document.getElementById("se-cust").value.trim();
   const newTotal=Math.max(0,(s.subtotal||0)-newDiscount);
@@ -1414,6 +1440,7 @@ function gotoScreen(name,btn){
   if(name==="report"){
     renderHistory();
     if(!profitFrom)setProfitPreset("today",document.querySelector("#profit-presets .preset-btn"));else renderProfit();
+    if(!dashFrom)setPreset("today",document.querySelector("#date-presets .preset-btn"));else renderDash();
   }
   if(name==="manage")renderProdList();
   if(name==="customers")renderCustList();

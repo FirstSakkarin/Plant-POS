@@ -121,26 +121,7 @@
     <div id="screen-report" class="screen">
       <div class="dash-wrap">
         <!-- ── ภาพรวมยอดขาย ── -->
-        <div class="section-lbl" style="margin-top:0"><i class="ti ti-chart-bar" style="font-size:16px;vertical-align:-2px;color:var(--g7)"></i> ภาพรวมยอดขาย</div>
-        <div class="date-presets" id="date-presets">
-          <button class="preset-btn active" onclick="setPreset('today',this)">วันนี้</button>
-          <button class="preset-btn" onclick="setPreset('7d',this)">7 วัน</button>
-          <button class="preset-btn" onclick="setPreset('30d',this)">30 วัน</button>
-          <button class="preset-btn" onclick="setPreset('mtd',this)">เดือนนี้</button>
-          <button class="preset-btn" onclick="setPreset('custom',this)">กำหนดเอง</button>
-        </div>
-        <div class="date-range-wrap" id="custom-range" style="display:none">
-          <input class="date-inp" type="date" id="date-from" onchange="renderDash()">
-          <span class="date-sep">ถึง</span>
-          <input class="date-inp" type="date" id="date-to" onchange="renderDash()">
-        </div>
-        <div class="metric-grid" id="metric-grid" style="margin-bottom:12px"></div>
-        <div style="height:160px;margin-bottom:8px;position:relative"><canvas id="bar-chart"></canvas></div>
-        <div class="section-lbl" style="margin-top:4px"><i class="ti ti-trophy" style="font-size:14px;vertical-align:-2px;color:var(--a6)"></i> สินค้าขายดี</div>
-        <div id="top-list" style="margin-bottom:20px"></div>
-
-        <!-- ── สรุปกำไร ── -->
-        <div class="section-lbl"><i class="ti ti-coin" style="font-size:16px;vertical-align:-2px;color:var(--g7)"></i> สรุปกำไร</div>
+        <div class="section-lbl" style="margin-top:0"><i class="ti ti-coin" style="font-size:16px;vertical-align:-2px;color:var(--g7)"></i> ภาพรวมยอดขาย</div>
         <div class="date-presets" id="profit-presets">
           <button class="preset-btn active" onclick="setProfitPreset('today',this)">วันนี้</button>
           <button class="preset-btn" onclick="setProfitPreset('7d',this)">7 วัน</button>

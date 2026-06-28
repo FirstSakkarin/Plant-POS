@@ -1474,7 +1474,6 @@ function gotoScreen(name,btn){
   if(name==="report"){
     renderHistory();
     if(!profitFrom)setProfitPreset("today",document.querySelector("#profit-presets .preset-btn"));else renderProfit();
-    if(!dashFrom)setPreset("today",document.querySelector("#date-presets .preset-btn"));else renderDash();
   }
   if(name==="manage")renderProdList();
   if(name==="customers")renderCustList();

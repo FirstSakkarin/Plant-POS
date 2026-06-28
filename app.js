@@ -321,6 +321,12 @@ function addCart(rowId){
 }
 function chgQty(rowId,d){
   if(!cart[rowId])return;
+  if(d>0&&selectedSaleStore){
+    // ตรวจ stock ก่อนเพิ่ม
+    const p=products.find(x=>x.row===rowId);
+    const storeStock=p?(selectedSaleStore==="fah"?(p.stockFah||0):(p.stockMom||0)):0;
+    if(cart[rowId].qty>=storeStock){toast("❌ เกินสต็อกของร้านนี้ ("+storeStock+" ต้น)");return;}
+  }
   cart[rowId].qty+=d;
   if(cart[rowId].qty<=0)delete cart[rowId];
   renderCart();
@@ -477,7 +483,7 @@ function updateFahSplit(rowId,val,inp){
   const row=inp?.closest("div[style*='border-bottom']");
   if(row){
     const info=row.querySelector("div[style*='font-size:10px']");
-    if(info)info.innerHTML=`฿${rev.toLocaleString()} · <span style="color:var(--g7)">🌿 ฿${Math.round(rev*v/100).toLocaleString()}</span> / <span style="color:#FFB0CC">🌸 ฿${Math.round(rev*(100-v)/100).toLocaleString()}</span>`;
+    if(info)info.innerHTML=`฿${rev.toLocaleString()} · <span style="color:var(--g7)">🩵 ฿${Math.round(rev*v/100).toLocaleString()}</span> / <span style="color:#FFB0CC">🩷 ฿${Math.round(rev*(100-v)/100).toLocaleString()}</span>`;
   }
 }
 
@@ -498,7 +504,6 @@ function openPay(){
   document.getElementById("change-box").textContent="";
   document.getElementById("change-box").className="change-box";
   document.getElementById("pay-ok").disabled=true;
-  payItemSplits={};
   // Header ชื่อร้านโดดเด่นด้านบน popup
   const isFah=selectedSaleStore==="fah";
   const storeName=isFah?"🩵 ร้านฟ้า":"🩷 ร้านแม่";
@@ -875,11 +880,16 @@ function openProductFormNewLot(name){
   document.getElementById("f-name").value=name;
   document.getElementById("prod-form-title").textContent="เพิ่ม Lot ใหม่: "+name;
   const ex=products.find(p=>p.name===name);
-  if(ex){document.getElementById("f-price").value=ex.price||"";
+  if(ex){
+    document.getElementById("f-price").value=ex.price||"";
     document.getElementById("f-cost").value=ex.cost||0;
+    // inherit emoji จาก lot เดิม
+    document.getElementById("f-emoji").value=ex.emoji||"🌿";
+    buildEmojiGrid(ex.emoji||"🌿");
     const dpct2=ex.defaultPct??50;
     const el2=document.getElementById("f-default-pct");if(el2)el2.value=dpct2;
-    syncDefaultPctBtns(dpct2);}
+    syncDefaultPctBtns(dpct2);
+  }
 }
 function closeProdForm(){document.getElementById("prod-overlay").classList.remove("show")}
 
@@ -945,6 +955,8 @@ async function confirmDelete(){
   try{
     await scriptPost({action:"deleteProduct",row});
     products=products.filter(p=>p.row!==row);
+    // เลื่อน row ของสินค้าที่อยู่หลังแถวที่ลบ (Sheets เลื่อนขึ้น 1 แถว)
+    products.forEach(p=>{if(p.row>row)p.row--;});
     renderProds();renderProdList();closeDelModal();toast("🗑 ลบสินค้าแล้ว");
   }catch(e){toast("❌ "+e.message);}
 }
@@ -985,19 +997,22 @@ function renderDash(){
   const pct=prevRev?Math.round((totalRev-prevRev)/prevRev*100):0;
   const byDay={};ms.forEach(s=>{const d=new Date(s.date);const k=`${d.getDate()}/${d.getMonth()+1}`;byDay[k]=(byDay[k]||0)+s.total;});
   const best=Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0];
-  // ต้นทุนรวม/กำไร — คำนวณจาก cost ของสินค้าปัจจุบัน × จำนวนที่ขายในช่วงนี้
-  let totalCost=0;
+  // ต้นทุนรวม/กำไร — ตาม business rule: Fah100% → fahCost แยก, อื่นๆ → totalCost
+  let totalCost=0,fahCostDash=0;
   ms.forEach(s=>s.items.forEach(it=>{
     const p=findProductForItem(it);
-    totalCost+=(p?.cost||0)*it.qty;
+    const cost=(p?.cost||0)*it.qty;
+    const fahPct=it.fahPct>=0?it.fahPct:50;
+    if(fahPct===100) fahCostDash+=cost;
+    else totalCost+=cost;
   }));
-  const totalProfit=totalRev-totalCost;
+  const totalProfit=totalRev-totalCost-fahCostDash;
   document.getElementById("metric-grid").innerHTML=`
     <div class="metric"><div class="metric-lbl">ยอดรวม</div><div class="metric-val">฿${(totalRev/1000).toFixed(1)}k</div><div class="metric-sub ${pct>0?"up":pct<0?"down":"neu"}">${pct>0?"▲":pct<0?"▼":"–"} ${Math.abs(pct)}%</div></div>
     <div class="metric"><div class="metric-lbl">จำนวนบิล</div><div class="metric-val">${bills}</div><div class="metric-sub neu">เฉลี่ย ฿${avg.toLocaleString()}</div></div>
     <div class="metric"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
     <div class="metric"><div class="metric-lbl">ส่วนลดรวม</div><div class="metric-val">฿${Math.round(totalDisc).toLocaleString()}</div><div class="metric-sub neu">วันดี ${best?best[0]:"-"}</div></div>
-    <div class="metric"><div class="metric-lbl">ต้นทุนรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalCost).toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-lbl">ต้นทุนรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalCost+fahCostDash).toLocaleString()}</div></div>
     <div class="metric"><div class="metric-lbl">กำไร</div><div class="metric-val" style="font-size:17px;color:${totalProfit>=0?"var(--g7)":"var(--r6)"}">฿${Math.round(totalProfit).toLocaleString()}</div></div>`;
   const dayList=[];const cur=new Date(from);
   while(cur<=toEnd){dayList.push(new Date(cur));cur.setDate(cur.getDate()+1);}
@@ -1125,16 +1140,24 @@ function renderProfit(){
 
   // Breakdown by item name
   const byName={};
-  ms.forEach(s=>s.items.forEach(it=>{
-    const k=it.name;
-    if(!byName[k])byName[k]={name:k,emoji:it.emoji||"🌿",qty:0,rev:0,fahRev:0,momRev:0,cost:0};
-    const rev=it.qty*(it.price||0);
-    const fPct=(it.fahPct>=0?it.fahPct:50)/100;
-    const p=findProductForItem(it);
-    byName[k].qty+=it.qty;byName[k].rev+=rev;
-    byName[k].fahRev+=rev*fPct;byName[k].momRev+=rev*(1-fPct);
-    byName[k].cost+=(p?.cost||0)*it.qty;
-  }));
+  ms.forEach(s=>{
+    const sub=s.subtotal||0;
+    const discRatio=sub>0?(s.discount||0)/sub:0;
+    s.items.forEach(it=>{
+      const k=it.name;
+      if(!byName[k])byName[k]={name:k,emoji:it.emoji||"🌿",qty:0,rev:0,fahRev:0,momRev:0,cost:0};
+      const rev=it.qty*(it.price||0);
+      const net=rev*(1-discRatio);
+      const fahPct=it.fahPct>=0?it.fahPct:50;
+      const p=findProductForItem(it);
+      const cost=(p?.cost||0)*it.qty;
+      byName[k].qty+=it.qty;byName[k].rev+=rev;
+      // ตาม business rule
+      if(fahPct===0){byName[k].momRev+=net;}
+      else if(fahPct===100){byName[k].fahRev+=net;byName[k].cost+=cost;}
+      else{byName[k].fahRev+=net;/* ยอดเต็มเป็นฟ้า */byName[k].cost+=cost;}
+    });
+  });
   const sorted=Object.values(byName).sort((a,b)=>b.rev-a.rev);
 
   document.getElementById("profit-breakdown").innerHTML=`

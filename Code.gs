@@ -168,17 +168,20 @@ function updateSummary(ss) {
     const itemsStr = String(row[1] || "");
     const custName = String(row[5] || "");
 
-    // คำนวณ ฟ้า/แม่ ต่อบิล — หักส่วนลดก่อนแล้วค่อยแบ่งตาม fahPct ของรายการ
+    // คำนวณ ฟ้า/แม่ ต่อบิล — ตาม business rule:
+    // fahPct=0 (ร้านแม่) → ยอดแม่ทั้งหมด
+    // fahPct=100 (ร้านฟ้า Fah100%) → ยอดฟ้าทั้งหมด
+    // fahPct=อื่น (ร้านฟ้า หาร%) → ยอดเป็นของฟ้าทั้งหมด, กำไรหาร (summary นับเฉพาะยอด)
     let fahTotal = 0, momTotal = 0;
     const discRatio = subtotal > 0 ? discount / subtotal : 0;
     itemsStr.split(",").forEach(seg => {
       const p = seg.trim().split("×");
-      const qty   = parseInt(p[1]) || 1;
-      const price = parseFloat(p[2]) || 0;
-      const fPct  = (parseFloat(p[3]) >= 0 ? parseFloat(p[3]) : 50) / 100;
-      const net   = qty * price * (1 - discRatio);
-      fahTotal += net * fPct;
-      momTotal += net * (1 - fPct);
+      const qty    = parseInt(p[1]) || 1;
+      const price  = parseFloat(p[2]) || 0;
+      const fahPct = parseFloat(p[3]) >= 0 ? parseFloat(p[3]) : 50;
+      const net    = qty * price * (1 - discRatio);
+      if (fahPct === 0) { momTotal += net; }
+      else              { fahTotal += net; }  // ร้านฟ้า (ทั้ง 100% และ X%) → ยอดเป็นฟ้า
     });
 
     if (!byDay[dayKey]) byDay[dayKey] = {bills:0, subtotal:0, discount:0, total:0, fah:0, mom:0, custs:[]};

@@ -67,6 +67,23 @@ async function scriptPost(data){
    ถ้า net ล้ม → queue รอ online กลับมาแล้ว sync เอง
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const Q_KEY="treesiri_opqueue";
+const SORT_KEY="treesiri_sortorder"; // cache ลำดับสินค้าใน localStorage
+
+function saveSortCache(){
+  try{
+    const m={};products.forEach(p=>m[p.row]=p.sortOrder);
+    localStorage.setItem(SORT_KEY,JSON.stringify(m));
+  }catch(e){}
+}
+function applySortCache(){
+  try{
+    const m=JSON.parse(localStorage.getItem(SORT_KEY)||"null");
+    if(!m)return;
+    let changed=false;
+    products.forEach(p=>{if(m[p.row]!==undefined&&m[p.row]!==9999){p.sortOrder=m[p.row];changed=true;}});
+    if(changed)products.sort((a,b)=>(a.sortOrder||9999)-(b.sortOrder||9999));
+  }catch(e){}
+}
 function qGet(){try{return JSON.parse(localStorage.getItem(Q_KEY)||"[]");}catch{return[];}}
 function qSave(q){try{localStorage.setItem(Q_KEY,JSON.stringify(q));}catch(e){console.warn("queue save failed",e);}}
 function qEnqueue(action,payload){
@@ -154,6 +171,8 @@ async function loadProducts(){
   })).filter(p=>p.name);
   // เรียงตาม sortOrder ก่อนวาด
   products.sort((a,b)=>(a.sortOrder||9999)-(b.sortOrder||9999));
+  // override ด้วย localStorage cache เผื่อ Sheets API คืนข้อมูลเก่า (cache hit)
+  applySortCache();
   renderProds();renderProdList();
 }
 
@@ -702,6 +721,8 @@ function syncDefaultPctBtns(val){
 function renderProdList(){
   const el=document.getElementById("prod-list");
   if(!products.length){el.innerHTML=`<div style="grid-column:1/-1"><div class="empty-state"><i class="ti ti-plant"></i><p>ยังไม่มีสินค้า กด "+ เพิ่มสินค้า"</p></div></div>`;return}
+  // เรียงก่อนเสมอ เพื่อให้ลำดับตรง แม้ array ถูก shuffle โดยสาเหตุใดก็ตาม
+  products.sort((a,b)=>(a.sortOrder||9999)-(b.sortOrder||9999));
   const grouped={};
   products.forEach(p=>{if(!grouped[p.name])grouped[p.name]=[];grouped[p.name].push(p);});
   el.innerHTML=Object.entries(grouped).map(([name,lots])=>{
@@ -807,6 +828,7 @@ async function saveSortOrder(source){
     products.sort((a,b)=>a.sortOrder-b.sortOrder);
   }
   if(!order.length)return;
+  saveSortCache(); // บันทึกลำดับใหม่ใน localStorage ทันที (ป้องกัน Sheets API cache overwrite)
   try{
     await scriptPost({action:"updateSortOrder",order});
     toast("✅ บันทึกลำดับแล้ว");

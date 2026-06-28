@@ -723,8 +723,18 @@ function renderProdList(){
   if(!products.length){el.innerHTML=`<div style="grid-column:1/-1"><div class="empty-state"><i class="ti ti-plant"></i><p>ยังไม่มีสินค้า กด "+ เพิ่มสินค้า"</p></div></div>`;return}
   // เรียงก่อนเสมอ เพื่อให้ลำดับตรง แม้ array ถูก shuffle โดยสาเหตุใดก็ตาม
   products.sort((a,b)=>(a.sortOrder||9999)-(b.sortOrder||9999));
+  // กรองตามคำค้นหา
+  const rawQ=(document.getElementById("manage-search-inp")?.value||"").toLowerCase();
+  const tokens=rawQ.trim().split(/\s+/).filter(Boolean);
+  const visible=tokens.length
+    ?products.filter(p=>tokens.every(t=>(p.name+" "+(p.lot||"")).toLowerCase().includes(t)))
+    :products;
+  if(!visible.length){
+    el.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--faint);font-size:13px;padding:32px 0">ไม่พบสินค้าที่ตรงกับคำค้นหา</div>`;
+    return;
+  }
   const grouped={};
-  products.forEach(p=>{if(!grouped[p.name])grouped[p.name]=[];grouped[p.name].push(p);});
+  visible.forEach(p=>{if(!grouped[p.name])grouped[p.name]=[];grouped[p.name].push(p);});
   el.innerHTML=Object.entries(grouped).map(([name,lots])=>{
     const totalStock=lots.reduce((s,p)=>s+p.stock,0);
     const rep=lots[0];
@@ -756,7 +766,9 @@ function renderProdList(){
     }).join("");
     return headerHtml+cards;
   }).join("");
-  initSortableProdList();
+  // ลากจัดเรียงได้เฉพาะตอนไม่มีคำค้นหา (ไม่ก่อให้เกิด sortOrder ผิด)
+  if(!tokens.length) initSortableProdList();
+  else if(_sortList){_sortList.destroy();_sortList=null;}
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

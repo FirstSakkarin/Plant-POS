@@ -149,6 +149,10 @@
           <span class="manage-title">จัดการสินค้า</span>
           <button class="add-btn" onclick="openProductForm()"><i class="ti ti-plus" style="font-size:15px"></i> เพิ่มสินค้า</button>
         </div>
+        <div class="cust-search">
+          <i class="ti ti-search"></i>
+          <input type="text" id="manage-search-inp" placeholder="ค้นหาชื่อ / Lot..." oninput="renderProdList()">
+        </div>
         <div class="prod-grid" id="prod-list"></div>
       </div>
     </div>

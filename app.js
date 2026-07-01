@@ -186,23 +186,16 @@ async function loadProducts(){
 // หาสินค้าที่ตรงกับรายการขาย (ใช้คำนวณต้นทุน/กำไรในหน้ารายงาน)
 // รายการขายบางส่วนเก็บชื่อรวม lot ไว้ในชื่อ เช่น "ปริกหางกระรอก(A)"
 function findProductForItem(it){
-  const name=it.name||"";
-  const lot=it.lot;
-  // มี row (in-memory) → match ตรงๆ เลย ไม่ต้องเดาชื่อ
-  if(it.row){const byRow=products.find(p=>p.row===it.row);if(byRow)return byRow;}
-  // มี lot แยก (in-memory, ไม่มี row) → match ชื่อ+lot โดยตรง
-  if(lot!==undefined){
-    return products.find(p=>p.name===name&&(p.lot||"")===(lot||""));
+  let name=it.name,lot=it.lot;
+  if(lot===undefined){
+    // ลอง exact match ก่อน (กรณีชื่อมีวงเล็บเป็นส่วนหนึ่งของชื่อ เช่น "สนออสเตรเลีย (ตั้ง)")
+    const exact=products.find(p=>p.name===name&&(p.lot||"")==="");
+    if(exact)return exact;
+    // fallback: แกะ lot ออกจากชื่อ เช่น "ต้น(A)" → name="ต้น", lot="A"
+    const m=(name||"").match(/^(.*)\((.*)\)$/);
+    if(m){name=m[1].trim();lot=m[2].trim();}
   }
-  // โหลดจาก Sheets: lot ฝังอยู่ในชื่อ เช่น "ต้น(A)" — ลอง regex ก่อน
-  const m=name.match(/^(.*)\((.+)\)$/);
-  if(m){
-    const pName=m[1].trim(),pLot=m[2].trim();
-    const byLot=products.find(p=>p.name===pName&&(p.lot||"")===pLot);
-    if(byLot)return byLot;
-  }
-  // fallback: ชื่อเต็มตรงๆ ไม่มี lot (เช่น ชื่อสินค้ามีวงเล็บในชื่อจริงๆ "สน (ตั้ง)")
-  return products.find(p=>p.name===name&&(p.lot||"")==="");
+  return products.find(p=>p.name===name&&(p.lot||"")===(lot||""));
 }
 
 // ── LOAD SALES (A=date,B=items,C=subtotal,D=discount,E=total,F=custName) ──
@@ -609,7 +602,7 @@ async function confirmSale(){
   sales.unshift({
     date:now,
     store:saleStore,
-    items:items.map(x=>({name:x.name,emoji:x.emoji,lot:x.lot,row:x.row,price:getItemPrice(x),qty:x.qty,
+    items:items.map(x=>({name:x.name,emoji:x.emoji,lot:x.lot,price:getItemPrice(x),qty:x.qty,
       fahPct:fPct[x.row]!==undefined?fPct[x.row]:(x.defaultPct??50)})),
     subtotal:sub,discount:disc,total,custName,
     itemCount:items.reduce((s,x)=>s+x.qty,0),extraCosts:[...extraCosts]
@@ -1323,24 +1316,6 @@ function openSaleDel(idx){
   document.getElementById("sale-del-overlay").classList.add("show");
 }
 function closeSaleDel(){document.getElementById("sale-del-overlay").classList.remove("show");deletingSaleIdx=null;}
-
-// คืน stock สินค้ากลับเมื่อลบประวัติการขาย
-function restoreSaleStock(s){
-  const saleStore=s.store||"";
-  s.items.forEach(it=>{
-    const p=findProductForItem(it);
-    if(!p)return;
-    p.stock=(p.stock||0)+it.qty;
-    const store=saleStore||it.store||"";
-    if(store==="fah")p.stockFah=(p.stockFah||0)+it.qty;
-    else if(store==="mom")p.stockMom=(p.stockMom||0)+it.qty;
-    qEnqueue("updateStock",{row:p.row,stock:p.stock});
-    qEnqueue("updateStockLocations",{row:p.row,stockFah:p.stockFah||0,stockMom:p.stockMom||0});
-  });
-  qFlush();
-  renderProds();renderProdList();
-}
-
 async function confirmDeleteSale(){
   const s=sales[deletingSaleIdx];
   if(!s)return closeSaleDel();
@@ -1348,22 +1323,16 @@ async function confirmDeleteSale(){
     // sheetRow ยังไม่ได้ sync — reload ก่อนแล้วลบ
     await loadSales();
     const updated=sales[deletingSaleIdx];
-    if(!updated?.sheetRow){
-      restoreSaleStock(updated||s);
-      sales.splice(deletingSaleIdx,1);
-      closeSaleDel();renderHistory();renderProfit();
-      toast("🗑 ลบแล้ว · คืน stock แล้ว (local)");return;
-    }
+    if(!updated?.sheetRow){sales.splice(deletingSaleIdx,1);closeSaleDel();renderHistory();renderProfit();toast("🗑 ลบแล้ว (local)");return;}
     deletingSaleIdx=sales.indexOf(updated);
   }
   try{
     await scriptPost({action:"deleteSaleByRow",sheetRow:s.sheetRow});
-    restoreSaleStock(s);
     sales.splice(deletingSaleIdx,1);
     // adjust sheetRow ของแถวที่อยู่หลัง (ทุกแถวถัดไปเลื่อนขึ้น 1)
     sales.forEach(x=>{if(x.sheetRow>s.sheetRow)x.sheetRow--;});
     closeSaleDel();renderHistory();renderProfit();
-    toast("🗑 ลบแล้ว · คืน stock แล้ว");
+    toast("🗑 ลบแล้ว");
   }catch(e){toast("❌ "+e.message);}
 }
 

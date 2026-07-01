@@ -1261,13 +1261,18 @@ function renderHistory(){
     lastDateKey=dateKey;
     const ds=`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
     const discTxt=s.discount>0?` ส่วนลด −฿${s.discount.toLocaleString()}`:"";
-    const storeTag=s.store==="fah"
-      ?`<span style="font-size:10px;background:#e0f5ef;color:#1a9974;padding:1px 7px;border-radius:20px;font-weight:700;margin-left:4px">🩵 ร้านฟ้า</span>`
-      :s.store==="mom"
-      ?`<span style="font-size:10px;background:#fce8f3;color:#c2185b;padding:1px 7px;border-radius:20px;font-weight:700;margin-left:4px">🩷 ร้านแม่</span>`
+    const isFahCard=s.store==="fah",isMomCard=s.store==="mom";
+    const storeTag=isFahCard
+      ?`<span style="font-size:10px;background:#88DBBD;color:#0a5740;padding:2px 8px;border-radius:20px;font-weight:700;margin-left:6px">🩵 ร้านฟ้า</span>`
+      :isMomCard
+      ?`<span style="font-size:10px;background:#FFB0CC;color:#7a1040;padding:2px 8px;border-radius:20px;font-weight:700;margin-left:6px">🩷 ร้านแม่</span>`
       :"";
-    const cardBorder=s.store==="fah"?"border-left:3px solid #88DBBD":s.store==="mom"?"border-left:3px solid #FFB0CC":"";
-    return divider+`<div class="sale-card" style="${cardBorder}">
+    const cardStyle=isFahCard
+      ?"border-left:4px solid #88DBBD;background:linear-gradient(135deg,#edfaf5 0%,var(--card) 60%)"
+      :isMomCard
+      ?"border-left:4px solid #FFB0CC;background:linear-gradient(135deg,#fef0f6 0%,var(--card) 60%)"
+      :"";
+    return divider+`<div class="sale-card" style="${cardStyle}">
       <div class="sale-hdr"><span class="sale-date"><i class="ti ti-clock" style="font-size:10px"></i> ${ds}${storeTag}</span><span class="sale-badge">${s.itemCount} รายการ</span></div>
       <div class="sale-items-txt">${s.custName?`👤 ${s.custName} · `:""}${s.items.map(x=>`${x.emoji||"🌿"}${x.name}×${x.qty}`).join(" · ")}${discTxt?` · ${discTxt}`:""}</div>
       <div class="sale-foot">

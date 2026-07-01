@@ -1316,6 +1316,24 @@ function openSaleDel(idx){
   document.getElementById("sale-del-overlay").classList.add("show");
 }
 function closeSaleDel(){document.getElementById("sale-del-overlay").classList.remove("show");deletingSaleIdx=null;}
+
+// คืน stock สินค้ากลับเมื่อลบประวัติการขาย
+function restoreSaleStock(s){
+  const saleStore=s.store||"";
+  s.items.forEach(it=>{
+    const p=findProductForItem(it);
+    if(!p)return;
+    p.stock=(p.stock||0)+it.qty;
+    const store=saleStore||it.store||"";
+    if(store==="fah")p.stockFah=(p.stockFah||0)+it.qty;
+    else if(store==="mom")p.stockMom=(p.stockMom||0)+it.qty;
+    qEnqueue("updateStock",{row:p.row,stock:p.stock});
+    qEnqueue("updateStockLocations",{row:p.row,stockFah:p.stockFah||0,stockMom:p.stockMom||0});
+  });
+  qFlush();
+  renderProds();renderProdList();
+}
+
 async function confirmDeleteSale(){
   const s=sales[deletingSaleIdx];
   if(!s)return closeSaleDel();
@@ -1323,16 +1341,22 @@ async function confirmDeleteSale(){
     // sheetRow ยังไม่ได้ sync — reload ก่อนแล้วลบ
     await loadSales();
     const updated=sales[deletingSaleIdx];
-    if(!updated?.sheetRow){sales.splice(deletingSaleIdx,1);closeSaleDel();renderHistory();renderProfit();toast("🗑 ลบแล้ว (local)");return;}
+    if(!updated?.sheetRow){
+      restoreSaleStock(updated||s);
+      sales.splice(deletingSaleIdx,1);
+      closeSaleDel();renderHistory();renderProfit();
+      toast("🗑 ลบแล้ว · คืน stock แล้ว (local)");return;
+    }
     deletingSaleIdx=sales.indexOf(updated);
   }
   try{
     await scriptPost({action:"deleteSaleByRow",sheetRow:s.sheetRow});
+    restoreSaleStock(s);
     sales.splice(deletingSaleIdx,1);
     // adjust sheetRow ของแถวที่อยู่หลัง (ทุกแถวถัดไปเลื่อนขึ้น 1)
     sales.forEach(x=>{if(x.sheetRow>s.sheetRow)x.sheetRow--;});
     closeSaleDel();renderHistory();renderProfit();
-    toast("🗑 ลบแล้ว");
+    toast("🗑 ลบแล้ว · คืน stock แล้ว");
   }catch(e){toast("❌ "+e.message);}
 }
 

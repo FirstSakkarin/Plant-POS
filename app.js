@@ -220,7 +220,8 @@ async function loadSales(){
     itemsStr:r[1]||"",
     items:(r[1]||"").split(",").map(s=>{
       const p=s.trim().split("×");
-      return{name:p[0]?.trim()||"",emoji:"🌿",qty:parseInt(p[1])||1,price:parseFloat(p[2])||0,fahPct:parseFloat(p[3])>=0?parseFloat(p[3]):50,store:(p[4]||"").trim()};
+      const prodRow=parseInt(p[5]);
+      return{name:p[0]?.trim()||"",emoji:"🌿",qty:parseInt(p[1])||1,price:parseFloat(p[2])||0,fahPct:parseFloat(p[3])>=0?parseFloat(p[3]):50,store:(p[4]||"").trim(),row:prodRow||undefined};
     }),
     get store(){return this.items[0]?.store||"";},
     subtotal:parseFloat(r[2])||0,
@@ -576,7 +577,8 @@ async function confirmSale(){
   const saleStore=selectedSaleStore||"";
   const itemStr=items.map(x=>{
     const fahPct=fPct[x.row]!==undefined?fPct[x.row]:(x.defaultPct??50);
-    return x.name+(x.lot?"("+x.lot+")":"")+"×"+x.qty+"×"+getItemPrice(x)+"×"+fahPct+"×"+saleStore;
+    // บันทึก row ของสินค้าไว้ด้วย (field ที่ 6) เพื่อให้ findProductForItem หาถูก row แม้ชื่อซ้ำกัน
+    return x.name+(x.lot?"("+x.lot+")":"")+"×"+x.qty+"×"+getItemPrice(x)+"×"+fahPct+"×"+saleStore+"×"+x.row;
   }).join(", ");
 
   // ── 1. อัปเดต in-memory ทันที (ไม่รอ network) ──

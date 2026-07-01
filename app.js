@@ -472,30 +472,17 @@ function renderPayProfitSplits(){
   if(!el)return;
   const items=Object.values(cart);
   if(!items.length){el.innerHTML="";return}
-  const isMom=selectedSaleStore==="mom";
   el.innerHTML=
     `<div style="font-size:12px;color:var(--m);font-weight:600;margin-bottom:5px">
-      แบ่ง % กำไรต่อรายการ
-      ${isMom?`<span style="color:#FFB0CC;font-weight:700"> — ร้านแม่: ฟ้าไม่ได้% ทุกรายการ</span>`:`<span style="font-weight:400">(🩵 Fah ได้กี่ %)</span>`}
+      แบ่ง % กำไรต่อรายการ <span style="font-weight:400">(🩵 Fah ได้กี่ % — อิงจากสินค้า)</span>
     </div>`+
     items.map(x=>{
-      // ร้านแม่ → fahPct = 0 เสมอ; ร้านฟ้า → ใช้ค่า default หรือที่ผู้ใช้เปลี่ยน
-      const fahPct=isMom?0:(payItemSplits[x.row]??x.defaultPct??50);
+      // ใช้ defaultPct ของสินค้าเสมอ ไม่ขึ้นกับร้านที่ขาย
+      const fahPct=payItemSplits[x.row]??x.defaultPct??50;
       payItemSplits[x.row]=fahPct;
       const momPct=100-fahPct;
       const rev=getItemPrice(x)*x.qty;
       const thumb=x.imgUrl?`<img src="${x.imgUrl}" style="width:20px;height:20px;object-fit:cover;border-radius:4px">`:x.emoji;
-      if(isMom){
-        // ร้านแม่: แสดงแบบ read-only ไม่มี input
-        return`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd)">
-          <span style="font-size:15px;flex-shrink:0">${thumb}</span>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:12px;font-weight:600;color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.name}${x.lot?" ("+x.lot+")":""}</div>
-            <div style="font-size:10px;color:var(--m)">฿${rev.toLocaleString()} · <span style="color:#FFB0CC">🩷 แม่ได้ทั้งหมด ฿${rev.toLocaleString()}</span></div>
-          </div>
-          <span style="font-size:11px;font-weight:700;color:#FFB0CC">แม่ 100%</span>
-        </div>`;
-      }
       return`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd)">
         <span style="font-size:15px;flex-shrink:0">${thumb}</span>
         <div style="flex:1;min-width:0">
@@ -560,7 +547,7 @@ function selectSaleStore(store,btn){
   document.querySelectorAll("[id^='store-']").forEach(b=>b.classList.remove("active"));
   btn.classList.add("active");
   calcChange();
-  // reset splits ทุกครั้งที่เปลี่ยนร้าน เพื่อ re-apply rule (แม่=0%, ฟ้า=defaultPct)
+  // reset splits เพื่อ re-render ด้วย defaultPct ของแต่ละสินค้า
   payItemSplits={};
   renderPayProfitSplits();
 }
@@ -1138,9 +1125,9 @@ function renderProfit(){
   const toEnd=new Date(profitTo||from);toEnd.setHours(23,59,59,999);
   const ms=sales.filter(s=>{const d=new Date(s.date);return d>=from&&d<=toEnd;});
 
-  // ━━ คำนวณยอด / กำไร / ต้นทุน — อิง %ฟ้าจากคลัง (stockFah ÷ stock รวม) ━━
-  // fahPct ดึงอัตโนมัติจาก product.stockFah / (stockFah+stockMom)
-  // ยอด/กำไร/ต้นทุน แบ่งสัดส่วนตาม %ฟ้า ทุกกรณี (proportional)
+  // ━━ คำนวณยอด / กำไร / ต้นทุน — อิง defaultPct (col H) คงที่จากสินค้า ━━
+  // ไม่ใช้ stockFah/stockMom เพราะ ratio เปลี่ยนตามสต็อกที่ขาย
+  // ลำดับ: p.defaultPct → it.fahPct (บันทึกขณะขาย) → 50%
   let totalRev=0,fahTotal=0,momTotal=0,totalItems=0,totalDisc=0;
   let totalCost=0,totalExtraCost=0;
   let fahProfit=0,momProfit=0;
@@ -1152,8 +1139,7 @@ function renderProfit(){
     const discRatio=sub>0?(s.discount||0)/sub:0;
     s.items.forEach(it=>{
       const p=findProductForItem(it);
-      const stTotal=(p?.stockFah||0)+(p?.stockMom||0);
-      const fPct=stTotal>0?(p.stockFah/stTotal):0.5; // ratio 0–1 จากคลัง
+      const fPct=(p?.defaultPct!=null?p.defaultPct:(it.fahPct??50))/100; // ratio 0–1 จาก defaultPct
       const cost=(p?.cost||0)*it.qty;
       const rev=it.qty*(it.price||0);
       const net=rev*(1-discRatio);
@@ -1186,7 +1172,7 @@ function renderProfit(){
       <div class="metric" data-accent="total"><div class="metric-lbl">📦 ต้นทุนอื่นๆ</div><div class="metric-val" style="font-size:15px;color:rgba(255,176,204,0.85)">฿${Math.round(totalExtraCost).toLocaleString()}</div></div>
     </div>`;
 
-  // Breakdown by item name — อิง %ฟ้าจากคลัง
+  // Breakdown by item name — อิง defaultPct (col H) คงที่
   const byName={};
   ms.forEach(s=>{
     const sub=s.subtotal||0;
@@ -1195,8 +1181,7 @@ function renderProfit(){
       const k=it.name;
       if(!byName[k])byName[k]={name:k,emoji:it.emoji||"🌿",qty:0,rev:0,fahRev:0,momRev:0,cost:0};
       const p=findProductForItem(it);
-      const stTotal=(p?.stockFah||0)+(p?.stockMom||0);
-      const fPct=stTotal>0?(p.stockFah/stTotal):0.5;
+      const fPct=(p?.defaultPct!=null?p.defaultPct:(it.fahPct??50))/100;
       const rev=it.qty*(it.price||0);
       const net=rev*(1-discRatio);
       const cost=(p?.cost||0)*it.qty;

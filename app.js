@@ -71,17 +71,24 @@ const SORT_KEY="treesiri_sortorder"; // cache ลำดับสินค้า�
 
 function saveSortCache(){
   try{
-    const m={};products.forEach(p=>m[p.row]=p.sortOrder);
-    localStorage.setItem(SORT_KEY,JSON.stringify(m));
+    // บันทึกเป็น ordered list ของ row numbers — ชัดเจน ไม่มี collision
+    localStorage.setItem(SORT_KEY,JSON.stringify(products.map(p=>p.row)));
   }catch(e){}
 }
 function applySortCache(){
   try{
-    const m=JSON.parse(localStorage.getItem(SORT_KEY)||"null");
-    if(!m)return;
-    let changed=false;
-    products.forEach(p=>{if(m[p.row]!==undefined&&m[p.row]!==9999){p.sortOrder=m[p.row];changed=true;}});
-    if(changed)products.sort((a,b)=>(a.sortOrder||9999)-(b.sortOrder||9999));
+    const rowList=JSON.parse(localStorage.getItem(SORT_KEY)||"null");
+    if(!rowList||!rowList.length)return;
+    const posMap={};
+    rowList.forEach((row,i)=>{posMap[row]=i;});
+    // เรียง products ตาม cache order; row ที่ไม่อยู่ใน cache ไปท้ายสุด
+    products.sort((a,b)=>{
+      const pa=posMap[a.row]!==undefined?posMap[a.row]:99999;
+      const pb=posMap[b.row]!==undefined?posMap[b.row]:99999;
+      return pa-pb;
+    });
+    // sync sortOrder property ให้ตรงกับ array index
+    products.forEach((p,i)=>{p.sortOrder=i;});
   }catch(e){}
 }
 function qGet(){try{return JSON.parse(localStorage.getItem(Q_KEY)||"[]");}catch{return[];}}
@@ -213,8 +220,9 @@ async function loadSales(){
     itemsStr:r[1]||"",
     items:(r[1]||"").split(",").map(s=>{
       const p=s.trim().split("×");
-      return{name:p[0]?.trim()||"",emoji:"🌿",qty:parseInt(p[1])||1,price:parseFloat(p[2])||0,fahPct:parseFloat(p[3])>=0?parseFloat(p[3]):50};
+      return{name:p[0]?.trim()||"",emoji:"🌿",qty:parseInt(p[1])||1,price:parseFloat(p[2])||0,fahPct:parseFloat(p[3])>=0?parseFloat(p[3]):50,store:(p[4]||"").trim()};
     }),
+    get store(){return this.items[0]?.store||"";},
     subtotal:parseFloat(r[2])||0,
     discount:parseFloat(r[3])||0,
     total:parseFloat(r[4])||0,
@@ -578,9 +586,10 @@ async function confirmSale(){
   const pad=n=>String(n).padStart(2,"0");
   const dateStr=now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate())+"T"+pad(now.getHours())+":"+pad(now.getMinutes());
   const custName=selectedCust?selectedCust.name:"";
+  const saleStore=selectedSaleStore||"";
   const itemStr=items.map(x=>{
     const fahPct=fPct[x.row]!==undefined?fPct[x.row]:(x.defaultPct??50);
-    return x.name+(x.lot?"("+x.lot+")":"")+"×"+x.qty+"×"+getItemPrice(x)+"×"+fahPct;
+    return x.name+(x.lot?"("+x.lot+")":"")+"×"+x.qty+"×"+getItemPrice(x)+"×"+fahPct+"×"+saleStore;
   }).join(", ");
 
   // ── 1. อัปเดต in-memory ทันที (ไม่รอ network) ──
@@ -605,6 +614,7 @@ async function confirmSale(){
   }
   sales.unshift({
     date:now,
+    store:saleStore,
     items:items.map(x=>({name:x.name,emoji:x.emoji,lot:x.lot,price:getItemPrice(x),qty:x.qty,
       fahPct:fPct[x.row]!==undefined?fPct[x.row]:(x.defaultPct??50)})),
     subtotal:sub,discount:disc,total,custName,
@@ -1251,8 +1261,14 @@ function renderHistory(){
     lastDateKey=dateKey;
     const ds=`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
     const discTxt=s.discount>0?` ส่วนลด −฿${s.discount.toLocaleString()}`:"";
-    return divider+`<div class="sale-card">
-      <div class="sale-hdr"><span class="sale-date"><i class="ti ti-clock" style="font-size:10px"></i> ${ds}</span><span class="sale-badge">${s.itemCount} รายการ</span></div>
+    const storeTag=s.store==="fah"
+      ?`<span style="font-size:10px;background:#e0f5ef;color:#1a9974;padding:1px 7px;border-radius:20px;font-weight:700;margin-left:4px">🩵 ร้านฟ้า</span>`
+      :s.store==="mom"
+      ?`<span style="font-size:10px;background:#fce8f3;color:#c2185b;padding:1px 7px;border-radius:20px;font-weight:700;margin-left:4px">🩷 ร้านแม่</span>`
+      :"";
+    const cardBorder=s.store==="fah"?"border-left:3px solid #88DBBD":s.store==="mom"?"border-left:3px solid #FFB0CC":"";
+    return divider+`<div class="sale-card" style="${cardBorder}">
+      <div class="sale-hdr"><span class="sale-date"><i class="ti ti-clock" style="font-size:10px"></i> ${ds}${storeTag}</span><span class="sale-badge">${s.itemCount} รายการ</span></div>
       <div class="sale-items-txt">${s.custName?`👤 ${s.custName} · `:""}${s.items.map(x=>`${x.emoji||"🌿"}${x.name}×${x.qty}`).join(" · ")}${discTxt?` · ${discTxt}`:""}</div>
       <div class="sale-foot">
         <div class="sale-total">฿${Math.round(s.total).toLocaleString()}</div>

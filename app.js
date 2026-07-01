@@ -186,16 +186,23 @@ async function loadProducts(){
 // หาสินค้าที่ตรงกับรายการขาย (ใช้คำนวณต้นทุน/กำไรในหน้ารายงาน)
 // รายการขายบางส่วนเก็บชื่อรวม lot ไว้ในชื่อ เช่น "ปริกหางกระรอก(A)"
 function findProductForItem(it){
-  let name=it.name,lot=it.lot;
-  if(lot===undefined){
-    // ลอง exact match ก่อน (กรณีชื่อมีวงเล็บเป็นส่วนหนึ่งของชื่อ เช่น "สนออสเตรเลีย (ตั้ง)")
-    const exact=products.find(p=>p.name===name&&(p.lot||"")==="");
-    if(exact)return exact;
-    // fallback: แกะ lot ออกจากชื่อ เช่น "ต้น(A)" → name="ต้น", lot="A"
-    const m=(name||"").match(/^(.*)\((.*)\)$/);
-    if(m){name=m[1].trim();lot=m[2].trim();}
+  const name=it.name||"";
+  const lot=it.lot;
+  // มี row (in-memory) → match ตรงๆ เลย ไม่ต้องเดาชื่อ
+  if(it.row){const byRow=products.find(p=>p.row===it.row);if(byRow)return byRow;}
+  // มี lot แยก (in-memory, ไม่มี row) → match ชื่อ+lot โดยตรง
+  if(lot!==undefined){
+    return products.find(p=>p.name===name&&(p.lot||"")===(lot||""));
   }
-  return products.find(p=>p.name===name&&(p.lot||"")===(lot||""));
+  // โหลดจาก Sheets: lot ฝังอยู่ในชื่อ เช่น "ต้น(A)" — ลอง regex ก่อน
+  const m=name.match(/^(.*)\((.+)\)$/);
+  if(m){
+    const pName=m[1].trim(),pLot=m[2].trim();
+    const byLot=products.find(p=>p.name===pName&&(p.lot||"")===pLot);
+    if(byLot)return byLot;
+  }
+  // fallback: ชื่อเต็มตรงๆ ไม่มี lot (เช่น ชื่อสินค้ามีวงเล็บในชื่อจริงๆ "สน (ตั้ง)")
+  return products.find(p=>p.name===name&&(p.lot||"")==="");
 }
 
 // ── LOAD SALES (A=date,B=items,C=subtotal,D=discount,E=total,F=custName) ──
@@ -602,7 +609,7 @@ async function confirmSale(){
   sales.unshift({
     date:now,
     store:saleStore,
-    items:items.map(x=>({name:x.name,emoji:x.emoji,lot:x.lot,price:getItemPrice(x),qty:x.qty,
+    items:items.map(x=>({name:x.name,emoji:x.emoji,lot:x.lot,row:x.row,price:getItemPrice(x),qty:x.qty,
       fahPct:fPct[x.row]!==undefined?fPct[x.row]:(x.defaultPct??50)})),
     subtotal:sub,discount:disc,total,custName,
     itemCount:items.reduce((s,x)=>s+x.qty,0),extraCosts:[...extraCosts]

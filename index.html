@@ -265,8 +265,15 @@
     <input class="form-inp" id="f-lot" type="text" placeholder="เช่น Lot A, สวนอ.สมชาย, 15/1/68">
     <div class="form-lbl">ราคาปกติ (บาท) *</div>
     <input class="form-inp" id="f-price" type="number" placeholder="0" inputmode="decimal">
-    <div class="form-lbl">ต้นทุน (บาท/ต้น) — ถ้าไม่มีต้นทุนให้ใส่ 0</div>
+    <div class="form-lbl">ราคาต้นทุน (บาท/ต้น) — ถ้าไม่มีต้นทุนให้ใส่ 0</div>
     <input class="form-inp" id="f-cost" type="number" placeholder="0" value="0" inputmode="decimal">
+    <div class="form-lbl">ต้นทุนของใคร</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button class="pt-btn active" id="co-mom" onclick="setCostOwner('แม่',this)" style="flex:1">🩷 แม่ทุน</button>
+      <button class="pt-btn" id="co-fah" onclick="setCostOwner('ฟ้า',this)" style="flex:1">🩵 ฟ้าทุน</button>
+      <button class="pt-btn" id="co-joint" onclick="setCostOwner('ร่วม',this)" style="flex:1">🤝 ร่วมทุน</button>
+    </div>
+    <input type="hidden" id="f-cost-owner" value="แม่">
     <div class="form-lbl">จำนวนสต็อกรวม</div>
     <input class="form-inp" id="f-stock" type="number" placeholder="0" inputmode="numeric" oninput="updateStockBreakdownHint()">
     <div class="form-lbl">จำนวนที่อยู่หน้าร้าน (เป็นส่วนหนึ่งของสต็อกรวม)</div>

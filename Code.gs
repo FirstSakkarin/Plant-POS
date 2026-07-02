@@ -61,9 +61,9 @@ function jsonOut(obj) {
 }
 
 /* ───────────────────────────────────────────────
-   PRODUCTS  (ชีต "Products", คอลัมน์ A-K)
-   A sortOrder | B ชื่อ | C lots | D ต้นทุน | E ราคา | F สต็อกรวม
-   G สต็อกฟ้า | H สต็อกแม่ | I emoji | J imgUrl | K %ฟ้า
+   PRODUCTS  (ชีต "Products", คอลัมน์ A-L)
+   A sortOrder | B ชื่อ | C lots | D ราคาต้นทุน | E ราคา | F สต็อกรวม
+   G สต็อกฟ้า | H สต็อกแม่ | I emoji | J imgUrl | K %ฟ้า | L ต้นทุนของใคร
 ─────────────────────────────────────────────── */
 function addProduct(ss, p) {
   const sheet = ss.getSheetByName("Products");
@@ -73,7 +73,8 @@ function addProduct(ss, p) {
     p.cost || 0, p.price || 0, p.stock || 0,
     p.stockFah || 0, p.stockMom || 0,
     p.emoji || "🌿", p.imgUrl || "",
-    p.defaultPct ?? 50
+    p.defaultPct ?? 50,
+    p.costOwner || "แม่"
   ]);
   return {};
 }
@@ -81,13 +82,14 @@ function addProduct(ss, p) {
 function updateProduct(ss, p) {
   const sheet = ss.getSheetByName("Products");
   const row = parseInt(p.row);
-  // คอลัมน์ B-K (ข้ามคอลัมน์ A=sortOrder ซึ่งจัดการแยกโดย updateSortOrder)
-  sheet.getRange(row, 2, 1, 10).setValues([[
+  // คอลัมน์ B-L (ข้ามคอลัมน์ A=sortOrder ซึ่งจัดการแยกโดย updateSortOrder)
+  sheet.getRange(row, 2, 1, 11).setValues([[
     p.name || "", p.lot || "",
     p.cost || 0, p.price || 0, p.stock || 0,
     p.stockFah || 0, p.stockMom || 0,
     p.emoji || "🌿", p.imgUrl || "",
-    p.defaultPct ?? 50
+    p.defaultPct ?? 50,
+    p.costOwner || "แม่"
   ]]);
   return {};
 }

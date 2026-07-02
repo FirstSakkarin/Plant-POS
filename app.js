@@ -1199,10 +1199,14 @@ function renderProfit(){
   let totalRev=0,fahTotal=0,momTotal=0,totalItems=0,totalDisc=0;
   let totalCost=0,totalExtraCost=0;
   let fahProfit=0,momProfit=0;
+  let fahCost=0,momCost=0;
+  let fahStoreTotal=0,momStoreTotal=0;
 
   ms.forEach(s=>{
     totalRev+=s.total;
     totalDisc+=(s.discount||0);
+    if(s.store==="fah") fahStoreTotal+=s.total;
+    else if(s.store==="mom") momStoreTotal+=s.total;
     const sub=s.subtotal||0;
     const discRatio=sub>0?(s.discount||0)/sub:0;
     s.items.forEach(it=>{
@@ -1213,6 +1217,8 @@ function renderProfit(){
       const net=rev*(1-discRatio);
       totalItems+=it.qty;
       totalCost+=cost;
+      fahCost+=cost*fPct;
+      momCost+=cost*(1-fPct);
       fahTotal+=net*fPct;
       momTotal+=net*(1-fPct);
       fahProfit+=net*fPct-cost*fPct;
@@ -1232,11 +1238,12 @@ function renderProfit(){
   document.getElementById("profit-metrics").innerHTML=`
     <div class="metric" data-accent="total"><div class="metric-lbl">ยอดขายรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalRev).toLocaleString()}</div></div>
     <div class="metric" data-accent="profit"><div class="metric-lbl">กำไรสุทธิ</div><div class="metric-val" style="font-size:17px;color:${netProfit>=0?"#F2C05A":"var(--r6)"}">฿${Math.round(netProfit).toLocaleString()}</div></div>
-    <div class="metric" data-accent="fah"><div class="metric-lbl">🩵 ยอดขายฟ้า</div><div class="metric-val" style="font-size:17px;color:#88DBBD">฿${Math.round(fahTotal).toLocaleString()}</div></div>
-    <div class="metric" data-accent="mom"><div class="metric-lbl">🩷 ยอดขายแม่</div><div class="metric-val" style="font-size:17px;color:#FFB0CC">฿${Math.round(momTotal).toLocaleString()}</div></div>
+    <div class="metric" data-accent="fah"><div class="metric-lbl">🩵 ยอดขายร้านฟ้า</div><div class="metric-val" style="font-size:17px;color:#88DBBD">฿${Math.round(fahStoreTotal).toLocaleString()}</div></div>
+    <div class="metric" data-accent="mom"><div class="metric-lbl">🩷 ยอดขายร้านแม่</div><div class="metric-val" style="font-size:17px;color:#FFB0CC">฿${Math.round(momStoreTotal).toLocaleString()}</div></div>
     <div class="metric" data-accent="fah"><div class="metric-lbl">🩵 กำไรฟ้า</div><div class="metric-val" style="font-size:17px;color:${fahProfit>=0?"#88DBBD":"var(--r6)"}">฿${Math.round(fahProfit).toLocaleString()}</div></div>
     <div class="metric" data-accent="mom"><div class="metric-lbl">🩷 กำไรแม่</div><div class="metric-val" style="font-size:17px;color:${momProfit>=0?"#FFB0CC":"var(--r6)"}">฿${Math.round(momProfit).toLocaleString()}</div></div>
     <div class="metric" data-accent="total"><div class="metric-lbl">ต้นทุนรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalCost).toLocaleString()}</div></div>
+    <div class="metric" data-accent="fah"><div class="metric-lbl">🩵 ต้นทุนฟ้า</div><div class="metric-val" style="font-size:17px;color:#88DBBD">฿${Math.round(fahCost).toLocaleString()}</div></div>
     <div class="metric-quad">
       <div class="metric" data-accent="total"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
       <div class="metric" data-accent="total"><div class="metric-lbl">จำนวนบิล</div><div class="metric-val">${bills}</div><div class="metric-sub neu">บิล</div></div>
@@ -1269,11 +1276,12 @@ function renderProfit(){
     <div class="profit-block">
       <div class="profit-block-title"><i class="ti ti-calculator" style="color:var(--g7);font-size:18px"></i> สรุปกำไร</div>
       <div class="profit-line" data-accent="total"><span class="p-lbl">ยอดขายรวม</span><span class="p-val">฿${Math.round(totalRev).toLocaleString()}</span></div>
-      <div class="profit-line" data-accent="fah"><span class="p-lbl">🩵 ยอดฟ้า</span><span class="p-val pv-ts">฿${Math.round(fahTotal).toLocaleString()}</span></div>
-      <div class="profit-line" data-accent="mom"><span class="p-lbl">🩷 ยอดแม่</span><span class="p-val pv-snp">฿${Math.round(momTotal).toLocaleString()}</span></div>
+      <div class="profit-line" data-accent="fah"><span class="p-lbl">🩵 ร้านฟ้า</span><span class="p-val pv-ts">฿${Math.round(fahStoreTotal).toLocaleString()}</span></div>
+      <div class="profit-line" data-accent="mom"><span class="p-lbl">🩷 ร้านแม่</span><span class="p-val pv-snp">฿${Math.round(momStoreTotal).toLocaleString()}</span></div>
       <div class="profit-line" data-accent="fah"><span class="p-lbl">🩵 กำไรฟ้า</span><span class="p-val" style="color:#88DBBD">฿${Math.round(fahProfit).toLocaleString()}</span></div>
       <div class="profit-line" data-accent="mom"><span class="p-lbl">🩷 กำไรแม่</span><span class="p-val" style="color:#FFB0CC">฿${Math.round(momProfit).toLocaleString()}</span></div>
       <div class="profit-line" data-accent="total"><span class="p-lbl">ต้นทุนรวม</span><span class="p-val">฿${Math.round(totalCost).toLocaleString()}</span></div>
+      <div class="profit-line" data-accent="fah"><span class="p-lbl">🩵 ต้นทุนฟ้า</span><span class="p-val" style="color:#88DBBD">฿${Math.round(fahCost).toLocaleString()}</span></div>
       <div class="profit-line" data-accent="total"><span class="p-lbl">📦 ต้นทุนอื่นๆ</span><span class="p-val" style="color:rgba(255,176,204,0.85)">฿${Math.round(totalExtraCost+reportExpenseTotal).toLocaleString()}</span></div>
       ${filteredExpenses.map(e=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0 2px 16px;font-size:11px;color:var(--m)"><span>↳ ${e.name}</span><div style="display:flex;align-items:center;gap:6px"><span style="color:rgba(255,176,204,0.7)">-฿${Math.round(e.amount).toLocaleString()}</span><button onclick="removeReportExpense(${e.sheetRow})" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:12px;padding:0;line-height:1"><i class="ti ti-x"></i></button></div></div>`).join("")}
       <div class="profit-line" data-accent="profit"><span class="p-lbl">กำไรสุทธิ</span><span class="p-val" style="color:${netProfit>=0?"#F2C05A":"var(--r6)"}">฿${Math.round(netProfit).toLocaleString()}</span></div>

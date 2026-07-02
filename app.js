@@ -161,22 +161,22 @@ async function syncAll(){
    LOAD DATA
    Columns: Products A-H, Sales A-F, Customers A-E
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-// ── LOAD PRODUCTS (A=name,B=lot,C=cat,D=price,E=stock,F=emoji,G=imgUrl,H=defaultPct,I=stockFah,J=stockMom,K=cost) ──
+// ── LOAD PRODUCTS (A=sortOrder,B=ชื่อ,C=lots,D=ต้นทุน,E=ราคา,F=สต็อกรวม,G=สต็อกฟ้า,H=สต็อกแม่,I=emoji,J=imgUrl,K=%ฟ้า) ──
 // defaultPct = Fah's default % (0-100), shown as starting value in checkout split
 // stockFah/stockMom = จำนวนต้นที่อยู่หน้าร้านฟ้า/ร้านแม่ (เป็นส่วนหนึ่งของ stock รวม ไม่ใช่แยกต่างหาก)
 // cost = ต้นทุนต่อต้น (บาท) — ใส่ 0 ได้ถ้าไม่มีต้นทุน ใช้คำนวณกำไร/ต้นทุนรวมในหน้ารายงาน
 async function loadProducts(){
-  const rows=await sheetGet("Products!A2:L");
+  const rows=await sheetGet("Products!A2:K");
   products=rows.map((r,i)=>({
     row:i+2,
-    name:r[0]||"",lot:r[1]||"",cat:r[2]||"",
-    price:parseFloat(r[3])||0,stock:parseInt(r[4])||0,
-    emoji:r[5]||"🌿",imgUrl:r[6]||"",
-    defaultPct:parseFloat(r[7])>=0?parseFloat(r[7]):50,
-    stockFah:parseInt(r[8])||0,
-    stockMom:parseInt(r[9])||0,
-    cost:parseFloat(r[10])||0,
-    sortOrder:parseInt(r[11])||9999  // col L — ลำดับการแสดงผล
+    sortOrder:parseInt(r[0])||9999,
+    name:r[1]||"",lot:r[2]||"",
+    cost:parseFloat(r[3])||0,
+    price:parseFloat(r[4])||0,stock:parseInt(r[5])||0,
+    stockFah:parseInt(r[6])||0,
+    stockMom:parseInt(r[7])||0,
+    emoji:r[8]||"🌿",imgUrl:r[9]||"",
+    defaultPct:parseFloat(r[10])>=0?parseFloat(r[10]):50
   })).filter(p=>p.name);
   // เรียงตาม sortOrder ก่อนวาด
   products.sort((a,b)=>(a.sortOrder||9999)-(b.sortOrder||9999));
@@ -964,7 +964,6 @@ async function saveProduct(){
   const name=document.getElementById("f-name").value.trim();
   const lot=document.getElementById("f-lot").value.trim();
   const existingP=editingProductId!==null?products.find(p=>p.row===editingProductId):products.find(p=>p.name===name);
-  const cat=existingP?.cat||"";
   const price=parseFloat(document.getElementById("f-price").value)||0;
   const cost=parseFloat(document.getElementById("f-cost").value)||0;
   const stock=parseInt(document.getElementById("f-stock").value)||0;
@@ -993,11 +992,11 @@ async function saveProduct(){
     const savedImgUrl=finalImgUrl;
     if(editingProductId!==null){
       const row=editingProductId;
-      await scriptPost({action:"updateProduct",row,name,lot,cat,price,cost,stock,emoji,imgUrl:savedImgUrl,defaultPct,stockFah,stockMom});
+      await scriptPost({action:"updateProduct",row,name,lot,price,cost,stock,emoji,imgUrl:savedImgUrl,defaultPct,stockFah,stockMom});
       const idx=products.findIndex(p=>p.row===row);
-      if(idx>=0)products[idx]={...products[idx],name,lot,cat,price,cost,stock,emoji,imgUrl:savedImgUrl,defaultPct,stockFah,stockMom};
+      if(idx>=0)products[idx]={...products[idx],name,lot,price,cost,stock,emoji,imgUrl:savedImgUrl,defaultPct,stockFah,stockMom};
     }else{
-      await scriptPost({action:"addProduct",name,lot,cat,price,cost,stock,emoji,imgUrl:savedImgUrl,defaultPct,stockFah,stockMom});
+      await scriptPost({action:"addProduct",name,lot,price,cost,stock,emoji,imgUrl:savedImgUrl,defaultPct,stockFah,stockMom});
       await loadProducts();
     }
     renderProds();renderProdList();closeProdForm();

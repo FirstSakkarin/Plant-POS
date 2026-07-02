@@ -62,20 +62,18 @@ function jsonOut(obj) {
 
 /* ───────────────────────────────────────────────
    PRODUCTS  (ชีต "Products", คอลัมน์ A-K)
-   A name | B lot | C cat | D price | E stock | F emoji
-   G imgUrl | H defaultPct | I stockFah | J stockMom | K cost
-   (ถ้ายังไม่มีคอลัมน์ K ให้เพิ่มหัวคอลัมน์ "cost" ในชีต Products)
+   A sortOrder | B ชื่อ | C lots | D ต้นทุน | E ราคา | F สต็อกรวม
+   G สต็อกฟ้า | H สต็อกแม่ | I emoji | J imgUrl | K %ฟ้า
 ─────────────────────────────────────────────── */
 function addProduct(ss, p) {
   const sheet = ss.getSheetByName("Products");
   sheet.appendRow([
-    p.name || "", p.lot || "", p.cat || "",
-    p.price || 0, p.stock || 0,
+    p.sortOrder || 0,
+    p.name || "", p.lot || "",
+    p.cost || 0, p.price || 0, p.stock || 0,
+    p.stockFah || 0, p.stockMom || 0,
     p.emoji || "🌿", p.imgUrl || "",
-    p.defaultPct ?? 50,
-    p.stockFah || 0,
-    p.stockMom || 0,
-    p.cost || 0
+    p.defaultPct ?? 50
   ]);
   return {};
 }
@@ -83,15 +81,14 @@ function addProduct(ss, p) {
 function updateProduct(ss, p) {
   const sheet = ss.getSheetByName("Products");
   const row = parseInt(p.row);
-  sheet.getRange(row, 1, 1, 8).setValues([[
-    p.name || "", p.lot || "", p.cat || "",
-    p.price || 0, p.stock || 0,
+  // คอลัมน์ B-K (ข้ามคอลัมน์ A=sortOrder ซึ่งจัดการแยกโดย updateSortOrder)
+  sheet.getRange(row, 2, 1, 10).setValues([[
+    p.name || "", p.lot || "",
+    p.cost || 0, p.price || 0, p.stock || 0,
+    p.stockFah || 0, p.stockMom || 0,
     p.emoji || "🌿", p.imgUrl || "",
     p.defaultPct ?? 50
   ]]);
-  sheet.getRange(row, 9).setValue(p.stockFah || 0);   // I
-  sheet.getRange(row, 10).setValue(p.stockMom || 0);  // J
-  sheet.getRange(row, 11).setValue(p.cost || 0);      // K
   return {};
 }
 
@@ -101,19 +98,19 @@ function deleteProduct(ss, p) {
   return {};
 }
 
-// ตัดสต็อกรวม (คอลัมน์ E) — เรียกตอนยืนยันการขาย
+// ตัดสต็อกรวม (คอลัมน์ F) — เรียกตอนยืนยันการขาย
 function updateStock(ss, p) {
   const sheet = ss.getSheetByName("Products");
-  sheet.getRange(parseInt(p.row), 5).setValue(p.stock || 0); // E
+  sheet.getRange(parseInt(p.row), 6).setValue(p.stock || 0); // F
   return {};
 }
 
-// อัปเดตสต็อกหน้าร้านฟ้า/แม่ (คอลัมน์ I, J) — เรียกตอนย้ายสต็อก หรือขายแล้วตัดยอดหน้าร้าน
+// อัปเดตสต็อกหน้าร้านฟ้า/แม่ (คอลัมน์ G, H) — เรียกตอนย้ายสต็อก หรือขายแล้วตัดยอดหน้าร้าน
 function updateStockLocations(ss, p) {
   const sheet = ss.getSheetByName("Products");
   const row = parseInt(p.row);
-  sheet.getRange(row, 9).setValue(p.stockFah || 0);   // I
-  sheet.getRange(row, 10).setValue(p.stockMom || 0);  // J
+  sheet.getRange(row, 7).setValue(p.stockFah || 0);   // G
+  sheet.getRange(row, 8).setValue(p.stockMom || 0);   // H
   return {};
 }
 
@@ -265,18 +262,14 @@ function uploadImage(data) {
   return { url: "https://drive.google.com/thumbnail?id=" + id + "&sz=w600" };
 }
 
-/* ── บันทึกลำดับการแสดงสินค้า (column L = sortOrder) ─── */
+/* ── บันทึกลำดับการแสดงสินค้า (column A = sortOrder) ─── */
 function updateSortOrder(ss, data) {
   const sheet = ss.getSheetByName("Products");
   const lastRow = sheet.getLastRow();
-  // ตรวจสอบว่ามี header "sortOrder" ใน L1 หรือยัง
-  if (lastRow >= 1 && sheet.getRange(1, 12).getValue() === "") {
-    sheet.getRange(1, 12).setValue("sortOrder");
-  }
   (data.order || []).forEach(item => {
     const row = parseInt(item.row);
     if (row >= 2 && row <= lastRow) {
-      sheet.getRange(row, 12).setValue(parseInt(item.pos));
+      sheet.getRange(row, 1).setValue(parseInt(item.pos)); // A
     }
   });
   return {};

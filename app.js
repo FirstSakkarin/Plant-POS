@@ -114,8 +114,24 @@ async function qFlush(){
       const all=qGet(),i=all.findIndex(x=>x.id===op.id);
       if(i>=0){all[i].done=true;qSave(all);}
     }catch(e){
-      console.warn("qFlush stopped:",op.action,e.message);
-      break; // หยุดทันทีถ้า network ล้ม รอ online event
+      if(!navigator.onLine){
+        console.warn("qFlush stopped: offline");
+        break; // เน็ตหลุดจริง — หยุดทั้งคิว รอ online event แล้วลองใหม่
+      }
+      // เน็ตยังอยู่แต่รายการนี้พังจริง (payload ผิด/server error) — ถ้าปล่อยให้ break
+      // ทุกครั้ง รายการนี้จะค้างขวางคิวที่เหลือไปตลอดกาล จึงลองซ้ำไม่กี่ครั้งแล้วข้าม
+      console.warn("qFlush: op failed",op.action,e.message);
+      const all=qGet(),i=all.findIndex(x=>x.id===op.id);
+      if(i>=0){
+        const failCount=(all[i].failCount||0)+1;
+        if(failCount>=3){
+          all[i].done=true;all[i].failed=true;
+          toast("⚠️ sync ล้มเหลว ("+op.action+"): "+e.message);
+        }else{
+          all[i].failCount=failCount;
+        }
+        qSave(all);
+      }
     }
   }
   qSave(qGet().filter(op=>!op.done));
@@ -439,7 +455,7 @@ function clearCart(){
 function getItemPrice(item){return item.customPrice!==null?item.customPrice:item.price}
 function getSubtotal(){return Object.values(cart).reduce((s,x)=>s+getItemPrice(x)*x.qty,0)}
 function getDiscount(){
-  const v=parseFloat(document.getElementById("disc-val").value)||0;
+  const v=Math.max(0,parseFloat(document.getElementById("disc-val").value)||0);
   const sub=getSubtotal();
   return discMode==="pct"?Math.min(sub,sub*v/100):Math.min(sub,v);
 }
@@ -1136,22 +1152,21 @@ function renderDash(){
   const pct=prevRev?Math.round((totalRev-prevRev)/prevRev*100):0;
   const byDay={};ms.forEach(s=>{const d=new Date(s.date);const k=`${d.getDate()}/${d.getMonth()+1}`;byDay[k]=(byDay[k]||0)+s.total;});
   const best=Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0];
-  // ต้นทุนรวม/กำไร — ตาม business rule: Fah100% → fahCost แยก, อื่นๆ → totalCost
-  let totalCost=0,fahCostDash=0;
+  // ต้นทุนรวม/กำไร — ต้องหักต้นทุนอื่นๆ + ค่าใช้จ่ายรายงานด้วย ให้ตรงกับหน้า "กำไร"
+  let totalCost=0;
   ms.forEach(s=>s.items.forEach(it=>{
     const p=findProductForItem(it);
-    const cost=(p?.cost||0)*it.qty;
-    const fahPct=it.fahPct>=0?it.fahPct:50;
-    if(fahPct===100) fahCostDash+=cost;
-    else totalCost+=cost;
+    totalCost+=(p?.cost||0)*it.qty;
   }));
-  const totalProfit=totalRev-totalCost-fahCostDash;
+  const totalExtraCostDash=ms.reduce((s,x)=>s+(x.extraCosts||[]).reduce((a,c)=>a+(c.amount||0),0),0);
+  const dashExpenseTotal=reportExpenses.filter(e=>e.date>=from&&e.date<=toEnd).reduce((s,e)=>s+(e.amount||0),0);
+  const totalProfit=totalRev-totalCost-totalExtraCostDash-dashExpenseTotal;
   document.getElementById("metric-grid").innerHTML=`
     <div class="metric"><div class="metric-lbl">ยอดรวม</div><div class="metric-val">฿${(totalRev/1000).toFixed(1)}k</div><div class="metric-sub ${pct>0?"up":pct<0?"down":"neu"}">${pct>0?"▲":pct<0?"▼":"–"} ${Math.abs(pct)}%</div></div>
     <div class="metric"><div class="metric-lbl">จำนวนบิล</div><div class="metric-val">${bills}</div><div class="metric-sub neu">เฉลี่ย ฿${avg.toLocaleString()}</div></div>
     <div class="metric"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
     <div class="metric"><div class="metric-lbl">ส่วนลดรวม</div><div class="metric-val">฿${Math.round(totalDisc).toLocaleString()}</div><div class="metric-sub neu">วันดี ${best?best[0]:"-"}</div></div>
-    <div class="metric"><div class="metric-lbl">ต้นทุนรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalCost+fahCostDash).toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-lbl">ต้นทุนรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalCost+totalExtraCostDash+dashExpenseTotal).toLocaleString()}</div></div>
     <div class="metric"><div class="metric-lbl">กำไร</div><div class="metric-val" style="font-size:17px;color:${totalProfit>=0?"var(--g7)":"var(--r6)"}">฿${Math.round(totalProfit).toLocaleString()}</div></div>`;
   const dayList=[];const cur=new Date(from);
   while(cur<=toEnd){dayList.push(new Date(cur));cur.setDate(cur.getDate()+1);}
@@ -1214,9 +1229,11 @@ function renderProfit(){
   const toEnd=new Date(profitTo||from);toEnd.setHours(23,59,59,999);
   const ms=sales.filter(s=>{const d=new Date(s.date);return d>=from&&d<=toEnd;});
 
-  // ━━ คำนวณยอด / กำไร / ต้นทุน — อิง defaultPct (col H) คงที่จากสินค้า ━━
+  // ━━ คำนวณยอด / กำไร / ต้นทุน ━━
   // ไม่ใช้ stockFah/stockMom เพราะ ratio เปลี่ยนตามสต็อกที่ขาย
-  // ลำดับ: p.defaultPct → it.fahPct (บันทึกขณะขาย) → 50%
+  // ลำดับ: it.fahPct (% ที่ตกลง/บันทึกไว้จริงตอนขายบิลนั้น) → p.defaultPct ปัจจุบัน → 50%
+  // (ต้องใช้ it.fahPct ก่อนเสมอ ไม่งั้นถ้าไปแก้ % เริ่มต้นของสินค้าทีหลัง จะย้อนไปเปลี่ยน
+  //  สัดส่วนของบิลเก่าที่คิดเงินกันไปแล้วด้วย)
   let totalRev=0,fahTotal=0,momTotal=0,totalItems=0,totalDisc=0;
   let totalCost=0,totalExtraCost=0;
   let fahProfit=0,momProfit=0;
@@ -1232,7 +1249,7 @@ function renderProfit(){
     const discRatio=sub>0?(s.discount||0)/sub:0;
     s.items.forEach(it=>{
       const p=findProductForItem(it);
-      const fPct=(p?.defaultPct!=null?p.defaultPct:(it.fahPct??50))/100; // ratio 0–1
+      const fPct=(it.fahPct!=null?it.fahPct:(p?.defaultPct??50))/100; // ratio 0–1
       const cost=(p?.cost||0)*it.qty;
       const rev=it.qty*(it.price||0);
       const net=rev*(1-discRatio);
@@ -1270,8 +1287,10 @@ function renderProfit(){
   const avg=bills?Math.round(totalRev/bills):0;
   const filteredExpenses=reportExpenses.filter(e=>e.date>=from&&e.date<=toEnd);
   const reportExpenseTotal=filteredExpenses.reduce((s,e)=>s+(e.amount||0),0);
-  fahProfit-=reportExpenseTotal/2;
-  momProfit-=reportExpenseTotal/2;
+  // ต้นทุนอื่นๆ (ค่าขนส่ง/ฝากขายต่อบิล) + ค่าใช้จ่ายรายงาน หักคนละครึ่งเหมือนกัน
+  // ไม่งั้น fahProfit+momProfit จะไม่เท่ากับ netProfit ที่แสดง
+  fahProfit-=(reportExpenseTotal+totalExtraCost)/2;
+  momProfit-=(reportExpenseTotal+totalExtraCost)/2;
   const netProfit=totalRev-totalCost-totalExtraCost-reportExpenseTotal;
 
   document.getElementById("profit-metrics").innerHTML=`
@@ -1301,7 +1320,7 @@ function renderProfit(){
       const k=it.name;
       if(!byName[k])byName[k]={name:k,emoji:it.emoji||"🌿",qty:0,rev:0,fahRev:0,momRev:0,cost:0};
       const p=findProductForItem(it);
-      const fPct=(p?.defaultPct!=null?p.defaultPct:(it.fahPct??50))/100;
+      const fPct=(it.fahPct!=null?it.fahPct:(p?.defaultPct??50))/100;
       const rev=it.qty*(it.price||0);
       const net=rev*(1-discRatio);
       const cost=(p?.cost||0)*it.qty;

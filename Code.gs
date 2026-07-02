@@ -82,6 +82,7 @@ function addProduct(ss, p) {
 function updateProduct(ss, p) {
   const sheet = ss.getSheetByName("Products");
   const row = parseInt(p.row);
+  if (!row || row < 2) throw new Error("Invalid row: " + p.row);
   // คอลัมน์ B-L (ข้ามคอลัมน์ A=sortOrder ซึ่งจัดการแยกโดย updateSortOrder)
   sheet.getRange(row, 2, 1, 11).setValues([[
     p.name || "", p.lot || "",
@@ -96,14 +97,18 @@ function updateProduct(ss, p) {
 
 function deleteProduct(ss, p) {
   const sheet = ss.getSheetByName("Products");
-  sheet.deleteRow(parseInt(p.row));
+  const row = parseInt(p.row);
+  if (!row || row < 2) throw new Error("Invalid row: " + p.row);
+  sheet.deleteRow(row);
   return {};
 }
 
 // ตัดสต็อกรวม (คอลัมน์ F) — เรียกตอนยืนยันการขาย
 function updateStock(ss, p) {
   const sheet = ss.getSheetByName("Products");
-  sheet.getRange(parseInt(p.row), 6).setValue(p.stock || 0); // F
+  const row = parseInt(p.row);
+  if (!row || row < 2) throw new Error("Invalid row: " + p.row);
+  sheet.getRange(row, 6).setValue(p.stock || 0); // F
   return {};
 }
 
@@ -111,6 +116,7 @@ function updateStock(ss, p) {
 function updateStockLocations(ss, p) {
   const sheet = ss.getSheetByName("Products");
   const row = parseInt(p.row);
+  if (!row || row < 2) throw new Error("Invalid row: " + p.row);
   sheet.getRange(row, 7).setValue(p.stockFah || 0);   // G
   sheet.getRange(row, 8).setValue(p.stockMom || 0);   // H
   return {};
@@ -124,46 +130,53 @@ function updateStockLocations(ss, p) {
 ─────────────────────────────────────────────── */
 function addSale(ss, s) {
   const sheet = ss.getSheetByName("Sales");
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    // หา billId ถัดไป (เลขลำดับ 1, 2, 3...)
+    // ทำภายใต้ lock เพื่อกัน billId ชนกันถ้ามีการขายพร้อมกันจากสองอุปกรณ์
+    const lastRow = sheet.getLastRow();
+    let billId = 1;
+    if (lastRow >= 2) {
+      const ids = sheet.getRange(2, 2, lastRow - 1, 1).getValues()
+        .map(r => parseInt(r[0]) || 0).filter(n => n > 0);
+      if (ids.length > 0) billId = Math.max(...ids) + 1;
+    }
 
-  // หา billId ถัดไป (เลขลำดับ 1, 2, 3...)
-  const lastRow = sheet.getLastRow();
-  let billId = 1;
-  if (lastRow >= 2) {
-    const ids = sheet.getRange(2, 2, lastRow - 1, 1).getValues()
-      .map(r => parseInt(r[0]) || 0).filter(n => n > 0);
-    if (ids.length > 0) billId = Math.max(...ids) + 1;
+    // แยก items string: "name×qty×price×fahPct×store×prodRow, ..."
+    const itemParts = (s.items || "").split(",").map(x => x.trim()).filter(x => x);
+
+    itemParts.forEach((itemStr, idx) => {
+      const p = itemStr.split("×");
+      const name     = (p[0] || "").trim();
+      const qtyNum   = parseInt(p[1]);
+      const qty      = isNaN(qtyNum) ? 1 : qtyNum;
+      const price    = parseFloat(p[2]) || 0;
+      const fahPct   = parseFloat(p[3]) >= 0 ? parseFloat(p[3]) : 50;
+      const store    = (p[4] || "").trim();
+      const prodRow  = parseInt(p[5]) || "";
+
+      sheet.appendRow([
+        s.date || "",                               // A: วันที่
+        billId,                                     // B: billId
+        name,                                       // C: ชื่อสินค้า
+        qty,                                        // D: จำนวน
+        price,                                      // E: ราคา/หน่วย
+        fahPct,                                     // F: %ฟ้า
+        store,                                      // G: ร้าน
+        prodRow,                                    // H: prodRow
+        idx === 0 ? (parseFloat(s.discount) || 0) : "",  // I: ส่วนลด (row แรก)
+        idx === 0 ? (parseFloat(s.total)    || 0) : "",  // J: ยอดสุทธิ (row แรก)
+        idx === 0 ? (s.custName || "")             : "",  // K: ลูกค้า (row แรก)
+        idx === 0 ? (s.extraCosts || "[]")         : ""   // L: ต้นทุนอื่นๆ (row แรก)
+      ]);
+    });
+
+    updateSummary(ss);
+    return {};
+  } finally {
+    lock.releaseLock();
   }
-
-  // แยก items string: "name×qty×price×fahPct×store×prodRow, ..."
-  const itemParts = (s.items || "").split(",").map(x => x.trim()).filter(x => x);
-
-  itemParts.forEach((itemStr, idx) => {
-    const p = itemStr.split("×");
-    const name    = (p[0] || "").trim();
-    const qty     = parseInt(p[1]) || 1;
-    const price   = parseFloat(p[2]) || 0;
-    const fahPct  = parseFloat(p[3]) >= 0 ? parseFloat(p[3]) : 50;
-    const store   = (p[4] || "").trim();
-    const prodRow = parseInt(p[5]) || "";
-
-    sheet.appendRow([
-      s.date || "",                               // A: วันที่
-      billId,                                     // B: billId
-      name,                                       // C: ชื่อสินค้า
-      qty,                                        // D: จำนวน
-      price,                                      // E: ราคา/หน่วย
-      fahPct,                                     // F: %ฟ้า
-      store,                                      // G: ร้าน
-      prodRow,                                    // H: prodRow
-      idx === 0 ? (parseFloat(s.discount) || 0) : "",  // I: ส่วนลด (row แรก)
-      idx === 0 ? (parseFloat(s.total)    || 0) : "",  // J: ยอดสุทธิ (row แรก)
-      idx === 0 ? (s.custName || "")             : "",  // K: ลูกค้า (row แรก)
-      idx === 0 ? (s.extraCosts || "[]")         : ""   // L: ต้นทุนอื่นๆ (row แรก)
-    ]);
-  });
-
-  updateSummary(ss);
-  return {};
 }
 
 /* ───────────────────────────────────────────────
@@ -185,18 +198,23 @@ function updateSummary(ss) {
   const billOrder = [];
 
   for (let i = 1; i < data.length; i++) {
-    const row    = data[i];
-    const dateStr = String(row[0] || "").trim();
+    const row     = data[i];
+    const rawDate = row[0];
     const billId  = String(row[1] || "").trim();
-    if (!dateStr || !billId) continue;
+    if (!rawDate || !billId) continue;
 
-    // แปลงวันที่เป็น key
+    // แปลงวันที่เป็น key — รองรับทั้ง string และกรณี Sheets แปลง cell เป็น Date object เอง
     let dayKey = "";
-    const iso = dateStr.match(/^(\d{4}-\d{2}-\d{2})/);
-    const dmy = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-    if (iso) dayKey = iso[1];
-    else if (dmy) dayKey = dmy[3] + "-" + String(dmy[2]).padStart(2,"0") + "-" + String(dmy[1]).padStart(2,"0");
-    else continue;
+    if (Object.prototype.toString.call(rawDate) === "[object Date]") {
+      dayKey = Utilities.formatDate(rawDate, Session.getScriptTimeZone(), "yyyy-MM-dd");
+    } else {
+      const dateStr = String(rawDate).trim();
+      const iso = dateStr.match(/^(\d{4}-\d{2}-\d{2})/);
+      const dmy = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (iso) dayKey = iso[1];
+      else if (dmy) dayKey = dmy[3] + "-" + String(dmy[2]).padStart(2,"0") + "-" + String(dmy[1]).padStart(2,"0");
+      else continue;
+    }
 
     if (!billInfo[billId]) {
       billInfo[billId] = { dayKey, discount: 0, total: 0, custName: "" };
@@ -212,8 +230,9 @@ function updateSummary(ss) {
     if (row[10]) billInfo[billId].custName = String(row[10]);
 
     // item-level info (col C-F)
+    const qtyNum = parseInt(row[3]);
     billItems[billId].push({
-      qty:    parseInt(row[3]) || 1,
+      qty:    isNaN(qtyNum) ? 1 : qtyNum,
       price:  parseFloat(row[4]) || 0,
       fahPct: parseFloat(row[5]) >= 0 ? parseFloat(row[5]) : 50,
     });
@@ -230,8 +249,9 @@ function updateSummary(ss) {
     let fahTotal = 0, momTotal = 0;
     items.forEach(it => {
       const net = it.qty * it.price * (1 - discRatio);
-      if (it.fahPct === 0) momTotal += net;
-      else                 fahTotal += net;
+      const fahShare = net * (it.fahPct / 100);
+      fahTotal += fahShare;
+      momTotal += net - fahShare;
     });
 
     const day = info.dayKey;

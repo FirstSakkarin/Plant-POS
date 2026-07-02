@@ -153,7 +153,14 @@ function setSS(s){
 }
 async function syncAll(){
   setSS("loading");
-  try{await loadProducts();await loadSales();await loadCustomers();await loadExpenses();setSS("ok");toast("✅ Sync สำเร็จ");}
+  try{
+    await loadProducts();await loadSales();await loadCustomers();await loadExpenses();
+    setSS("ok");toast("✅ Sync สำเร็จ");
+    // re-render หน้าที่กำลังดูอยู่ เผื่อ sync เสร็จหลังจากเปิดหน้านั้นแล้ว
+    if(document.getElementById("screen-report")?.classList.contains("active")){
+      renderHistory();renderProfit();
+    }
+  }
   catch(e){setSS("error");toast("❌ "+e.message);}
 }
 
@@ -242,6 +249,7 @@ async function loadCustomers(){
 async function loadExpenses(){
   try{
     const rows=await sheetGet("Expenses!A2:C");
+    if(!Array.isArray(rows)){reportExpenses=[];return;}
     reportExpenses=rows.map((r,i)=>({
       sheetRow:i+2,
       date:r[0]?new Date(r[0]+"T00:00:00"):new Date(NaN),

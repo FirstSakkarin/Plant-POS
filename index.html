@@ -459,7 +459,10 @@
 
 <style>
 .report-fab{
-  position:fixed;bottom:80px;right:18px;
+  position:fixed;
+  /* บน mobile: เผื่อ tab-bar (~64px) + safe area + ช่องว่าง 14px */
+  bottom:calc(env(safe-area-inset-bottom,0px) + 90px);
+  right:18px;
   width:56px;height:56px;border-radius:50%;
   background:linear-gradient(135deg,#f5c842,#e8a800);
   border:none;cursor:pointer;
@@ -470,6 +473,8 @@
   z-index:200;
   transition:transform .15s,box-shadow .15s;
 }
+/* บน desktop (sidebar แทน tab-bar) ลด bottom ลง */
+@media(min-width:768px){.report-fab{bottom:24px;}}
 .report-fab:active{transform:scale(.93);}
 @keyframes fabPulse{
   0%,100%{box-shadow:0 0 0 6px rgba(245,200,66,.15),0 0 18px rgba(245,200,66,.45),0 4px 14px rgba(0,0,0,.22);}

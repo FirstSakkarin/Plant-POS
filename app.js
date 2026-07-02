@@ -648,6 +648,7 @@ async function confirmSale(){
   const now=new Date();
   const btn=document.getElementById("pay-ok");
   btn.disabled=true;btn.textContent="กำลังบันทึก...";
+  try{
 
   // ── เตรียมข้อมูล ──
   const fPct=payItemSplits;
@@ -692,7 +693,7 @@ async function confirmSale(){
     subtotal:sub,discount:disc,total,custName,
     get store(){return this.items[0]?.store||"";},
     itemCount:items.reduce((s,x)=>s+x.qty,0),extraCosts:[...extraCosts],
-    itemsStr
+    itemsStr:itemStr
   });
 
   // ── 2. แสดง UI + ใบเสร็จทันที ──
@@ -727,6 +728,14 @@ async function confirmSale(){
       points:savedCust.newPts,note:savedCust.note||"",totalSpent:savedCust.newSpent});
   }
   qFlush(); // background sync — ไม่ await
+  }catch(e){
+    console.error("confirmSale failed",e);
+    toast("❌ บันทึกไม่สำเร็จ: "+e.message);
+  }finally{
+    // กันปุ่มค้างที่ "กำลังบันทึก..." ตลอดไปถ้าเกิด error ระหว่างขั้นตอนใดก็ตาม
+    btn.disabled=false;
+    if(btn.textContent==="กำลังบันทึก...")btn.textContent="ยืนยันการขาย";
+  }
 }
 
 function setImgTab(mode,btn){

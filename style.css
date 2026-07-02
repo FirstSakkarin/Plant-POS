@@ -2164,15 +2164,19 @@
   color: rgba(255,193,7,0.85) !important;
 }
 
-/* ── 12. METRIC CARDS (report): subtle glass ── */
+/* ── 12. METRIC CARDS (report): subtle glass ──
+   หน้า "รายงาน" ไม่ได้บังคับพื้นหลังมืดเหมือน #screen-pos (ดู "LIQUID GLASS
+   THEME" ด้านบน) จึงต้องใช้ var(--bg2)/var(--t) ที่สลับตาม prefers-color-scheme
+   เอง ถ้า hardcode เป็น rgba(255,255,255,..) จะกลายเป็นตัวหนังสือขาวบนพื้นขาว
+   มองไม่เห็นเลยเวลาเปิดในโหมด Light */
 .metric {
-  background: rgba(255,255,255,0.04) !important;
-  border: 0.5px solid rgba(255,255,255,0.09) !important;
+  background: var(--bg2) !important;
+  border: 0.5px solid var(--bd) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.08) !important;
 }
-.metric-lbl { color: rgba(255,255,255,0.42) !important; }
-.metric-val { color: rgba(255,255,255,0.92) !important; }
-.metric-sub { color: rgba(255,255,255,0.3) !important; }
+.metric-lbl { color: var(--m) !important; }
+.metric-val { color: var(--t) !important; }
+.metric-sub { color: var(--faint) !important; }
 
 /* ── 12b. METRIC CARDS: store accent tint ── */
 /* ร้านฟ้า (teal) */
@@ -2195,12 +2199,12 @@
 
 /* ยอดรวม (white/neutral) */
 .metric[data-accent="total"] {
-  background: rgba(255,255,255,0.07) !important;
-  border-color: rgba(255,255,255,0.16) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.13), 0 2px 8px rgba(0,0,0,0.22) !important;
+  background: var(--bg3) !important;
+  border-color: var(--bds) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.13), 0 2px 8px rgba(0,0,0,0.08) !important;
 }
-.metric[data-accent="total"] .metric-lbl { color: rgba(255,255,255,0.55) !important; }
-.metric[data-accent="total"] .metric-val { color: rgba(255,255,255,0.95) !important; }
+.metric[data-accent="total"] .metric-lbl { color: var(--m) !important; }
+.metric[data-accent="total"] .metric-val { color: var(--t) !important; }
 
 /* ── 12b-2. METRIC + PROFIT-LINE: กำไรสุทธิ → golden ── */
 .metric[data-accent="profit"] {

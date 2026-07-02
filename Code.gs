@@ -115,27 +115,50 @@ function updateStockLocations(ss, p) {
 }
 
 /* ───────────────────────────────────────────────
-   SALES  (ชีต "Sales", คอลัมน์ A-G)
-   A date | B items | C subtotal | D discount | E total | F custName | G extraCosts (JSON)
+   SALES  (ชีต "Sales", คอลัมน์ A-L) — รูปแบบใหม่ 1 row/item
+   A วันที่ | B billId | C ชื่อสินค้า | D จำนวน | E ราคา/หน่วย
+   F %ฟ้า | G ร้าน | H prodRow | I ส่วนลด | J ยอดสุทธิ | K ลูกค้า | L ต้นทุนอื่นๆ
+   bill-level (I,J,K,L) เขียนที่แถวแรกของบิลเท่านั้น
 ─────────────────────────────────────────────── */
 function addSale(ss, s) {
   const sheet = ss.getSheetByName("Sales");
-  sheet.appendRow([
-    s.date || "",
-    s.items || "",
-    s.subtotal || 0,
-    s.discount || 0,
-    s.total || 0,
-    s.custName || "",
-    s.extraCosts || ""
-  ]);
-  updateSummary(ss); // อัปเดตชีตสรุปผลทุกครั้งที่มีการขาย
+  const billId = s.date || "";
+
+  // แยก items string: "name×qty×price×fahPct×store×prodRow, ..."
+  const itemParts = (s.items || "").split(",").map(x => x.trim()).filter(x => x);
+
+  itemParts.forEach((itemStr, idx) => {
+    const p = itemStr.split("×");
+    const name    = (p[0] || "").trim();
+    const qty     = parseInt(p[1]) || 1;
+    const price   = parseFloat(p[2]) || 0;
+    const fahPct  = parseFloat(p[3]) >= 0 ? parseFloat(p[3]) : 50;
+    const store   = (p[4] || "").trim();
+    const prodRow = parseInt(p[5]) || "";
+
+    sheet.appendRow([
+      s.date || "",                               // A: วันที่
+      billId,                                     // B: billId
+      name,                                       // C: ชื่อสินค้า
+      qty,                                        // D: จำนวน
+      price,                                      // E: ราคา/หน่วย
+      fahPct,                                     // F: %ฟ้า
+      store,                                      // G: ร้าน
+      prodRow,                                    // H: prodRow
+      idx === 0 ? (parseFloat(s.discount) || 0) : "",  // I: ส่วนลด (row แรก)
+      idx === 0 ? (parseFloat(s.total)    || 0) : "",  // J: ยอดสุทธิ (row แรก)
+      idx === 0 ? (s.custName || "")             : "",  // K: ลูกค้า (row แรก)
+      idx === 0 ? (s.extraCosts || "[]")         : ""   // L: ต้นทุนอื่นๆ (row แรก)
+    ]);
+  });
+
+  updateSummary(ss);
   return {};
 }
 
 /* ───────────────────────────────────────────────
    SUMMARY  (ชีต "สรุปผล") — อัปเดตอัตโนมัติทุกครั้งที่บันทึกขาย
-   แสดงยอดรายวัน: จำนวนบิล, ยอดก่อนลด, ส่วนลด, ยอดสุทธิ, ฟ้าได้, แม่ได้
+   รูปแบบใหม่: A-L (1 row/item, group by billId)
 ─────────────────────────────────────────────── */
 function updateSummary(ss) {
   const salesSheet = ss.getSheetByName("Sales");
@@ -146,14 +169,18 @@ function updateSummary(ss) {
   const data = salesSheet.getDataRange().getValues();
   if (data.length <= 1) return;
 
-  // จัดกลุ่มยอดตามวัน
-  const byDay = {};
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i];
-    const dateStr = String(row[0] || "").trim();
-    if (!dateStr) continue;
+  // Pass 1: รวบรวม items ต่อ bill (group by billId = col B)
+  const billItems = {};  // billId → [{qty, price, fahPct}]
+  const billInfo  = {};  // billId → {dayKey, discount, total, custName}
+  const billOrder = [];
 
-    // แปลง date string → key "YYYY-MM-DD" (รองรับทั้ง ISO และ DD/MM/YYYY)
+  for (let i = 1; i < data.length; i++) {
+    const row    = data[i];
+    const dateStr = String(row[0] || "").trim();
+    const billId  = String(row[1] || "").trim();
+    if (!dateStr || !billId) continue;
+
+    // แปลงวันที่เป็น key
     let dayKey = "";
     const iso = dateStr.match(/^(\d{4}-\d{2}-\d{2})/);
     const dmy = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
@@ -161,41 +188,54 @@ function updateSummary(ss) {
     else if (dmy) dayKey = dmy[3] + "-" + String(dmy[2]).padStart(2,"0") + "-" + String(dmy[1]).padStart(2,"0");
     else continue;
 
-    const subtotal = parseFloat(row[2]) || 0;
-    const discount = parseFloat(row[3]) || 0;
-    const total    = parseFloat(row[4]) || 0;
-    const itemsStr = String(row[1] || "");
-    const custName = String(row[5] || "");
+    if (!billInfo[billId]) {
+      billInfo[billId] = { dayKey, discount: 0, total: 0, custName: "" };
+      billItems[billId] = [];
+      billOrder.push(billId);
+    }
 
-    // คำนวณ ฟ้า/แม่ ต่อบิล — ตาม business rule:
-    // fahPct=0 (ร้านแม่) → ยอดแม่ทั้งหมด
-    // fahPct=100 (ร้านฟ้า Fah100%) → ยอดฟ้าทั้งหมด
-    // fahPct=อื่น (ร้านฟ้า หาร%) → ยอดเป็นของฟ้าทั้งหมด, กำไรหาร (summary นับเฉพาะยอด)
-    let fahTotal = 0, momTotal = 0;
-    const discRatio = subtotal > 0 ? discount / subtotal : 0;
-    itemsStr.split(",").forEach(seg => {
-      const p = seg.trim().split("×");
-      const qty    = parseInt(p[1]) || 1;
-      const price  = parseFloat(p[2]) || 0;
-      const fahPct = parseFloat(p[3]) >= 0 ? parseFloat(p[3]) : 50;
-      const net    = qty * price * (1 - discRatio);
-      if (fahPct === 0) { momTotal += net; }
-      else              { fahTotal += net; }  // ร้านฟ้า (ทั้ง 100% และ X%) → ยอดเป็นฟ้า
+    // bill-level info อยู่ที่แถวแรก (col I, J, K)
+    if (row[8] !== "" && row[8] !== null && row[8] !== undefined)
+      billInfo[billId].discount = parseFloat(row[8]) || 0;
+    if (row[9] !== "" && row[9] !== null && row[9] !== undefined)
+      billInfo[billId].total = parseFloat(row[9]) || 0;
+    if (row[10]) billInfo[billId].custName = String(row[10]);
+
+    // item-level info (col C-F)
+    billItems[billId].push({
+      qty:    parseInt(row[3]) || 1,
+      price:  parseFloat(row[4]) || 0,
+      fahPct: parseFloat(row[5]) >= 0 ? parseFloat(row[5]) : 50,
     });
-
-    if (!byDay[dayKey]) byDay[dayKey] = {bills:0, subtotal:0, discount:0, total:0, fah:0, mom:0, custs:[]};
-    byDay[dayKey].bills++;
-    byDay[dayKey].subtotal += subtotal;
-    byDay[dayKey].discount += discount;
-    byDay[dayKey].total    += total;
-    byDay[dayKey].fah      += fahTotal;
-    byDay[dayKey].mom      += momTotal;
-    if (custName) byDay[dayKey].custs.push(custName);
   }
 
-  const days = Object.keys(byDay).sort();
+  // Pass 2: รวบรวมต่อวัน
+  const byDay = {};
+  billOrder.forEach(billId => {
+    const info  = billInfo[billId];
+    const items = billItems[billId];
+    const subtotal  = items.reduce((s, it) => s + it.qty * it.price, 0);
+    const discRatio = subtotal > 0 ? info.discount / subtotal : 0;
 
-  // สร้าง rows
+    let fahTotal = 0, momTotal = 0;
+    items.forEach(it => {
+      const net = it.qty * it.price * (1 - discRatio);
+      if (it.fahPct === 0) momTotal += net;
+      else                 fahTotal += net;
+    });
+
+    const day = info.dayKey;
+    if (!byDay[day]) byDay[day] = {bills:0, subtotal:0, discount:0, total:0, fah:0, mom:0, custs:[]};
+    byDay[day].bills++;
+    byDay[day].subtotal += subtotal;
+    byDay[day].discount += info.discount;
+    byDay[day].total    += info.total;
+    byDay[day].fah      += fahTotal;
+    byDay[day].mom      += momTotal;
+    if (info.custName) byDay[day].custs.push(info.custName);
+  });
+
+  const days = Object.keys(byDay).sort();
   const headers = ["วันที่","จำนวนบิล","ยอดก่อนลด (฿)","ส่วนลด (฿)","ยอดสุทธิ (฿)","🌿 ฟ้าได้ (฿)","🌸 แม่ได้ (฿)","ลูกค้า"];
   const rows = [headers];
   let gBills=0, gSub=0, gDisc=0, gTotal=0, gFah=0, gMom=0;
@@ -212,27 +252,19 @@ function updateSummary(ss) {
     gTotal+=d.total; gFah+=d.fah; gMom+=d.mom;
   });
 
-  // แถวรวมทั้งหมด
   rows.push(["รวมทั้งหมด", gBills, Math.round(gSub), Math.round(gDisc), Math.round(gTotal), Math.round(gFah), Math.round(gMom), ""]);
 
   sumSheet.getRange(1, 1, rows.length, headers.length).setValues(rows);
-
-  // จัดรูปแบบ header
   sumSheet.getRange(1, 1, 1, headers.length)
     .setFontWeight("bold").setBackground("#1e3a08").setFontColor("#c8e89a").setFontSize(11);
-  // จัดรูปแบบแถวรวม
   sumSheet.getRange(rows.length, 1, 1, headers.length)
     .setFontWeight("bold").setBackground("#EAF3DE").setFontColor("#1e3a08");
-  // แถวข้อมูลสลับสี
   for (let r = 2; r < rows.length; r++) {
     sumSheet.getRange(r, 1, 1, headers.length)
       .setBackground(r % 2 === 0 ? "#f7f7f5" : "#ffffff");
   }
-  // จัด format ตัวเลข
   sumSheet.getRange(2, 3, rows.length-1, 5).setNumberFormat("#,##0");
   sumSheet.autoResizeColumns(1, headers.length);
-
-  // อัปเดต timestamp
   sumSheet.getRange(rows.length+2, 1).setValue("อัปเดตล่าสุด: " + new Date().toLocaleString("th-TH"));
 }
 
@@ -275,29 +307,31 @@ function updateSortOrder(ss, data) {
   return {};
 }
 
-/* ── ลบบิล ─────────────────────────────────────────────── */
+/* ── ลบบิล (ลบทุก row ของบิล จาก sheetRow ถึง lastSheetRow) ── */
 function deleteSaleByRow(ss, data) {
   const sheet = ss.getSheetByName("Sales");
-  const row = parseInt(data.sheetRow);
-  if (!row || row < 2) throw new Error("Invalid sheetRow: " + data.sheetRow);
-  sheet.deleteRow(row);
+  const firstRow = parseInt(data.sheetRow);
+  const lastRow  = parseInt(data.lastSheetRow) || firstRow;
+  if (!firstRow || firstRow < 2) throw new Error("Invalid sheetRow: " + data.sheetRow);
+  // ลบจากล่างขึ้นบน เพื่อไม่ให้ row number เลื่อน
+  for (let r = lastRow; r >= firstRow; r--) {
+    sheet.deleteRow(r);
+  }
   updateSummary(ss);
   return {};
 }
 
-/* ── แก้ไขบิล (discount / custName เท่านั้น) ──────────── */
+/* ── แก้ไขบิล (discount / total / custName) ── */
 function editSale(ss, data) {
   const sheet = ss.getSheetByName("Sales");
-  const row = parseInt(data.sheetRow);
+  const row = parseInt(data.sheetRow); // first row ของบิล
   if (!row || row < 2) throw new Error("Invalid sheetRow: " + data.sheetRow);
-  const subtotal = sheet.getRange(row, 3).getValue();  // C = subtotal
-  const newDiscount = parseFloat(data.discount) || 0;
-  const newTotal = Math.max(0, subtotal - newDiscount);
-  sheet.getRange(row, 4).setValue(newDiscount);        // D = discount
-  sheet.getRange(row, 5).setValue(newTotal);           // E = total
-  sheet.getRange(row, 6).setValue(data.custName || ""); // F = custName
+  // I=9: ส่วนลด, J=10: ยอดสุทธิ, K=11: ลูกค้า
+  sheet.getRange(row, 9).setValue(parseFloat(data.discount) || 0);
+  sheet.getRange(row, 10).setValue(parseFloat(data.total) || 0);
+  sheet.getRange(row, 11).setValue(data.custName || "");
   updateSummary(ss);
-  return { newTotal };
+  return { newTotal: parseFloat(data.total) || 0 };
 }
 
 function addCustomer(ss, c) {

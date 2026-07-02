@@ -195,6 +195,9 @@ async function loadProducts(){
 // หาสินค้าที่ตรงกับรายการขาย (ใช้คำนวณต้นทุน/กำไรในหน้ารายงาน)
 // รายการขายบางส่วนเก็บชื่อรวม lot ไว้ในชื่อ เช่น "ปริกหางกระรอก(A)"
 function findProductForItem(it){
+  // 1. มี prodRow บันทึกไว้ → lookup by row (แม่นที่สุด)
+  if(it.row){const byRow=products.find(p=>p.row===it.row);if(byRow)return byRow;}
+
   let name=it.name,lot=it.lot;
   if(lot===undefined){
     // ลอง exact match ก่อน (กรณีชื่อมีวงเล็บเป็นส่วนหนึ่งของชื่อ เช่น "สนออสเตรเลีย (ตั้ง)")
@@ -204,7 +207,13 @@ function findProductForItem(it){
     const m=(name||"").match(/^(.*)\((.*)\)$/);
     if(m){name=m[1].trim();lot=m[2].trim();}
   }
-  return products.find(p=>p.name===name&&(p.lot||"")===(lot||""));
+  const withLot=products.find(p=>p.name===name&&(p.lot||"")===(lot||""));
+  if(withLot)return withLot;
+
+  // 2. last resort: match by name อย่างเดียว ถ้ามีสินค้าชื่อนี้ชิ้นเดียวในระบบ
+  const byName=products.filter(p=>p.name===name);
+  if(byName.length===1)return byName[0];
+  return undefined;
 }
 
 // ── LOAD SALES (A=date,B=items,C=subtotal,D=discount,E=total,F=custName) ──
@@ -222,24 +231,53 @@ function parseSheetDate(str){
 }
 
 async function loadSales(){
-  const rows=await sheetGet("Sales!A2:G");
-  sales=rows.map((r,i)=>({
-    sheetRow:i+2,  // row 1 = header, i=0 → row 2
-    date:parseSheetDate(r[0]),
-    itemsStr:r[1]||"",
-    items:(r[1]||"").split(",").map(s=>{
-      const p=s.trim().split("×");
-      const prodRow=parseInt(p[5]);
-      return{name:p[0]?.trim()||"",emoji:"🌿",qty:parseInt(p[1])||1,price:parseFloat(p[2])||0,fahPct:parseFloat(p[3])>=0?parseFloat(p[3]):50,store:(p[4]||"").trim(),row:prodRow||undefined};
-    }),
-    get store(){return this.items[0]?.store||"";},
-    subtotal:parseFloat(r[2])||0,
-    discount:parseFloat(r[3])||0,
-    total:parseFloat(r[4])||0,
-    custName:r[5]||"",
-    extraCosts:r[6]?JSON.parse(r[6]):[],
-    itemCount:(r[1]||"").split(",").reduce((a,s)=>{const p=s.split("×");return a+(parseInt(p[1])||1)},0)
-  })).filter(s=>!isNaN(s.date.getTime())).reverse();
+  // รูปแบบใหม่: A=วันที่, B=billId, C=ชื่อสินค้า, D=จำนวน, E=ราคา/หน่วย,
+  //             F=%ฟ้า, G=ร้าน, H=prodRow, I=ส่วนลด, J=ยอดสุทธิ, K=ลูกค้า, L=ต้นทุนอื่นๆ
+  const rows=await sheetGet("Sales!A2:L");
+  const billMap=new Map();
+  const billOrder=[];
+  rows.forEach((r,i)=>{
+    const sheetRow=i+2;
+    const dateStr=String(r[0]||"").trim();
+    const billId=String(r[1]||dateStr).trim();
+    if(!dateStr)return;
+    if(!billMap.has(billId)){
+      let xc=[];try{if(r[11])xc=JSON.parse(r[11]);}catch(e){}
+      billMap.set(billId,{
+        billId,sheetRow,lastSheetRow:sheetRow,
+        date:parseSheetDate(dateStr),
+        items:[],
+        discount:r[8]!==""&&r[8]!=null?parseFloat(r[8])||0:0,
+        total:r[9]!==""&&r[9]!=null?parseFloat(r[9])||0:0,
+        custName:r[10]||"",
+        extraCosts:xc
+      });
+      billOrder.push(billId);
+    }
+    const b=billMap.get(billId);
+    b.lastSheetRow=sheetRow;
+    // bill-level อาจอยู่ที่แถวแรก — fallback ถ้า row แรกยังไม่มีค่า
+    if(!b.discount&&r[8]!==""&&r[8]!=null)b.discount=parseFloat(r[8])||0;
+    if(!b.total&&r[9]!==""&&r[9]!=null)b.total=parseFloat(r[9])||0;
+    if(!b.custName&&r[10])b.custName=String(r[10]);
+    b.items.push({
+      name:(r[2]||"").trim(),emoji:"🌿",
+      qty:parseInt(r[3])||1,price:parseFloat(r[4])||0,
+      fahPct:parseFloat(r[5])>=0?parseFloat(r[5]):50,
+      store:(r[6]||"").trim(),
+      row:parseInt(r[7])||undefined
+    });
+  });
+  sales=billOrder.map(billId=>{
+    const b=billMap.get(billId);
+    const subtotal=b.items.reduce((s,x)=>s+x.qty*(x.price||0),0);
+    return{
+      ...b,subtotal,
+      get store(){return this.items[0]?.store||"";},
+      itemCount:b.items.reduce((a,x)=>a+(x.qty||1),0),
+      itemsStr:b.items.map(it=>`${it.name}×${it.qty}×${it.price}×${it.fahPct}×${it.store}×${it.row||""}`).join(", ")
+    };
+  }).filter(s=>!isNaN(s.date.getTime())).reverse();
 }
 
 async function loadCustomers(){
@@ -596,7 +634,8 @@ async function confirmSale(){
   // ── เตรียมข้อมูล ──
   const fPct=payItemSplits;
   const pad=n=>String(n).padStart(2,"0");
-  const dateStr=now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate())+"T"+pad(now.getHours())+":"+pad(now.getMinutes());
+  // รวม seconds เพื่อให้ billId unique (กัน 2 บิลในนาทีเดียวกัน)
+  const dateStr=now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate())+"T"+pad(now.getHours())+":"+pad(now.getMinutes())+":"+pad(now.getSeconds());
   const custName=selectedCust?selectedCust.name:"";
   const saleStore=selectedSaleStore||"";
   const itemStr=items.map(x=>{
@@ -626,12 +665,16 @@ async function confirmSale(){
     savedCust={...selectedCust,newPts,newSpent};
   }
   sales.unshift({
+    billId:dateStr,sheetRow:undefined,lastSheetRow:undefined,
     date:now,
-    store:saleStore,
-    items:items.map(x=>({name:x.name,emoji:x.emoji,lot:x.lot,price:getItemPrice(x),qty:x.qty,
-      fahPct:fPct[x.row]!==undefined?fPct[x.row]:(x.defaultPct??50)})),
+    items:items.map(x=>({name:x.name+(x.lot?"("+x.lot+")":""),emoji:x.emoji,lot:x.lot,
+      price:getItemPrice(x),qty:x.qty,
+      fahPct:fPct[x.row]!==undefined?fPct[x.row]:(x.defaultPct??50),
+      store:saleStore,row:x.row})),
     subtotal:sub,discount:disc,total,custName,
-    itemCount:items.reduce((s,x)=>s+x.qty,0),extraCosts:[...extraCosts]
+    get store(){return this.items[0]?.store||"";},
+    itemCount:items.reduce((s,x)=>s+x.qty,0),extraCosts:[...extraCosts],
+    itemsStr
   });
 
   // ── 2. แสดง UI + ใบเสร็จทันที ──
@@ -1356,11 +1399,19 @@ async function confirmDeleteSale(){
     if(!updated?.sheetRow){sales.splice(deletingSaleIdx,1);closeSaleDel();renderHistory();renderProfit();toast("🗑 ลบแล้ว (local)");return;}
     deletingSaleIdx=sales.indexOf(updated);
   }
+  const s2=sales[deletingSaleIdx];
   try{
-    await scriptPost({action:"deleteSaleByRow",sheetRow:s.sheetRow});
+    const lastRow=s2.lastSheetRow||s2.sheetRow;
+    await scriptPost({action:"deleteSaleByRow",sheetRow:s2.sheetRow,lastSheetRow:lastRow});
+    const deletedRows=lastRow-s2.sheetRow+1;
     sales.splice(deletingSaleIdx,1);
-    // adjust sheetRow ของแถวที่อยู่หลัง (ทุกแถวถัดไปเลื่อนขึ้น 1)
-    sales.forEach(x=>{if(x.sheetRow>s.sheetRow)x.sheetRow--;});
+    // ปรับ sheetRow ของบิลที่อยู่ถัดไปใน Sheet (ทุกบิลที่ sheetRow > lastRow ของบิลที่ลบ)
+    sales.forEach(x=>{
+      if(x.sheetRow>lastRow){
+        x.sheetRow-=deletedRows;
+        if(x.lastSheetRow)x.lastSheetRow-=deletedRows;
+      }
+    });
     closeSaleDel();renderHistory();renderProfit();
     toast("🗑 ลบแล้ว");
   }catch(e){toast("❌ "+e.message);}

@@ -193,8 +193,15 @@
             font-size: 22px;
             font-weight: 700;
             color: #fff;
-            text-shadow: 0 0 14px rgba(255,255,255,0.85), 0 0 32px rgba(255,255,255,0.3);
-            letter-spacing: 0.5px
+            text-shadow: 0 0 14px rgba(255,0,200,0.85), 0 0 32px rgba(0,200,255,0.4);
+            letter-spacing: 0.5px;
+            /* glow ไล่สีรุ้งวนไปเรื่อยๆ — หมุน hue ของสี glow (ตัวอักษรยังคงเป็นสีขาวเหมือนเดิม
+               เพราะ hue-rotate ไม่มีผลกับสีขาว/เทาที่ไม่มี hue) */
+            animation: logoHueGlow 6s linear infinite;
+        }
+        @keyframes logoHueGlow {
+            from { filter: hue-rotate(0deg); }
+            to   { filter: hue-rotate(360deg); }
         }
 
         .topbar-sub {
@@ -1935,31 +1942,47 @@
   border: 0.5px solid rgba(255,255,255,0.1) !important;
   color: rgba(255,255,255,0.4) !important;
 }
-/* Pre-color store buttons even before selection */
+/* Pre-color store buttons even before selection
+   หมายเหตุ: box-shadow/text-shadow ตรงนี้ตั้งใจไม่ใส่ !important เพื่อให้ @keyframes
+   ด้านล่าง (fahGlowPulse/momGlowPulse) แก้ไขค่าได้จริง — !important จะชนะ animation
+   เสมอตาม CSS cascade ทำให้ glow ไม่ขยับเลยถ้าใส่ !important ไว้ */
 #pos-fah {
   color: #88DBBD !important;
   border-color: rgba(109,191,161,0.3) !important;
-  box-shadow: 0 0 10px rgba(109,191,161,0.15), inset 0 1px 0 rgba(109,191,161,0.1) !important;
-  text-shadow: 0 0 10px rgba(109,191,161,0.5) !important;
+  animation: fahGlowPulse 2.4s ease-in-out infinite;
 }
 #pos-mom {
   color: #FFB0CC !important;
   border-color: rgba(255,176,204,0.3) !important;
-  box-shadow: 0 0 10px rgba(255,176,204,0.15), inset 0 1px 0 rgba(255,176,204,0.1) !important;
-  text-shadow: 0 0 10px rgba(255,176,204,0.5) !important;
+  animation: momGlowPulse 2.4s ease-in-out infinite;
+}
+@keyframes fahGlowPulse {
+  0%,100% { box-shadow: 0 0 10px rgba(109,191,161,0.15), inset 0 1px 0 rgba(109,191,161,0.1); text-shadow: 0 0 10px rgba(109,191,161,0.5); }
+  50%     { box-shadow: 0 0 22px rgba(109,191,161,0.45), inset 0 1px 0 rgba(109,191,161,0.15); text-shadow: 0 0 16px rgba(109,191,161,0.85); }
+}
+@keyframes momGlowPulse {
+  0%,100% { box-shadow: 0 0 10px rgba(255,176,204,0.15), inset 0 1px 0 rgba(255,176,204,0.1); text-shadow: 0 0 10px rgba(255,176,204,0.5); }
+  50%     { box-shadow: 0 0 22px rgba(255,176,204,0.45), inset 0 1px 0 rgba(255,176,204,0.15); text-shadow: 0 0 16px rgba(255,176,204,0.85); }
 }
 .ss-btn.active, #pos-fah.active {
   background: rgba(109,191,161,0.14) !important;
   border-color: rgba(109,191,161,0.5) !important;
   color: #88DBBD !important;
-  box-shadow: 0 0 18px rgba(109,191,161,0.35), 0 0 6px rgba(109,191,161,0.2), inset 0 1px 0 rgba(255,255,255,0.15) !important;
-  text-shadow: 0 0 12px rgba(109,191,161,0.8), 0 0 24px rgba(109,191,161,0.3) !important;
+  animation: fahGlowPulseActive 2s ease-in-out infinite;
 }
 #pos-mom.active {
   background: rgba(255,176,204,0.14) !important;
   border-color: rgba(255,176,204,0.5) !important;
   color: #FFB0CC !important;
-  box-shadow: 0 0 18px rgba(255,176,204,0.35), 0 0 6px rgba(255,176,204,0.2), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+  animation: momGlowPulseActive 2s ease-in-out infinite;
+}
+@keyframes fahGlowPulseActive {
+  0%,100% { box-shadow: 0 0 18px rgba(109,191,161,0.35), 0 0 6px rgba(109,191,161,0.2), inset 0 1px 0 rgba(255,255,255,0.15); text-shadow: 0 0 12px rgba(109,191,161,0.8), 0 0 24px rgba(109,191,161,0.3); }
+  50%     { box-shadow: 0 0 30px rgba(109,191,161,0.6), 0 0 10px rgba(109,191,161,0.3), inset 0 1px 0 rgba(255,255,255,0.2); text-shadow: 0 0 18px rgba(109,191,161,1), 0 0 34px rgba(109,191,161,0.5); }
+}
+@keyframes momGlowPulseActive {
+  0%,100% { box-shadow: 0 0 18px rgba(255,176,204,0.35), 0 0 6px rgba(255,176,204,0.2), inset 0 1px 0 rgba(255,255,255,0.15); text-shadow: 0 0 12px rgba(255,176,204,0.8), 0 0 24px rgba(255,176,204,0.3); }
+  50%     { box-shadow: 0 0 30px rgba(255,176,204,0.6), 0 0 10px rgba(255,176,204,0.3), inset 0 1px 0 rgba(255,255,255,0.2); text-shadow: 0 0 18px rgba(255,176,204,1), 0 0 34px rgba(255,176,204,0.5); }
   text-shadow: 0 0 12px rgba(255,176,204,0.8), 0 0 24px rgba(255,176,204,0.3) !important;
 }
 .pos-store-lbl { color: rgba(255,255,255,0.3) !important; }

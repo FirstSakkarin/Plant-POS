@@ -1495,7 +1495,30 @@ async function confirmDeleteSale(){
     });
     closeSaleDel();renderHistory();renderProfit();
     toast("🗑 ลบแล้ว");
+
+    // คืนสต็อกที่ถูกหักไปตอนขายบิลนี้ กลับเข้าคลัง (ทั้งสต็อกรวมและสต็อกหน้าร้าน)
+    await restoreStockForSale(s2);
   }catch(e){toast("❌ "+e.message);}
+}
+
+async function restoreStockForSale(sale){
+  let failed=false;
+  for(const it of sale.items){
+    const p=findProductForItem(it);
+    if(!p)continue;
+    p.stock=(p.stock||0)+it.qty;
+    if(it.store==="fah")p.stockFah=(p.stockFah||0)+it.qty;
+    else if(it.store==="mom")p.stockMom=(p.stockMom||0)+it.qty;
+    try{
+      await scriptPost({action:"updateStock",row:p.row,stock:p.stock});
+      await scriptPost({action:"updateStockLocations",row:p.row,stockFah:p.stockFah||0,stockMom:p.stockMom||0});
+    }catch(e){
+      failed=true;
+      console.warn("คืนสต็อกไม่สำเร็จ:",p.name,e.message);
+    }
+  }
+  renderProds();renderProdList();
+  if(failed)toast("⚠️ ลบบิลสำเร็จ แต่คืนสต็อกบางรายการไม่สำเร็จ กรุณาตรวจสอบสต็อก");
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

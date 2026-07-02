@@ -225,6 +225,27 @@
   </div>
 </div>
 
+<!-- ════ POPUP: แก้ไขราคาต้นไม้ในตะกร้า ════ -->
+<div class="overlay" id="price-edit-overlay" data-close="closePriceEdit">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closePriceEdit()"><i class="ti ti-x"></i></button>
+    <div class="sheet-title" id="pe-title">แก้ราคา</div>
+    <div class="form-lbl">ราคาที่จะขาย (บาท/ต้น)</div>
+    <input class="form-inp" id="pe-price-inp" type="number" min="0" inputmode="decimal" placeholder="0" style="font-size:22px;font-weight:700;margin-bottom:6px" oninput="renderPriceEditPreview()">
+    <button type="button" id="pe-reset-btn" onclick="resetPriceEdit()" style="background:none;border:none;color:var(--g8);font-size:12px;font-weight:600;cursor:pointer;padding:0;margin-bottom:14px;display:flex;align-items:center;gap:4px">
+      <i class="ti ti-rotate" style="font-size:14px"></i> รีเซ็ตเป็นราคาปกติ (฿<span id="pe-orig-price">0</span>)
+    </button>
+    <div style="font-size:12px;color:var(--m);margin-bottom:16px;background:var(--bg2);border-radius:8px;padding:8px 10px">
+      ยอดรวมรายการนี้ (<span id="pe-qty">1</span> ต้น) — <b id="pe-line-total" style="color:var(--t)">฿0</b>
+    </div>
+    <div class="sheet-btns">
+      <button class="btn-secondary" onclick="closePriceEdit()">ยกเลิก</button>
+      <button class="btn-primary" onclick="savePriceEdit()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
 <!-- ════ POPUP: แก้ไขประวัติการขาย ════ -->
 <div class="overlay" id="sale-edit-overlay" data-close="closeSaleEdit">
   <div class="sheet">
@@ -449,13 +470,20 @@
     <div class="sheet-handle"></div>
     <button class="sheet-close" onclick="closeReportExpenseModal()"><i class="ti ti-x"></i></button>
     <div class="sheet-title">ค่าใช้จ่ายอื่นๆ</div>
-    <div style="font-size:12px;color:var(--m);margin-bottom:12px;background:var(--bg2);border-radius:8px;padding:8px 10px">
-      💛 หักจากกำไรของ <strong>ฟ้าและแม่ คนละครึ่ง</strong> เท่าๆ กัน
-    </div>
     <div class="form-lbl">ชื่อค่าใช้จ่าย</div>
     <input class="form-inp" id="rexp-name" type="text" placeholder="เช่น ค่าปุ๋ย, ค่าขนส่ง" style="margin-bottom:10px">
     <div class="form-lbl">จำนวนเงิน (บาท)</div>
-    <input class="form-inp" id="rexp-amt" type="number" placeholder="0" inputmode="decimal" style="margin-bottom:12px">
+    <input class="form-inp" id="rexp-amt" type="number" placeholder="0" inputmode="decimal" style="margin-bottom:10px">
+    <div class="form-lbl">หักจากใคร</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button class="pt-btn active" id="rexp-owner-joint" onclick="setRexpOwner('ร่วม',this)" style="flex:1">🤝 คนละครึ่ง</button>
+      <button class="pt-btn" id="rexp-owner-mom" onclick="setRexpOwner('แม่',this)" style="flex:1">🩷 แม่ 100%</button>
+      <button class="pt-btn" id="rexp-owner-fah" onclick="setRexpOwner('ฟ้า',this)" style="flex:1">🩵 ฟ้า 100%</button>
+    </div>
+    <input type="hidden" id="rexp-owner" value="ร่วม">
+    <div style="font-size:12px;color:var(--m);margin-bottom:12px;background:var(--bg2);border-radius:8px;padding:8px 10px" id="rexp-owner-hint">
+      💛 หักจากกำไรของ <strong>ฟ้าและแม่ คนละครึ่ง</strong> เท่าๆ กัน
+    </div>
     <div class="sheet-btns">
       <button class="btn-secondary" onclick="closeReportExpenseModal()">ยกเลิก</button>
       <button class="btn-primary" onclick="addReportExpense()">เพิ่ม</button>

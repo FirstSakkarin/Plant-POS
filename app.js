@@ -304,13 +304,14 @@ async function loadCustomers(){
 }
 async function loadExpenses(){
   try{
-    const rows=await sheetGet("Expenses!A2:C");
+    const rows=await sheetGet("Expenses!A2:D");
     if(!Array.isArray(rows)){reportExpenses=[];return;}
     reportExpenses=rows.map((r,i)=>({
       sheetRow:i+2,
       date:r[0]?new Date(r[0]+"T00:00:00"):new Date(NaN),
       name:r[1]||"",
-      amount:parseFloat(r[2])||0
+      amount:parseFloat(r[2])||0,
+      owner:r[3]||"ร่วม" // แถวเก่าก่อนมีคอลัมน์นี้ → ถือว่าคนละครึ่งเหมือนเดิม
     })).filter(e=>!isNaN(e.date.getTime()));
   }catch(e){
     // ยังไม่มีชีต Expenses — ไม่เป็นไร ข้ามไป
@@ -507,16 +508,40 @@ function setDiscMode(mode,btn){
 }
 
 // ── PRICE EDIT ────────────────────────────────────────────
+let editingCartPriceRow=null;
 function openPriceEdit(rowId){
   const item=cart[rowId];if(!item)return;
-  const np=prompt(`แก้ราคา "${item.name}"${item.lot?" ("+item.lot+")":""}
-ราคาปกติ: ฿${item.price}
-
-กรอกราคาใหม่:`,item.customPrice??item.price);
-  if(np===null)return;
-  const p=parseFloat(np);
-  if(isNaN(p)||p<0){toast("❌ ราคาไม่ถูกต้อง");return;}
-  cart[rowId].customPrice=p;renderCart();
+  editingCartPriceRow=rowId;
+  document.getElementById("pe-title").textContent=`แก้ราคา ${item.name}${item.lot?" ("+item.lot+")":""}`;
+  document.getElementById("pe-orig-price").textContent=item.price.toLocaleString();
+  document.getElementById("pe-qty").textContent=item.qty;
+  const inp=document.getElementById("pe-price-inp");
+  inp.value=item.customPrice??item.price;
+  renderPriceEditPreview();
+  document.getElementById("price-edit-overlay").classList.add("show");
+  setTimeout(()=>{inp.focus();inp.select();},120);
+}
+function closePriceEdit(){
+  document.getElementById("price-edit-overlay").classList.remove("show");
+  editingCartPriceRow=null;
+}
+function renderPriceEditPreview(){
+  const item=cart[editingCartPriceRow];if(!item)return;
+  const v=parseFloat(document.getElementById("pe-price-inp").value);
+  const p=isNaN(v)||v<0?0:v;
+  document.getElementById("pe-line-total").textContent="฿"+(p*item.qty).toLocaleString();
+}
+function resetPriceEdit(){
+  const item=cart[editingCartPriceRow];if(!item)return;
+  cart[editingCartPriceRow].customPrice=null;
+  renderCart();closePriceEdit();
+}
+function savePriceEdit(){
+  const item=cart[editingCartPriceRow];if(!item)return;
+  const v=parseFloat(document.getElementById("pe-price-inp").value);
+  if(isNaN(v)||v<0){toast("❌ ราคาไม่ถูกต้อง");return;}
+  cart[editingCartPriceRow].customPrice=v;
+  renderCart();closePriceEdit();
 }
 
 // ── CUSTOMER SELECTOR ─────────────────────────────────────
@@ -1302,10 +1327,17 @@ function renderProfit(){
   const avg=bills?Math.round(totalRev/bills):0;
   const filteredExpenses=reportExpenses.filter(e=>e.date>=from&&e.date<=toEnd);
   const reportExpenseTotal=filteredExpenses.reduce((s,e)=>s+(e.amount||0),0);
-  // ต้นทุนอื่นๆ (ค่าขนส่ง/ฝากขายต่อบิล) + ค่าใช้จ่ายรายงาน หักคนละครึ่งเหมือนกัน
-  // ไม่งั้น fahProfit+momProfit จะไม่เท่ากับ netProfit ที่แสดง
-  fahProfit-=(reportExpenseTotal+totalExtraCost)/2;
-  momProfit-=(reportExpenseTotal+totalExtraCost)/2;
+  // ค่าใช้จ่ายแต่ละรายการหักตาม "หักจากใคร" ของตัวเอง — ร่วม=คนละครึ่ง, แม่/ฟ้า=หักเต็มฝั่งนั้น
+  let fahExpenseShare=0,momExpenseShare=0;
+  filteredExpenses.forEach(e=>{
+    const amt=e.amount||0;
+    if(e.owner==="ฟ้า") fahExpenseShare+=amt;
+    else if(e.owner==="แม่") momExpenseShare+=amt;
+    else{fahExpenseShare+=amt/2;momExpenseShare+=amt/2;} // ร่วม (ค่าเริ่มต้น)
+  });
+  // ต้นทุนอื่นๆ (ค่าขนส่ง/ฝากขายต่อบิล) ยังคงหักคนละครึ่งเหมือนเดิม
+  fahProfit-=fahExpenseShare+totalExtraCost/2;
+  momProfit-=momExpenseShare+totalExtraCost/2;
   const netProfit=totalRev-totalCost-totalExtraCost-reportExpenseTotal;
 
   document.getElementById("profit-metrics").innerHTML=`
@@ -1361,7 +1393,10 @@ function renderProfit(){
       <div class="profit-line" data-accent="total"><span class="p-lbl">ต้นทุนรวม</span><span class="p-val">฿${Math.round(totalCost).toLocaleString()}</span></div>
       <div class="profit-line" data-accent="fah"><span class="p-lbl">🩵 ต้นทุนฟ้า</span><span class="p-val" style="color:#88DBBD">฿${Math.round(fahCost).toLocaleString()}</span></div>
       <div class="profit-line" data-accent="total"><span class="p-lbl">📦 ต้นทุนอื่นๆ</span><span class="p-val" style="color:rgba(255,176,204,0.85)">฿${Math.round(totalExtraCost+reportExpenseTotal).toLocaleString()}</span></div>
-      ${filteredExpenses.map(e=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0 2px 16px;font-size:11px;color:var(--m)"><span>↳ ${e.name}</span><div style="display:flex;align-items:center;gap:6px"><span style="color:rgba(255,176,204,0.7)">-฿${Math.round(e.amount).toLocaleString()}</span><button onclick="removeReportExpense(${e.sheetRow})" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:12px;padding:0;line-height:1"><i class="ti ti-x"></i></button></div></div>`).join("")}
+      ${filteredExpenses.map(e=>{
+        const ownerTag=e.owner==="ฟ้า"?`<span style="color:#88DBBD">🩵 ฟ้า</span>`:e.owner==="แม่"?`<span style="color:#FFB0CC">🩷 แม่</span>`:`<span style="color:var(--faint)">🤝 ครึ่ง</span>`;
+        return`<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0 2px 16px;font-size:11px;color:var(--m)"><span>↳ ${e.name} ${ownerTag}</span><div style="display:flex;align-items:center;gap:6px"><span style="color:rgba(255,176,204,0.7)">-฿${Math.round(e.amount).toLocaleString()}</span><button onclick="removeReportExpense(${e.sheetRow})" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:12px;padding:0;line-height:1"><i class="ti ti-x"></i></button></div></div>`;
+      }).join("")}
       <div class="profit-line" data-accent="profit"><span class="p-lbl">กำไรสุทธิ</span><span class="p-val" style="color:${netProfit>=0?"#F2C05A":"var(--r6)"}">฿${Math.round(netProfit).toLocaleString()}</span></div>
     </div>
     ${sorted.length?`<div class="profit-block">
@@ -1729,11 +1764,28 @@ function renderExtraCosts(){
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   REPORT EXPENSES — ค่าใช้จ่ายอื่นๆ ระดับรายงาน (หักคนละครึ่ง)
+   REPORT EXPENSES — ค่าใช้จ่ายอื่นๆ ระดับรายงาน
+   หักได้ 3 แบบ: ร่วม (คนละครึ่ง, ค่าเริ่มต้น) / แม่ 100% / ฟ้า 100%
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const REXP_OWNER_HINTS={
+  "ร่วม":"💛 หักจากกำไรของ <strong>ฟ้าและแม่ คนละครึ่ง</strong> เท่าๆ กัน",
+  "แม่":"🩷 หักจากกำไรของ <strong>แม่ทั้งหมด 100%</strong>",
+  "ฟ้า":"🩵 หักจากกำไรของ <strong>ฟ้าทั้งหมด 100%</strong>",
+};
+function setRexpOwner(val,btn){
+  document.getElementById("rexp-owner").value=val;
+  ["rexp-owner-joint","rexp-owner-mom","rexp-owner-fah"].forEach(id=>{
+    const b=document.getElementById(id);
+    if(b)b.classList.remove("active");
+  });
+  if(btn)btn.classList.add("active");
+  const hint=document.getElementById("rexp-owner-hint");
+  if(hint)hint.innerHTML=REXP_OWNER_HINTS[val]||REXP_OWNER_HINTS["ร่วม"];
+}
 function openReportExpenseModal(){
   document.getElementById("rexp-name").value="";
   document.getElementById("rexp-amt").value="";
+  setRexpOwner("ร่วม",document.getElementById("rexp-owner-joint"));
   document.getElementById("report-exp-overlay").classList.add("show");
   setTimeout(()=>document.getElementById("rexp-name").focus(),120);
 }
@@ -1743,6 +1795,7 @@ function closeReportExpenseModal(){
 async function addReportExpense(){
   const name=document.getElementById("rexp-name").value.trim();
   const amt=parseFloat(document.getElementById("rexp-amt").value)||0;
+  const owner=document.getElementById("rexp-owner")?.value||"ร่วม";
   if(!name||!amt){toast("⚠️ กรอกชื่อและจำนวนเงินด้วย");return;}
   const now=new Date();
   const pad=n=>String(n).padStart(2,"0");
@@ -1750,7 +1803,7 @@ async function addReportExpense(){
   closeReportExpenseModal();
   toast("⏳ กำลังบันทึก...");
   try{
-    await scriptPost({action:"addExpense",date:dateStr,name,amount:amt});
+    await scriptPost({action:"addExpense",date:dateStr,name,amount:amt,owner});
     await loadExpenses();
     renderProfit();
     toast("✅ บันทึก "+name+" ฿"+amt.toLocaleString());

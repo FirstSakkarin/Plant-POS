@@ -386,18 +386,18 @@ function updateCustomer(ss, c) {
 }
 
 /* ───────────────────────────────────────────────
-   EXPENSES  (ชีต "Expenses", คอลัมน์ A-C)
-   A date (YYYY-MM-DD) | B name | C amount
+   EXPENSES  (ชีต "Expenses", คอลัมน์ A-D)
+   A date (YYYY-MM-DD) | B name | C amount | D owner (ร่วม/แม่/ฟ้า — ใครหักกำไร)
    ⚠️ สร้างชีตชื่อ "Expenses" ใน Google Sheet ก่อนใช้
 ─────────────────────────────────────────────── */
 function addExpense(ss, data) {
   let sheet = ss.getSheetByName("Expenses");
   if (!sheet) {
     sheet = ss.insertSheet("Expenses");
-    sheet.getRange(1, 1, 1, 3).setValues([["Date","Name","Amount"]]);
-    sheet.getRange(1, 1, 1, 3).setFontWeight("bold");
+    sheet.getRange(1, 1, 1, 4).setValues([["Date","Name","Amount","Owner"]]);
+    sheet.getRange(1, 1, 1, 4).setFontWeight("bold");
   }
-  sheet.appendRow([data.date || "", data.name || "", parseFloat(data.amount) || 0]);
+  sheet.appendRow([data.date || "", data.name || "", parseFloat(data.amount) || 0, data.owner || "ร่วม"]);
   return {};
 }
 

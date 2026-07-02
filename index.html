@@ -431,51 +431,8 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- FAB: ค่าใช้จ่ายอื่นๆ (รายงาน) -->
-<button class="report-fab" id="report-fab" onclick="openReportExpenseModal()" title="ค่าใช้จ่ายอื่นๆ" style="display:none">
-  <i class="ti ti-plus" style="font-size:22px;font-weight:300"></i>
-  <span style="font-size:9px;margin-top:2px;white-space:nowrap;opacity:.9">ค่าใช้จ่าย</span>
-</button>
 
-<!-- POPUP: ค่าใช้จ่ายอื่นๆ (รายงาน) -->
-<div class="overlay" id="report-exp-overlay" data-close="closeReportExpenseModal">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <button class="sheet-close" onclick="closeReportExpenseModal()"><i class="ti ti-x"></i></button>
-    <div class="sheet-title">ค่าใช้จ่ายอื่นๆ</div>
-    <div style="font-size:12px;color:var(--m);margin-bottom:12px;background:var(--bg2);border-radius:8px;padding:8px 10px">
-      💛 หักจากกำไรของ <strong>ฟ้าและแม่ คนละครึ่ง</strong> เท่าๆ กัน
-    </div>
-    <div class="form-lbl">ชื่อค่าใช้จ่าย</div>
-    <input class="form-inp" id="rexp-name" type="text" placeholder="เช่น ค่าปุ๋ย, ค่าขนส่ง" style="margin-bottom:10px">
-    <div class="form-lbl">จำนวนเงิน (บาท)</div>
-    <input class="form-inp" id="rexp-amt" type="number" placeholder="0" inputmode="decimal" style="margin-bottom:12px">
-    <div class="sheet-btns">
-      <button class="btn-secondary" onclick="closeReportExpenseModal()">ยกเลิก</button>
-      <button class="btn-primary" onclick="addReportExpense()">เพิ่ม</button>
-    </div>
-  </div>
-</div>
 
-<style>
-.report-fab{
-  position:fixed;bottom:80px;right:18px;
-  width:56px;height:56px;border-radius:50%;
-  background:linear-gradient(135deg,#f5c842,#e8a800);
-  border:none;cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  color:#fff;
-  box-shadow:0 0 0 6px rgba(245,200,66,.15),0 0 18px rgba(245,200,66,.45),0 4px 14px rgba(0,0,0,.22);
-  animation:fabPulse 2.4s ease-in-out infinite;
-  z-index:200;
-  transition:transform .15s,box-shadow .15s;
-}
-.report-fab:active{transform:scale(.93);}
-@keyframes fabPulse{
-  0%,100%{box-shadow:0 0 0 6px rgba(245,200,66,.15),0 0 18px rgba(245,200,66,.45),0 4px 14px rgba(0,0,0,.22);}
-  50%{box-shadow:0 0 0 10px rgba(245,200,66,.08),0 0 28px rgba(245,200,66,.6),0 4px 14px rgba(0,0,0,.22);}
-}
-</style>
 
 <script src="app.js" defer></script>
 

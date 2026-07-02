@@ -44,6 +44,8 @@ function doPost(e) {
       case "updateSortOrder":   result = updateSortOrder(ss, data); break;
       case "uploadImage":       result = uploadImage(data); break;
       case "rebuildSummary":    result = (updateSummary(ss), {}); break;
+      case "addExpense":        result = addExpense(ss, data); break;
+      case "deleteExpenseByRow": result = deleteExpenseByRow(ss, data); break;
       default:
         return jsonOut({ ok: false, error: "Unknown action: " + data.action });
     }
@@ -323,5 +325,30 @@ function updateCustomer(ss, c) {
     c.points || 0, c.note || "",
     c.totalSpent || 0
   ]]);
+  return {};
+}
+
+/* ───────────────────────────────────────────────
+   EXPENSES  (ชีต "Expenses", คอลัมน์ A-C)
+   A date (YYYY-MM-DD) | B name | C amount
+   ⚠️ สร้างชีตชื่อ "Expenses" ใน Google Sheet ก่อนใช้
+─────────────────────────────────────────────── */
+function addExpense(ss, data) {
+  let sheet = ss.getSheetByName("Expenses");
+  if (!sheet) {
+    sheet = ss.insertSheet("Expenses");
+    sheet.getRange(1, 1, 1, 3).setValues([["Date","Name","Amount"]]);
+    sheet.getRange(1, 1, 1, 3).setFontWeight("bold");
+  }
+  sheet.appendRow([data.date || "", data.name || "", parseFloat(data.amount) || 0]);
+  return {};
+}
+
+function deleteExpenseByRow(ss, data) {
+  const sheet = ss.getSheetByName("Expenses");
+  if (!sheet) throw new Error("ไม่พบชีต 'Expenses'");
+  const row = parseInt(data.sheetRow);
+  if (!row || row < 2) throw new Error("Invalid sheetRow: " + data.sheetRow);
+  sheet.deleteRow(row);
   return {};
 }

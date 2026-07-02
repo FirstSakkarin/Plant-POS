@@ -153,7 +153,7 @@ function setSS(s){
 }
 async function syncAll(){
   setSS("loading");
-  try{await loadProducts();await loadSales();await loadCustomers();setSS("ok");toast("✅ Sync สำเร็จ");}
+  try{await loadProducts();await loadSales();await loadCustomers();await loadExpenses();setSS("ok");toast("✅ Sync สำเร็จ");}
   catch(e){setSS("error");toast("❌ "+e.message);}
 }
 
@@ -238,6 +238,20 @@ async function loadSales(){
 async function loadCustomers(){
   const rows=await sheetGet("Customers!A2:E");
   customers=rows.map((r,i)=>({row:i+2,name:r[0]||"",phone:r[1]||"",points:parseInt(r[2])||0,note:r[3]||"",totalSpent:parseFloat(r[4])||0})).filter(c=>c.name);
+}
+async function loadExpenses(){
+  try{
+    const rows=await sheetGet("Expenses!A2:C");
+    reportExpenses=rows.map((r,i)=>({
+      sheetRow:i+2,
+      date:r[0]?new Date(r[0]+"T00:00:00"):new Date(NaN),
+      name:r[1]||"",
+      amount:parseFloat(r[2])||0
+    })).filter(e=>!isNaN(e.date.getTime()));
+  }catch(e){
+    // ยังไม่มีชีต Expenses — ไม่เป็นไร ข้ามไป
+    reportExpenses=[];
+  }
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1159,7 +1173,8 @@ function renderProfit(){
 
   const bills=ms.length;
   const avg=bills?Math.round(totalRev/bills):0;
-  const reportExpenseTotal=reportExpenses.reduce((s,e)=>s+(e.amount||0),0);
+  const filteredExpenses=reportExpenses.filter(e=>e.date>=from&&e.date<=toEnd);
+  const reportExpenseTotal=filteredExpenses.reduce((s,e)=>s+(e.amount||0),0);
   fahProfit-=reportExpenseTotal/2;
   momProfit-=reportExpenseTotal/2;
   const netProfit=totalRev-totalCost-totalExtraCost-reportExpenseTotal;
@@ -1210,7 +1225,7 @@ function renderProfit(){
       <div class="profit-line" data-accent="mom"><span class="p-lbl">🩷 กำไรแม่</span><span class="p-val" style="color:#FFB0CC">฿${Math.round(momProfit).toLocaleString()}</span></div>
       <div class="profit-line" data-accent="total"><span class="p-lbl">ต้นทุนรวม</span><span class="p-val">฿${Math.round(totalCost).toLocaleString()}</span></div>
       <div class="profit-line" data-accent="total"><span class="p-lbl">📦 ต้นทุนอื่นๆ</span><span class="p-val" style="color:rgba(255,176,204,0.85)">฿${Math.round(totalExtraCost+reportExpenseTotal).toLocaleString()}</span></div>
-      ${reportExpenses.map((e,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0 2px 16px;font-size:11px;color:var(--m)"><span>↳ ${e.name}</span><div style="display:flex;align-items:center;gap:6px"><span style="color:rgba(255,176,204,0.7)">-฿${Math.round(e.amount).toLocaleString()}</span><button onclick="removeReportExpense(${i})" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:12px;padding:0;line-height:1"><i class="ti ti-x"></i></button></div></div>`).join("")}
+      ${filteredExpenses.map(e=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0 2px 16px;font-size:11px;color:var(--m)"><span>↳ ${e.name}</span><div style="display:flex;align-items:center;gap:6px"><span style="color:rgba(255,176,204,0.7)">-฿${Math.round(e.amount).toLocaleString()}</span><button onclick="removeReportExpense(${e.sheetRow})" style="border:none;background:none;color:var(--faint);cursor:pointer;font-size:12px;padding:0;line-height:1"><i class="ti ti-x"></i></button></div></div>`).join("")}
       <div class="profit-line" data-accent="profit"><span class="p-lbl">กำไรสุทธิ</span><span class="p-val" style="color:${netProfit>=0?"#F2C05A":"var(--r6)"}">฿${Math.round(netProfit).toLocaleString()}</span></div>
     </div>
     ${sorted.length?`<div class="profit-block">
@@ -1548,18 +1563,30 @@ function openReportExpenseModal(){
 function closeReportExpenseModal(){
   document.getElementById("report-exp-overlay").classList.remove("show");
 }
-function addReportExpense(){
+async function addReportExpense(){
   const name=document.getElementById("rexp-name").value.trim();
   const amt=parseFloat(document.getElementById("rexp-amt").value)||0;
   if(!name||!amt){toast("⚠️ กรอกชื่อและจำนวนเงินด้วย");return;}
-  reportExpenses.push({name,amount:amt});
+  const now=new Date();
+  const pad=n=>String(n).padStart(2,"0");
+  const dateStr=now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate());
   closeReportExpenseModal();
-  renderProfit();
-  toast("✅ เพิ่มค่าใช้จ่าย "+name+" ฿"+amt.toLocaleString());
+  toast("⏳ กำลังบันทึก...");
+  try{
+    await scriptPost({action:"addExpense",date:dateStr,name,amount:amt});
+    await loadExpenses();
+    renderProfit();
+    toast("✅ บันทึก "+name+" ฿"+amt.toLocaleString());
+  }catch(e){toast("❌ "+e.message);}
 }
-function removeReportExpense(i){
-  reportExpenses.splice(i,1);
+async function removeReportExpense(sheetRow){
+  reportExpenses=reportExpenses.filter(e=>e.sheetRow!==sheetRow);
   renderProfit();
+  try{
+    await scriptPost({action:"deleteExpenseByRow",sheetRow});
+    await loadExpenses();
+    renderProfit();
+  }catch(e){toast("❌ "+e.message);await loadExpenses();renderProfit();}
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

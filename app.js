@@ -41,6 +41,8 @@ let payItemSplits={};
 let selectedSaleStore=null;
 // ต้นทุนอื่นๆ ในบิลนี้ [{label, amount}]
 let extraCosts=[];
+// ค่าใช้จ่ายอื่นๆ ในรายงาน (หักคนละครึ่ง) [{name, amount}]
+let reportExpenses=[];
 // ประวัติที่กำลังแก้ไข/ลบ
 let editingSaleIdx=null, deletingSaleIdx=null;
 
@@ -1157,7 +1159,10 @@ function renderProfit(){
 
   const bills=ms.length;
   const avg=bills?Math.round(totalRev/bills):0;
-  const netProfit=totalRev-totalCost-totalExtraCost;
+  const reportExpenseTotal=reportExpenses.reduce((s,e)=>s+(e.amount||0),0);
+  fahProfit-=reportExpenseTotal/2;
+  momProfit-=reportExpenseTotal/2;
+  const netProfit=totalRev-totalCost-totalExtraCost-reportExpenseTotal;
 
   document.getElementById("profit-metrics").innerHTML=`
     <div class="metric" data-accent="total"><div class="metric-lbl">ยอดขายรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalRev).toLocaleString()}</div></div>
@@ -1204,7 +1209,8 @@ function renderProfit(){
       <div class="profit-line" data-accent="fah"><span class="p-lbl">🩵 กำไรฟ้า</span><span class="p-val" style="color:#88DBBD">฿${Math.round(fahProfit).toLocaleString()}</span></div>
       <div class="profit-line" data-accent="mom"><span class="p-lbl">🩷 กำไรแม่</span><span class="p-val" style="color:#FFB0CC">฿${Math.round(momProfit).toLocaleString()}</span></div>
       <div class="profit-line" data-accent="total"><span class="p-lbl">ต้นทุนรวม</span><span class="p-val">฿${Math.round(totalCost).toLocaleString()}</span></div>
-      <div class="profit-line" data-accent="total"><span class="p-lbl">📦 ต้นทุนอื่นๆ</span><span class="p-val" style="color:rgba(255,176,204,0.85)">฿${Math.round(totalExtraCost).toLocaleString()}</span></div>
+      <div class="profit-line" data-accent="total"><span class="p-lbl">📦 ต้นทุนอื่นๆ (ต่อบิล)</span><span class="p-val" style="color:rgba(255,176,204,0.85)">฿${Math.round(totalExtraCost).toLocaleString()}</span></div>
+      ${reportExpenses.map((e,i)=>`<div class="profit-line" style="align-items:center"><span class="p-lbl">💸 ${e.name}</span><div style="display:flex;align-items:center;gap:8px"><span class="p-val" style="color:#f5c842">-฿${Math.round(e.amount).toLocaleString()}</span><button onclick="removeReportExpense(${i})" style="border:none;background:none;color:var(--m);cursor:pointer;font-size:13px;padding:0;line-height:1"><i class="ti ti-x"></i></button></div></div>`).join("")}
       <div class="profit-line" data-accent="profit"><span class="p-lbl">กำไรสุทธิ</span><span class="p-val" style="color:${netProfit>=0?"#F2C05A":"var(--r6)"}">฿${Math.round(netProfit).toLocaleString()}</span></div>
     </div>
     ${sorted.length?`<div class="profit-block">
@@ -1466,6 +1472,8 @@ function gotoScreen(name,btn){
   } else if(selectedSaleStore){
     document.documentElement.dataset.store=selectedSaleStore;
   }
+  const fab=document.getElementById("report-fab");
+  if(fab)fab.style.display=name==="report"?"flex":"none";
   if(name==="report"){
     renderHistory();
     if(!profitFrom)setProfitPreset("today",document.querySelector("#profit-presets .preset-btn"));else renderProfit();
@@ -1526,6 +1534,32 @@ function renderExtraCosts(){
         oninput="extraCosts[${i}].amount=parseFloat(this.value)||0">
       <button class="extra-cost-remove" onclick="removeExtraCost(${i})"><i class="ti ti-x" style="font-size:12px"></i></button>
     </div>`).join("");
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   REPORT EXPENSES — ค่าใช้จ่ายอื่นๆ ระดับรายงาน (หักคนละครึ่ง)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function openReportExpenseModal(){
+  document.getElementById("rexp-name").value="";
+  document.getElementById("rexp-amt").value="";
+  document.getElementById("report-exp-overlay").classList.add("show");
+  setTimeout(()=>document.getElementById("rexp-name").focus(),120);
+}
+function closeReportExpenseModal(){
+  document.getElementById("report-exp-overlay").classList.remove("show");
+}
+function addReportExpense(){
+  const name=document.getElementById("rexp-name").value.trim();
+  const amt=parseFloat(document.getElementById("rexp-amt").value)||0;
+  if(!name||!amt){toast("⚠️ กรอกชื่อและจำนวนเงินด้วย");return;}
+  reportExpenses.push({name,amount:amt});
+  closeReportExpenseModal();
+  renderProfit();
+  toast("✅ เพิ่มค่าใช้จ่าย "+name+" ฿"+amt.toLocaleString());
+}
+function removeReportExpense(i){
+  reportExpenses.splice(i,1);
+  renderProfit();
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

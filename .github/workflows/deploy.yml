@@ -15,9 +15,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy to gh-pages branch
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
-          exclude_assets: '.github,.git,.gitignore,.gitattributes,*.gs,mockup*.html'
+      - name: Deploy to gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/FirstSakkarin/Plant-POS.git
+
+          # Create orphan branch with only the needed files
+          git checkout --orphan gh-pages-tmp
+          git rm -rf . --quiet
+
+          git checkout main -- index.html app.js style.css images/ .nojekyll
+          git add index.html app.js style.css images/ .nojekyll
+          git commit -m "Deploy static site"
+          git push origin HEAD:gh-pages --force

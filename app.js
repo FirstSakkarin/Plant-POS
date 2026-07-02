@@ -1338,6 +1338,10 @@ function renderProfit(){
   // ต้นทุนอื่นๆ (ค่าขนส่ง/ฝากขายต่อบิล) ยังคงหักคนละครึ่งเหมือนเดิม
   fahProfit-=fahExpenseShare+totalExtraCost/2;
   momProfit-=momExpenseShare+totalExtraCost/2;
+  // "รายได้ฟ้า/แม่" (เงินที่ต้องโอนให้จริง) ต้องหักค่าใช้จ่ายด้วยเช่นกัน ไม่ใช่หักแค่ตัวเลข
+  // "กำไร" เฉยๆ — ไม่งั้นเงินที่โอนจริงจะยังคิดสูงเกินไปทั้งที่กำไรที่แสดงลดลงแล้ว
+  fahTotal-=fahExpenseShare+totalExtraCost/2;
+  momTotal-=momExpenseShare+totalExtraCost/2;
   const netProfit=totalRev-totalCost-totalExtraCost-reportExpenseTotal;
 
   document.getElementById("profit-metrics").innerHTML=`
@@ -1350,7 +1354,7 @@ function renderProfit(){
     <div class="metric" data-accent="total"><div class="metric-lbl">ราคาต้นทุนรวม</div><div class="metric-val" style="font-size:17px">฿${Math.round(totalCost).toLocaleString()}</div></div>
     <div class="metric" data-accent="fah"><div class="metric-lbl">🩵 ราคาต้นทุนฟ้า</div><div class="metric-val" style="font-size:17px;color:#88DBBD">฿${Math.round(fahCost).toLocaleString()}</div></div>
     <div class="metric" data-accent="fah" style="border:1px solid rgba(136,219,189,0.4)"><div class="metric-lbl">💸 รายได้ฟ้า</div><div class="metric-val" style="font-size:17px;color:#88DBBD">฿${Math.round(fahTotal).toLocaleString()}</div></div>
-    <div class="metric" data-accent="mom" style="border:1px solid rgba(255,176,204,0.4)"><div class="metric-lbl">🩷 รายได้แม่</div><div class="metric-val" style="font-size:17px;color:#FFB0CC">฿${Math.round(totalRev-fahTotal).toLocaleString()}</div></div>
+    <div class="metric" data-accent="mom" style="border:1px solid rgba(255,176,204,0.4)"><div class="metric-lbl">🩷 รายได้แม่</div><div class="metric-val" style="font-size:17px;color:#FFB0CC">฿${Math.round(momTotal).toLocaleString()}</div></div>
     <div class="metric-quad">
       <div class="metric" data-accent="total"><div class="metric-lbl">ต้นไม้ที่ขาย</div><div class="metric-val">${totalItems}</div><div class="metric-sub neu">ต้น</div></div>
       <div class="metric" data-accent="total"><div class="metric-lbl">จำนวนบิล</div><div class="metric-val">${bills}</div><div class="metric-sub neu">บิล</div></div>

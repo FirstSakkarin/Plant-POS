@@ -122,7 +122,15 @@ function updateStockLocations(ss, p) {
 ─────────────────────────────────────────────── */
 function addSale(ss, s) {
   const sheet = ss.getSheetByName("Sales");
-  const billId = s.date || "";
+
+  // หา billId ถัดไป (เลขลำดับ 1, 2, 3...)
+  const lastRow = sheet.getLastRow();
+  let billId = 1;
+  if (lastRow >= 2) {
+    const ids = sheet.getRange(2, 2, lastRow - 1, 1).getValues()
+      .map(r => parseInt(r[0]) || 0).filter(n => n > 0);
+    if (ids.length > 0) billId = Math.max(...ids) + 1;
+  }
 
   // แยก items string: "name×qty×price×fahPct×store×prodRow, ..."
   const itemParts = (s.items || "").split(",").map(x => x.trim()).filter(x => x);

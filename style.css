@@ -1784,6 +1784,11 @@
           .sidebar-top{padding:20px 16px 14px;border-bottom:0.5px solid rgba(255,255,255,0.1)}
           .sidebar-store-name{font-size:16px;font-weight:700;color:#c8e89a;margin-bottom:2px}
           .sidebar-sub{font-size:10px;color:#7aaa3a}
+          /* ช่องค้นหาต้นไม้ + ปุ่มเปิด Google Sheet — เวอร์ชัน sidebar ของปุ่มที่อยู่ใน
+             topbar บนมือถือ (topbar ทั้งแถบถูกซ่อนที่ breakpoint นี้ ดู .topbar{display:none}) */
+          .sidebar-search-row{display:flex;align-items:center;gap:6px;margin-top:10px}
+          .sidebar-search-input{flex:1;min-width:0;background:rgba(255,255,255,0.09);border:0.5px solid rgba(255,255,255,0.18);border-radius:9px;padding:7px 10px;color:#fff;font-size:12px;font-family:'Sukhumvit Set','Prompt','Sarabun',sans-serif;outline:none}
+          .sidebar-search-input::placeholder{color:rgba(255,255,255,0.35)}
           .sidebar-nav{padding:8px;flex:1}
           .sb-btn{display:flex;align-items:center;gap:10px;width:100%;padding:12px 12px;border-radius:10px;border:none;background:none;font-size:13px;font-family:'Sukhumvit Set','Prompt','Sarabun',sans-serif;color:rgba(255,255,255,0.55);cursor:pointer;text-align:left;margin-bottom:2px;transition:.15s}
           .sb-btn i{font-size:20px;flex-shrink:0}

@@ -56,6 +56,10 @@
     <div class="sidebar-top">
       <div class="sidebar-store-name" id="sb-store-name">TreeSiri</div>
       <div class="sidebar-sub">ขาย · รายงาน · คลังต้นไม้ · ลูกค้า</div>
+      <div class="sidebar-search-row">
+        <input type="text" id="sidebar-search-input" class="sidebar-search-input" placeholder="ค้นหาต้นไม้..." oninput="renderProds()">
+        <a class="sheet-pill" href="https://docs.google.com/spreadsheets/d/1c_t89oC0p5setOKKu2vuPbkVb_NXPCJ8jh_O9pP4s-o" target="_blank" title="เปิด Google Sheet"><i class="ti ti-table-filled"></i></a>
+      </div>
     </div>
     <div class="sidebar-nav">
       <button class="sb-btn active" onclick="gotoScreen('pos',this)"><i class="ti ti-basket"></i>ขาย</button>
@@ -248,7 +252,7 @@
     <div style="font-size:12px;color:var(--r6);margin-bottom:16px">⚠️ ไม่สามารถเรียกคืนได้ และจะถูกลบออกจาก Google Sheet ด้วย</div>
     <div class="sheet-btns">
       <button class="btn-secondary" onclick="closeSaleDel()">ยกเลิก</button>
-      <button class="btn-primary" style="background:var(--r6);border-color:var(--r6)" onclick="confirmDeleteSale()">ลบ</button>
+      <button class="btn-primary" id="sale-del-ok" style="background:var(--r6);border-color:var(--r6)" onclick="confirmDeleteSale()">ลบ</button>
     </div>
   </div>
 </div>

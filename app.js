@@ -358,7 +358,9 @@ function renderProds(){
   }
 
   const storeKey=selectedSaleStore==="fah"?"stockFah":"stockMom";
-  const rawQ=(document.getElementById("topbar-search-input")?.value||"").toLowerCase();
+  // มือถือ: ช่องค้นหาอยู่ใน topbar (ซ่อนไว้จนกดไอคอนแว่นขยาย)
+  // แท็บเล็ต/เดสก์ท็อป: topbar ทั้งแถบถูกซ่อนไปใช้ sidebar แทน จึงมีช่องค้นหาแยกต่างหากใน sidebar
+  const rawQ=((document.getElementById("sidebar-search-input")?.value||document.getElementById("topbar-search-input")?.value)||"").toLowerCase();
   const tokens=rawQ.trim().split(/\s+/).filter(Boolean);
   // แสดงทุกสินค้า (รวม out-of-stock) — กรองเฉพาะ search
   const f=products.filter(p=>{
@@ -1470,18 +1472,26 @@ function openSaleDel(idx){
   document.getElementById("sale-del-overlay").classList.add("show");
 }
 function closeSaleDel(){document.getElementById("sale-del-overlay").classList.remove("show");deletingSaleIdx=null;}
+let _deletingSaleInProgress=false;
 async function confirmDeleteSale(){
+  // กันกดปุ่ม "ลบ" ซ้ำระหว่างรอ network — ถ้าไม่กัน คำขอลบที่สองจะยังอ้าง
+  // sheetRow/lastSheetRow ชุดเดิม (ค่าก่อน splice) ส่งไปพร้อมกับคำขอแรก พอคำขอแรก
+  // ลบแถวใน Sheet เสร็จ แถวจะเลื่อนขึ้น ทำให้คำขอที่สองไปลบแถวของบิลถัดไปแทน
+  if(_deletingSaleInProgress)return;
+  const btn=document.getElementById("sale-del-ok");
   const s=sales[deletingSaleIdx];
   if(!s)return closeSaleDel();
-  if(!s.sheetRow){
-    // sheetRow ยังไม่ได้ sync — reload ก่อนแล้วลบ
-    await loadSales();
-    const updated=sales[deletingSaleIdx];
-    if(!updated?.sheetRow){sales.splice(deletingSaleIdx,1);closeSaleDel();renderHistory();renderProfit();toast("🗑 ลบแล้ว (local)");return;}
-    deletingSaleIdx=sales.indexOf(updated);
-  }
-  const s2=sales[deletingSaleIdx];
+  _deletingSaleInProgress=true;
+  if(btn)btn.disabled=true;
   try{
+    if(!s.sheetRow){
+      // sheetRow ยังไม่ได้ sync — reload ก่อนแล้วลบ
+      await loadSales();
+      const updated=sales[deletingSaleIdx];
+      if(!updated?.sheetRow){sales.splice(deletingSaleIdx,1);closeSaleDel();renderHistory();renderProfit();toast("🗑 ลบแล้ว (local)");return;}
+      deletingSaleIdx=sales.indexOf(updated);
+    }
+    const s2=sales[deletingSaleIdx];
     const lastRow=s2.lastSheetRow||s2.sheetRow;
     await scriptPost({action:"deleteSaleByRow",sheetRow:s2.sheetRow,lastSheetRow:lastRow});
     const deletedRows=lastRow-s2.sheetRow+1;
@@ -1499,6 +1509,10 @@ async function confirmDeleteSale(){
     // คืนสต็อกที่ถูกหักไปตอนขายบิลนี้ กลับเข้าคลัง (ทั้งสต็อกรวมและสต็อกหน้าร้าน)
     await restoreStockForSale(s2);
   }catch(e){toast("❌ "+e.message);}
+  finally{
+    _deletingSaleInProgress=false;
+    if(btn)btn.disabled=false;
+  }
 }
 
 async function restoreStockForSale(sale){

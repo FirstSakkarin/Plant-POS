@@ -1349,7 +1349,10 @@ function renderProfit(){
 
   document.getElementById("profit-breakdown").innerHTML=`
     <div class="profit-block">
-      <div class="profit-block-title"><i class="ti ti-calculator" style="color:var(--g7);font-size:18px"></i> สรุปกำไร</div>
+      <div class="profit-block-title" style="justify-content:space-between">
+        <span style="display:flex;align-items:center;gap:6px"><i class="ti ti-calculator" style="color:var(--g7);font-size:18px"></i> สรุปกำไร</span>
+        <button class="rexp-add-btn" onclick="openReportExpenseModal()"><i class="ti ti-plus" style="font-size:13px;font-weight:300"></i> ค่าใช้จ่าย</button>
+      </div>
       <div class="profit-line" data-accent="total"><span class="p-lbl">ยอดขายรวม</span><span class="p-val">฿${Math.round(totalRev).toLocaleString()}</span></div>
       <div class="profit-line" data-accent="fah"><span class="p-lbl">🩵 ร้านฟ้า</span><span class="p-val pv-ts">฿${Math.round(fahStoreTotal).toLocaleString()}</span></div>
       <div class="profit-line" data-accent="mom"><span class="p-lbl">🩷 ร้านแม่</span><span class="p-val pv-snp">฿${Math.round(momStoreTotal).toLocaleString()}</span></div>
@@ -1663,8 +1666,6 @@ function gotoScreen(name,btn){
   } else if(selectedSaleStore){
     document.documentElement.dataset.store=selectedSaleStore;
   }
-  const fab=document.getElementById("report-fab");
-  if(fab)fab.style.display=name==="report"?"flex":"none";
   if(name==="report"){
     renderHistory();
     if(!profitFrom)setProfitPreset("today",document.querySelector("#profit-presets .preset-btn"));else renderProfit();

@@ -68,6 +68,7 @@
       <button class="sb-btn" onclick="gotoScreen('customers',this)"><i class="ti ti-users"></i>ลูกค้า</button>
     </div>
     <div class="sidebar-foot">
+      <button class="rexp-add-btn" style="width:100%;justify-content:center;margin-bottom:8px" onclick="openReportExpenseModal()"><i class="ti ti-plus" style="font-size:13px;font-weight:300"></i> ค่าใช้จ่าย</button>
       <button class="sidebar-sync-btn" onclick="syncAll()"><span class="sdot" id="sdot2"></span> <span id="slbl2">Sync</span></button>
     </div>
   </nav>
@@ -442,12 +443,6 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- FAB: ค่าใช้จ่ายอื่นๆ (รายงาน) -->
-<button class="report-fab" id="report-fab" onclick="openReportExpenseModal()" title="ค่าใช้จ่ายอื่นๆ" style="display:none">
-  <i class="ti ti-plus" style="font-size:22px;font-weight:300"></i>
-  <span style="font-size:9px;margin-top:2px;white-space:nowrap;opacity:.9">ค่าใช้จ่าย</span>
-</button>
-
 <!-- POPUP: ค่าใช้จ่ายอื่นๆ (รายงาน) -->
 <div class="overlay" id="report-exp-overlay" data-close="closeReportExpenseModal">
   <div class="sheet">
@@ -469,27 +464,22 @@
 </div>
 
 <style>
-.report-fab{
-  position:fixed;
-  /* บน mobile: เผื่อ tab-bar (~64px) + safe area + ช่องว่าง 14px */
-  bottom:calc(env(safe-area-inset-bottom,0px) + 90px);
-  right:18px;
-  width:56px;height:56px;border-radius:50%;
+/* ปุ่ม "+ ค่าใช้จ่าย" — ย้ายจากปุ่มลอย (FAB) เดิมมาไว้ในหัวข้อ "สรุปกำไร" แทน
+   (เลื่อนจอไปพร้อมเนื้อหา ไม่ลอยทับหน้าจออีกต่อไป) แต่ยังคงสีทอง + glow/pulse เดิมไว้ */
+.rexp-add-btn{
+  display:flex;align-items:center;gap:5px;flex-shrink:0;
+  padding:7px 13px;border-radius:var(--rad);border:none;cursor:pointer;
   background:linear-gradient(135deg,#f5c842,#e8a800);
-  border:none;cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  color:#fff;
-  box-shadow:0 0 0 6px rgba(245,200,66,.15),0 0 18px rgba(245,200,66,.45),0 4px 14px rgba(0,0,0,.22);
+  color:#fff;font-size:12px;font-weight:700;
+  font-family:'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+  box-shadow:0 0 0 4px rgba(245,200,66,.15),0 0 12px rgba(245,200,66,.45);
   animation:fabPulse 2.4s ease-in-out infinite;
-  z-index:200;
   transition:transform .15s,box-shadow .15s;
 }
-/* บน desktop (sidebar แทน tab-bar) ลด bottom ลง */
-@media(min-width:768px){.report-fab{bottom:24px;}}
-.report-fab:active{transform:scale(.93);}
+.rexp-add-btn:active{transform:scale(.93);}
 @keyframes fabPulse{
-  0%,100%{box-shadow:0 0 0 6px rgba(245,200,66,.15),0 0 18px rgba(245,200,66,.45),0 4px 14px rgba(0,0,0,.22);}
-  50%{box-shadow:0 0 0 10px rgba(245,200,66,.08),0 0 28px rgba(245,200,66,.6),0 4px 14px rgba(0,0,0,.22);}
+  0%,100%{box-shadow:0 0 0 4px rgba(245,200,66,.15),0 0 12px rgba(245,200,66,.45);}
+  50%{box-shadow:0 0 0 7px rgba(245,200,66,.08),0 0 20px rgba(245,200,66,.6);}
 }
 </style>
 

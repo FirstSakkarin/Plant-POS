@@ -853,6 +853,21 @@ function setCostOwner(val, btn){
   if(btn) btn.classList.add("active");
 }
 
+// ปุ่มลัดปฏิทินท้ายช่อง Lot/แหล่งที่มา — เผื่อร้านอยากพิมพ์วันที่รับต้นไม้เข้ามาแทนชื่อ lot
+// ใช้ <input type="date"> ที่ซ่อนไว้เปิด native date picker แล้วเติมค่าเป็นข้อความ D/M/YY (พ.ศ.)
+function openLotDatePicker(){
+  const hidden=document.getElementById("f-lot-date-hidden");
+  if(!hidden)return;
+  if(hidden.showPicker) hidden.showPicker();
+  else{hidden.focus();hidden.click();}
+}
+function applyLotDate(val){
+  if(!val)return;
+  const d=new Date(val+"T00:00:00");
+  const yearBE=(d.getFullYear()+543)%100;
+  document.getElementById("f-lot").value=`${d.getDate()}/${d.getMonth()+1}/${String(yearBE).padStart(2,"0")}`;
+}
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MANAGE PRODUCTS  — รายการสินค้า, เพิ่ม/แก้/ลบ
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
@@ -898,10 +913,13 @@ function renderProdList(){
       // สีผสมฟ้า (#88DBBD) กับแม่ (#FFB0CC) ตาม %ฟ้าจริงของ lot นี้ — 0%=ชมพูล้วน,
       // 100%=ฟ้าล้วน ใช้เป็นทั้งขอบซ้ายและสีป้าย lot/% (ผ่าน CSS var(--mix) ใน style.css)
       const mixColor=`color-mix(in srgb, #88DBBD ${fPct}%, #FFB0CC)`;
-      return`<div class="plist-row nested" data-row="${p.row}" style="--mix:${mixColor}">
+      // สต็อกหมดสนิท (สวน+ฟ้า+แม่=0) → ทำให้แถวจางลง แต่ยังอยู่ครบ กดแก้ไขเพิ่มสต็อก
+      // กลับมาใช้ lot เดิมได้เหมือนเดิม ไม่ได้ซ่อน/ลบทิ้งไปไหน
+      const soldOut=p.stock<=0;
+      return`<div class="plist-row nested${soldOut?" sold-out":""}" data-row="${p.row}" style="--mix:${mixColor}">
         <div class="drag-handle" title="ลากเพื่อจัดเรียง"><i class="ti ti-grip-vertical"></i></div>
         ${thumbHtml}
-        <span class="plist-name"><span class="lot-tag">${p.lot||"–"}</span></span>
+        <span class="plist-name"><span class="lot-tag">${p.lot||"–"}</span>${soldOut?` <span class="sold-out-badge">หมดแล้ว</span>`:""}</span>
         <span class="plist-price">฿${p.price.toLocaleString()}</span>
         <span class="plist-meta"><span class="fah-pct">Fah ${fPct}%</span> · ทุน <b>฿${(p.cost||0).toLocaleString()}</b></span>
         <span class="plist-stockbits">
@@ -911,8 +929,8 @@ function renderProdList(){
         </span>
         <span class="plist-qty">${p.stock}<small>ต้น</small></span>
         <div class="plist-actions">
-          <button class="plist-btn" onclick="openTransferModal(${p.row})" title="ย้ายสต็อก"><i class="ti ti-arrows-exchange"></i></button>
           <button class="plist-btn" onclick="openProductForm(${p.row})" title="แก้ไข"><i class="ti ti-edit"></i></button>
+          <button class="plist-btn" onclick="openTransferModal(${p.row})" title="สลับสินค้า"><i class="ti ti-arrows-exchange"></i></button>
           <button class="plist-btn del" onclick="openDelModal(${p.row})" title="ลบ"><i class="ti ti-trash"></i></button>
         </div>
       </div>`;

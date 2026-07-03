@@ -288,16 +288,20 @@
     <div class="form-lbl">ชื่อต้นไม้ *</div>
     <input class="form-inp" id="f-name" type="text" placeholder="เช่น มอนสเตร่า">
     <div class="form-lbl">Lot / แหล่งที่มา</div>
-    <input class="form-inp" id="f-lot" type="text" placeholder="เช่น Lot A, สวนอ.สมชาย, 15/1/68">
+    <div class="inp-with-btn">
+      <input class="form-inp" id="f-lot" type="text" placeholder="เช่น Lot A, สวนอ.สมชาย, 15/1/68">
+      <button type="button" class="inp-cal-btn" onclick="openLotDatePicker()" title="เลือกวันที่"><i class="ti ti-calendar"></i></button>
+      <input type="date" id="f-lot-date-hidden" tabindex="-1" onchange="applyLotDate(this.value)" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px">
+    </div>
     <div class="form-lbl">ราคาปกติ (บาท) *</div>
     <input class="form-inp" id="f-price" type="number" placeholder="0" inputmode="decimal">
     <div class="form-lbl">ราคาต้นทุน (บาท/ต้น) — ถ้าไม่มีต้นทุนให้ใส่ 0</div>
     <input class="form-inp" id="f-cost" type="number" placeholder="0" value="0" inputmode="decimal">
     <div class="form-lbl">ต้นทุนของใคร</div>
     <div style="display:flex;gap:8px;margin-bottom:8px">
-      <button class="pt-btn active" id="co-mom" onclick="setCostOwner('แม่',this)" style="flex:1">🩷 แม่ทุน</button>
-      <button class="pt-btn" id="co-fah" onclick="setCostOwner('ฟ้า',this)" style="flex:1">🩵 ฟ้าทุน</button>
-      <button class="pt-btn" id="co-joint" onclick="setCostOwner('ร่วม',this)" style="flex:1">🤝 ร่วมทุน</button>
+      <button class="pt-btn active" id="co-mom" onclick="setCostOwner('แม่',this)" style="flex:1">🩷 ทุนแม่</button>
+      <button class="pt-btn" id="co-fah" onclick="setCostOwner('ฟ้า',this)" style="flex:1">🩵 ทุนฟ้า</button>
+      <button class="pt-btn" id="co-joint" onclick="setCostOwner('ร่วม',this)" style="flex:1">🤝 ทุนร่วม</button>
     </div>
     <input type="hidden" id="f-cost-owner" value="แม่">
     <div class="form-lbl">จำนวนสต็อกรวม</div>

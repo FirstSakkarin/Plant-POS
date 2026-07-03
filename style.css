@@ -627,6 +627,19 @@
             padding: 0 2px
         }
         .plist-grp-hdr:first-child { margin-top: 0 }
+        /* Lot ที่สต็อกหมดสนิท (สวน+ฟ้า+แม่=0) — จางลงแต่ไม่ซ่อน ยังกดแก้ไขเพิ่มสต็อก
+           กลับมาใช้ lot เดิมได้ ปุ่ม actions ไม่โดนจางด้วย เพื่อให้เห็นชัดว่ายังกดได้ */
+        .plist-row.sold-out > *:not(.plist-actions) { opacity: .5 }
+        .plist-row.sold-out .plist-thumb img { filter: grayscale(70%) }
+        .sold-out-badge {
+            font-size: 9.5px;
+            font-weight: 700;
+            color: var(--r6);
+            background: color-mix(in srgb, var(--r6) 14%, var(--bg2));
+            padding: 1px 5px;
+            border-radius: 5px;
+            white-space: nowrap
+        }
         /* .drag-handle เดิมออกแบบมาให้ position:absolute ลอยที่มุมการ์ดสูง —
            ในแถวเตี้ยแบบนี้ไม่มีที่ว่างให้ลอยแบบนั้น เลยขอ override ให้เป็น
            ไอคอนแคบๆ อยู่ในแนว grid ปกติทางซ้ายสุดของแถวแทน */
@@ -1456,6 +1469,29 @@
             .form-inp:focus {
                 border-color: var(--g7)
             }
+
+        /* ปุ่มลัด (เช่น ปฏิทิน) ท้ายกล่อง input — .inp-with-btn ครอบ input ไว้เพื่อวางปุ่ม
+           ลอยชิดขอบขวาใน input เดียวกัน แทนที่จะเป็นปุ่มแยกข้างนอก */
+        .inp-with-btn { position: relative }
+        .inp-with-btn .form-inp { padding-right: 40px }
+        .inp-cal-btn {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            border: none;
+            background: var(--bg3);
+            color: var(--m);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 15px
+        }
+        .inp-cal-btn:active { background: var(--g1); color: var(--g8) }
 
         /* กล่องอัปโหลดรูปสินค้า — กำหนดขนาดคงที่ ไม่ให้รูปที่เลือกมาแสดงเต็มขนาดไฟล์จนล้นจอ */
         .img-upload-area {
@@ -2558,6 +2594,24 @@
   background: rgba(255,176,204,0.14) !important;
   border-color: rgba(255,176,204,0.35) !important;
   color: #FFB0CC !important;
+}
+/* ปุ่ม "ต้นทุนของใคร" ในฟอร์มสินค้า (เปิดจากหน้าคลังสินค้า ไม่ใช่หน้าขาย จึงไม่มี
+   data-store ให้ยึดสีตามด้านบน) — ผูกสีตาม id ของปุ่มเองแทน เพื่อให้ทุนแม่ชมพู/
+   ทุนฟ้าเขียวมิ้นท์เสมอ ไม่ว่าจะเปิดฟอร์มจากที่ไหนหรือกำลังเลือกร้านไหนอยู่ก็ตาม */
+#co-mom.active {
+  background: rgba(255,176,204,0.14) !important;
+  border-color: rgba(255,176,204,0.35) !important;
+  color: #FFB0CC !important;
+}
+#co-fah.active {
+  background: rgba(109,191,161,0.14) !important;
+  border-color: rgba(109,191,161,0.35) !important;
+  color: #88DBBD !important;
+}
+#co-joint.active {
+  background: rgba(214,179,58,0.14) !important;
+  border-color: rgba(214,179,58,0.35) !important;
+  color: #d6b34a !important;
 }
 
 /* ── 15. QBTN (quantity buttons in cart): glass ── */

@@ -403,24 +403,29 @@ function renderProds(){
         ${imgHtml}
         <div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px">
           <span style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${rep.name}</span>
-          <span style="font-size:10.5px;font-weight:600;color:var(--faint);flex-shrink:0">฿${(rep.cost||0).toLocaleString()}</span>
+          <span style="display:inline-flex;align-items:center;font-size:13px;color:var(--g7);font-weight:700;background:var(--g1);border-radius:8px;padding:2px 7px;flex-shrink:0">฿${rep.price.toLocaleString()}</span>
         </div>
         <div style="margin-top:4px;display:flex;align-items:center;justify-content:space-between;gap:6px">
-          <span style="display:inline-flex;align-items:center;font-size:13px;color:var(--g7);font-weight:700;background:var(--g1);border-radius:8px;padding:3px 8px;flex-shrink:0">฿${rep.price.toLocaleString()}</span>
+          <span style="font-size:10.5px;font-weight:600;color:var(--faint);flex-shrink:0">฿${(rep.cost||0).toLocaleString()}</span>
           <span style="font-size:10px;color:var(--m);font-weight:500;flex-shrink:0">รวม ${totalStoreStock} ต้น</span>
         </div>
         ${chips}
       </div>`;
     }
+    const stockText=totalStoreStock<=0?"หมดแล้ว":"คงเหลือ "+totalStoreStock+" ต้น";
+    const stockColor=totalStoreStock<=5&&totalStoreStock>0?"var(--r6)":"var(--faint)";
     return`<div class="pcard${totalStoreStock<=0?" pcard-empty":""}" data-row="${rep.row}" onclick="${totalStoreStock>0?`addCart(${rep.row})`:""}" >
       ${imgHtml}
       <div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px">
         <span style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${rep.name}</span>
-        <span style="font-size:10.5px;font-weight:600;color:var(--faint);flex-shrink:0">฿${(rep.cost||0).toLocaleString()}</span>
+        <span style="display:inline-flex;align-items:center;font-size:13px;color:var(--g7);font-weight:700;background:var(--g1);border-radius:8px;padding:2px 7px;flex-shrink:0">฿${rep.price.toLocaleString()}</span>
       </div>
       <span class="pbadge" style="background:var(--bg2);color:var(--m);font-size:10px">${rep.lot?rep.lot+" · ":""}<span style="color:${fahColor(rep.defaultPct)};font-weight:700">Fah ${rep.defaultPct??50}%</span></span>
-      <div style="margin-top:4px"><span style="display:inline-flex;align-items:center;font-size:13px;color:var(--g7);font-weight:700;background:var(--g1);border-radius:8px;padding:3px 8px">฿${rep.price.toLocaleString()}</span></div>
-      <div style="font-size:10px;color:${totalStoreStock<=5&&totalStoreStock>0?"var(--r6)":"var(--faint)"};margin-top:2px">${totalStoreStock<=0?"หมดแล้ว":"คงเหลือ "+totalStoreStock+" ต้น"}</div>
+      <div style="margin-top:4px;display:flex;align-items:center;justify-content:space-between;gap:6px">
+        <span style="font-size:10.5px;font-weight:600;color:var(--faint)">฿${(rep.cost||0).toLocaleString()}</span>
+        ${!rep.lot?`<span style="font-size:10px;color:${stockColor}">${stockText}</span>`:""}
+      </div>
+      ${rep.lot?`<div style="font-size:10px;color:${stockColor};margin-top:2px">${stockText}</div>`:""}
     </div>`;
   }).join("");
   initSortableGrid();

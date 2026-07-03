@@ -487,6 +487,216 @@
             .mcard-btn.del {
                 color: var(--r6)
             }
+
+        /* ── รายการสินค้าแบบแถว (คลังสินค้า) — กระชับกว่าการ์ดกริดเดิม ──
+           ใช้ CSS grid-template-areas เพราะมือถือ (แถวยาว) กับจอใหญ่ (การ์ด 2 คอลัมน์)
+           ต้องจัดวางชิ้นส่วนเดียวกัน (รูป/ชื่อ/ราคา/ต้นทุน/สต็อก/ปุ่ม) ในโครงที่ต่างกันโดย
+           สิ้นเชิง — grid-template-areas สลับผังได้ในบรรทัดเดียวต่อ breakpoint โดยไม่ต้อง
+           เปลี่ยน HTML เลย ส่วน --mix คือสีผสมฟ้า/แม่ตาม %ฟ้าจริงของแต่ละ lot (ตั้งจาก JS
+           ด้วย inline style="--mix:...") ใช้ทั้งเป็นสีขอบซ้ายและสีป้าย lot/% */
+        .plist-row {
+            display: grid;
+            grid-template-columns: 14px 86px 1fr auto auto;
+            grid-template-rows: auto auto;
+            grid-template-areas:
+                "handle thumb name price   actions"
+                "handle thumb meta stockbits actions";
+            gap: 4px 6px;
+            align-items: center;
+            padding: 8px 10px;
+            border: 0.5px solid var(--bd);
+            border-left: 4px solid var(--mix, var(--bd));
+            border-radius: var(--rad-lg);
+            margin-bottom: 7px;
+            background: var(--bg)
+        }
+        .plist-row.nested { margin-left: 10px }
+        .plist-thumb {
+            grid-area: thumb;
+            width: 86px;
+            height: 86px;
+            align-self: center;
+            border-radius: 10px;
+            object-fit: cover;
+            background: var(--bg2)
+        }
+        .plist-thumb-emoji {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px
+        }
+        .plist-name {
+            grid-area: name;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--t);
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+        .lot-tag {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--mix, var(--m));
+            background: color-mix(in srgb, var(--mix, var(--bd)) 18%, var(--bg2));
+            padding: 1px 6px;
+            border-radius: 5px
+        }
+        .fah-pct { color: var(--mix, var(--m)); font-weight: 700 }
+        .plist-price {
+            /* หน้าคลังสินค้าไม่ได้บังคับพื้นมืดเหมือนหน้าขาย (#screen-pos) จึงใช้ var(--t)
+               ที่ปรับตาม light/dark เอง แทน var(--g7) ซึ่งค่า default เป็นสีขาวโปร่งแสง
+               ออกแบบมาสำหรับพื้นมืดเท่านั้น — ถ้าใช้ตรงนี้จะกลายเป็นตัวหนังสือขาวบนพื้นขาว */
+            grid-area: price;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--t);
+            justify-self: end
+        }
+        .plist-meta {
+            grid-area: meta;
+            font-size: 10px;
+            color: var(--m);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+        .plist-meta b {
+            /* เหตุผลเดียวกับ .plist-price ด้านบน — var(--g8) สมมติพื้นมืดเสมอ */
+            color: var(--t);
+            font-weight: 600
+        }
+        .plist-stockbits {
+            grid-area: stockbits;
+            font-size: 10px;
+            color: var(--faint);
+            display: flex;
+            gap: 7px;
+            justify-self: end;
+            font-variant-numeric: tabular-nums
+        }
+        .plist-stockbits .low {
+            color: var(--r6);
+            font-weight: 700
+        }
+        .plist-qty {
+            grid-area: qty;
+            display: none; /* เฉพาะจอใหญ่ ดู @media ด้านล่าง */
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--t);
+            justify-self: end;
+            font-variant-numeric: tabular-nums
+        }
+        .plist-qty small {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--m);
+            margin-left: 2px
+        }
+        .plist-actions {
+            grid-area: actions;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            align-self: center
+        }
+        .plist-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 0.5px solid var(--bd);
+            background: var(--bg2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--m)
+        }
+        .plist-btn.del {
+            color: var(--r6)
+        }
+        .plist-grp-hdr {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin: 10px 0 6px;
+            padding: 0 2px
+        }
+        .plist-grp-hdr:first-child { margin-top: 0 }
+        /* .drag-handle เดิมออกแบบมาให้ position:absolute ลอยที่มุมการ์ดสูง —
+           ในแถวเตี้ยแบบนี้ไม่มีที่ว่างให้ลอยแบบนั้น เลยขอ override ให้เป็น
+           ไอคอนแคบๆ อยู่ในแนว grid ปกติทางซ้ายสุดของแถวแทน */
+        .plist-row .drag-handle {
+            grid-area: handle;
+            position: static;
+            width: 14px;
+            align-self: stretch;
+            display: flex;
+            align-items: center;
+            font-size: 14px
+        }
+
+        /* ── จอใหญ่ (แท็บเล็ต/เดสก์ท็อป): เปลี่ยนจากแถวยาวเป็นการ์ด 2 คอลัมน์
+           รูปขยายใหญ่ฝั่งซ้าย สูงเต็มจนถึงแถวปุ่มด้านล่าง, ข้อมูล (ราคา/lot/%ฟ้า/ทุน/
+           สต็อก/จำนวน) ชิดขวาเรียงเป็นคอลัมน์ ── */
+        @media (min-width: 768px) {
+            #prod-list {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0,1fr));
+                gap: 10px;
+                align-content: start
+            }
+            .plist-grp-hdr { grid-column: 1 / -1 }
+            .plist-row {
+                grid-template-columns: 1.3fr 1fr;
+                grid-template-rows: auto auto auto auto auto;
+                grid-template-areas:
+                    "thumb price"
+                    "thumb name"
+                    "thumb meta"
+                    "thumb stockbits"
+                    "thumb qty"
+                    "actions actions";
+                gap: 4px 10px;
+                margin-bottom: 0;
+                align-items: start
+            }
+            .plist-row.nested { margin-left: 0 }
+            .plist-row .drag-handle { display: none }
+            .plist-thumb {
+                grid-area: thumb;
+                grid-row: 1 / 6; /* สูงเต็มจนชิดแถวปุ่มด้านล่างพอดี ไม่ใช่แค่แถวราคา */
+                width: 100%;
+                height: 100%;
+                min-height: 120px;
+                align-self: stretch
+            }
+            .plist-name, .plist-meta, .plist-stockbits, .plist-qty {
+                justify-self: end;
+                text-align: right
+            }
+            .plist-price { font-size: 19px; font-weight: 800; justify-self: end }
+            .plist-qty {
+                display: flex;
+                align-items: baseline;
+                border-top: 0.5px solid var(--bd);
+                padding-top: 4px;
+                margin-top: 4px
+            }
+            .plist-stockbits { justify-content: flex-end }
+            .plist-actions {
+                grid-area: actions;
+                flex-direction: row;
+                align-self: auto;
+                margin-top: 6px
+            }
+            .plist-actions .plist-btn { flex: 1 }
+        }
+
         /* Cart */
         .cart-panel {
             flex-shrink: 0;

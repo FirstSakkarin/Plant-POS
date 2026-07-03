@@ -400,16 +400,25 @@ function renderProds(){
       }).join("");
       return`<div class="pcard" data-row="${rep.row}" style="cursor:default">
         ${imgHtml}
-        <div style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3">${rep.name}</div>
-        <div style="font-size:13px;color:var(--g7);font-weight:600;margin-top:2px">฿${rep.price.toLocaleString()} <span style="font-size:10px;color:var(--m)">รวม ${totalStoreStock} ต้น</span></div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px">
+          <span style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${rep.name}</span>
+          <span style="font-size:10.5px;font-weight:600;color:var(--faint);flex-shrink:0">฿${(rep.cost||0).toLocaleString()}</span>
+        </div>
+        <div style="margin-top:4px;display:flex;align-items:center;justify-content:space-between;gap:6px">
+          <span style="display:inline-flex;align-items:center;font-size:13px;color:var(--g7);font-weight:700;background:var(--g1);border-radius:8px;padding:3px 8px;flex-shrink:0">฿${rep.price.toLocaleString()}</span>
+          <span style="font-size:10px;color:var(--m);font-weight:500;flex-shrink:0">รวม ${totalStoreStock} ต้น</span>
+        </div>
         ${chips}
       </div>`;
     }
     return`<div class="pcard${totalStoreStock<=0?" pcard-empty":""}" data-row="${rep.row}" onclick="${totalStoreStock>0?`addCart(${rep.row})`:""}" >
       ${imgHtml}
-      <div style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3">${rep.name}</div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px">
+        <span style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${rep.name}</span>
+        <span style="font-size:10.5px;font-weight:600;color:var(--faint);flex-shrink:0">฿${(rep.cost||0).toLocaleString()}</span>
+      </div>
       <span class="pbadge" style="background:var(--bg2);color:var(--m);font-size:10px">${rep.lot?rep.lot+" · ":""}<span style="color:${fahColor(rep.defaultPct)};font-weight:700">Fah ${rep.defaultPct??50}%</span></span>
-      <div style="font-size:13px;color:var(--g7);font-weight:600;margin-top:2px">฿${rep.price.toLocaleString()}</div>
+      <div style="margin-top:4px"><span style="display:inline-flex;align-items:center;font-size:13px;color:var(--g7);font-weight:700;background:var(--g1);border-radius:8px;padding:3px 8px">฿${rep.price.toLocaleString()}</span></div>
       <div style="font-size:10px;color:${totalStoreStock<=5&&totalStoreStock>0?"var(--r6)":"var(--faint)"};margin-top:2px">${totalStoreStock<=0?"หมดแล้ว":"คงเหลือ "+totalStoreStock+" ต้น"}</div>
     </div>`;
   }).join("");
@@ -850,7 +859,7 @@ function setCostOwner(val, btn){
 // ── MANAGE PRODUCTS ───────────────────────────────────────
 function renderProdList(){
   const el=document.getElementById("prod-list");
-  if(!products.length){el.innerHTML=`<div style="grid-column:1/-1"><div class="empty-state"><i class="ti ti-plant"></i><p>ยังไม่มีสินค้า กด "+ เพิ่มสินค้า"</p></div></div>`;return}
+  if(!products.length){el.innerHTML=`<div class="empty-state"><i class="ti ti-plant"></i><p>ยังไม่มีสินค้า กด "+ เพิ่มสินค้า"</p></div>`;return}
   // เรียงก่อนเสมอ เพื่อให้ลำดับตรง แม้ array ถูก shuffle โดยสาเหตุใดก็ตาม
   products.sort((a,b)=>(a.sortOrder||9999)-(b.sortOrder||9999));
   // กรองตามคำค้นหา
@@ -860,41 +869,55 @@ function renderProdList(){
     ?products.filter(p=>tokens.every(t=>(p.name+" "+(p.lot||"")).toLowerCase().includes(t)))
     :products;
   if(!visible.length){
-    el.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--faint);font-size:13px;padding:32px 0">ไม่พบสินค้าที่ตรงกับคำค้นหา</div>`;
+    el.innerHTML=`<div style="text-align:center;color:var(--faint);font-size:13px;padding:32px 0">ไม่พบสินค้าที่ตรงกับคำค้นหา</div>`;
     return;
   }
   const grouped={};
   visible.forEach(p=>{if(!grouped[p.name])grouped[p.name]=[];grouped[p.name].push(p);});
+  // แถวรายการต่อ 1 lot — ชื่อสินค้าอยู่ในหัวข้อกลุ่มแล้ว แถวย่อยโชว์แค่ป้าย lot
+  // สั้นๆ (A/B/–) เพื่อไม่พิมพ์ชื่อซ้ำ ทำให้แถวเตี้ยลง
   el.innerHTML=Object.entries(grouped).map(([name,lots])=>{
     const totalStock=lots.reduce((s,p)=>s+p.stock,0);
     const rep=lots[0];
-    const headerHtml=`<div style="grid-column:1/-1;display:flex;align-items:center;gap:7px;margin:6px 0 2px">
+    const headerHtml=`<div class="plist-grp-hdr">
       <span style="font-size:13px;font-weight:700;color:var(--t)">${rep.emoji} ${name}</span>
       <span style="font-size:11px;color:var(--m)">รวม ${totalStock} ต้น · ${lots.length} Lot</span>
       <button class="add-btn" style="margin-left:auto;padding:5px 10px;font-size:11px" onclick="openProductFormNewLot('${name}')">+ Lot</button>
     </div>`;
-    const cards=lots.map(p=>{
-      const imgHtml=p.imgUrl
-        ?`<div style="position:relative;margin-bottom:6px"><img style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;background:var(--bg2)" src="${p.imgUrl}" loading="lazy" onerror="this.style.display='none'"><span style="position:absolute;bottom:4px;right:6px;font-size:16px;background:rgba(255,255,255,.85);border-radius:6px;padding:2px 4px;line-height:1">${p.emoji}</span></div>`
-        :`<div style="font-size:26px;text-align:center;margin-bottom:5px;line-height:1">${p.emoji}</div>`;
+    const rows=lots.map(p=>{
+      // รูปสี่เหลี่ยมจัตุรัสคงที่ (ไม่ยืดตามความสูงแถวแล้ว) — ถ้าโหลดรูปไม่ได้แค่ซ่อน <img>
+      // ที่พัง เหลืออิโมจิป้ายเล็กมุมขวาล่างไว้ยืนยันชนิดต้นไม้ (แบบเดียวกับที่ใช้ในหน้าขาย)
+      const thumbHtml=p.imgUrl
+        ?`<div class="plist-thumb" style="position:relative;overflow:hidden;padding:0">
+            <img src="${p.imgUrl}" loading="lazy" onerror="this.style.display='none'" style="width:100%;height:100%;object-fit:cover;display:block">
+            <span style="position:absolute;bottom:2px;right:2px;font-size:11px;background:rgba(255,255,255,.85);border-radius:4px;padding:1px 3px;line-height:1">${p.emoji}</span>
+          </div>`
+        :`<div class="plist-thumb plist-thumb-emoji">${p.emoji}</div>`;
       const fah=p.stockFah||0,mom=p.stockMom||0,garden=p.stock-fah-mom;
-      return`<div class="pcard mcard" data-row="${p.row}" style="cursor:default">
+      const fPct=p.defaultPct??50;
+      // สีผสมฟ้า (#88DBBD) กับแม่ (#FFB0CC) ตาม %ฟ้าจริงของ lot นี้ — 0%=ชมพูล้วน,
+      // 100%=ฟ้าล้วน ใช้เป็นทั้งขอบซ้ายและสีป้าย lot/% (ผ่าน CSS var(--mix) ใน style.css)
+      const mixColor=`color-mix(in srgb, #88DBBD ${fPct}%, #FFB0CC)`;
+      return`<div class="plist-row nested" data-row="${p.row}" style="--mix:${mixColor}">
         <div class="drag-handle" title="ลากเพื่อจัดเรียง"><i class="ti ti-grip-vertical"></i></div>
-        ${imgHtml}
-        <div style="font-size:12px;font-weight:600;color:var(--t);line-height:1.3">${name}${p.lot?`<div style="font-size:10px;font-weight:400;color:var(--m);margin-top:1px">${p.lot}</div>`:""}</div>
-        <div style="font-size:13px;color:var(--g7);font-weight:600;margin-top:2px">฿${p.price.toLocaleString()}</div>
-        <div style="font-size:10px;color:${p.stock<=0?"var(--r6)":p.stock<=5?"var(--a6)":"var(--faint)"};margin-top:2px">${p.stock<=0?"หมดแล้ว":"คงเหลือ "+p.stock+" ต้น"}</div>
-        <div style="font-size:10px;color:var(--m);margin-top:3px;line-height:1.5">🏡สวน ${garden} · 🔵ฟ้า ${fah} · 🟢แม่ ${mom}</div>
-        <span class="pbadge" style="background:var(--g1);color:var(--g8);font-size:10px">Fah ${p.defaultPct??50}%</span>
-        ${p.cost>0?`<span class="pbadge" style="background:rgba(255,176,204,0.15);color:rgba(255,176,204,0.9);font-size:10px">ต้นทุน ฿${p.cost.toLocaleString()}</span>`:""}
-        <div class="mcard-actions">
-          <button class="mcard-btn" onclick="openTransferModal(${p.row})" title="ย้ายสต็อก"><i class="ti ti-arrows-exchange"></i></button>
-          <button class="mcard-btn" onclick="openProductForm(${p.row})"><i class="ti ti-edit"></i></button>
-          <button class="mcard-btn del" onclick="openDelModal(${p.row})"><i class="ti ti-trash"></i></button>
+        ${thumbHtml}
+        <span class="plist-name"><span class="lot-tag">${p.lot||"–"}</span></span>
+        <span class="plist-price">฿${p.price.toLocaleString()}</span>
+        <span class="plist-meta"><span class="fah-pct">Fah ${fPct}%</span> · ทุน <b>฿${(p.cost||0).toLocaleString()}</b></span>
+        <span class="plist-stockbits">
+          <span title="เหลือในสวน">🏡${garden}</span>
+          <span title="หน้าร้านฟ้า" class="${fah<=0?"low":""}">🔵${fah}</span>
+          <span title="หน้าร้านแม่" class="${mom<=0?"low":""}">🟢${mom}</span>
+        </span>
+        <span class="plist-qty">${p.stock}<small>ต้น</small></span>
+        <div class="plist-actions">
+          <button class="plist-btn" onclick="openTransferModal(${p.row})" title="ย้ายสต็อก"><i class="ti ti-arrows-exchange"></i></button>
+          <button class="plist-btn" onclick="openProductForm(${p.row})" title="แก้ไข"><i class="ti ti-edit"></i></button>
+          <button class="plist-btn del" onclick="openDelModal(${p.row})" title="ลบ"><i class="ti ti-trash"></i></button>
         </div>
       </div>`;
     }).join("");
-    return headerHtml+cards;
+    return headerHtml+rows;
   }).join("");
   // ลากจัดเรียงได้เฉพาะตอนไม่มีคำค้นหา (ไม่ก่อให้เกิด sortOrder ผิด)
   if(!tokens.length) initSortableProdList();

@@ -190,11 +190,12 @@
         }
 
         .store-name {
-            font-size: 22px;
+            font-size: 34px;
             font-weight: 700;
             color: #fff;
             text-shadow: 0 0 14px rgba(255,0,200,0.85), 0 0 32px rgba(0,200,255,0.4);
             letter-spacing: 0.5px;
+            cursor: pointer;
             /* glow ไล่สีรุ้งวนไปเรื่อยๆ — หมุน hue ของสี glow (ตัวอักษรยังคงเป็นสีขาวเหมือนเดิม
                เพราะ hue-rotate ไม่มีผลกับสีขาว/เทาที่ไม่มี hue) */
             animation: logoHueGlow 6s linear infinite;
@@ -1139,8 +1140,11 @@
             border-radius: var(--rad-lg);
             padding: 10px 12px;
             margin-bottom: 8px;
-            background: var(--bg)
+            background: var(--bg);
+            cursor: pointer;
+            transition: transform .1s
         }
+        .sale-card:active { transform: scale(.98) }
 
         .sale-hdr {
             display: flex;
@@ -1316,14 +1320,22 @@
             align-items: center;
             gap: 5px;
             padding: 7px 13px;
-            background: var(--g8);
-            color: #d4edaa;
+            background: linear-gradient(135deg,#6fcf3f,#3d8a14);
+            color: #fff;
             border: none;
             border-radius: var(--rad);
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 700;
             font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
-            cursor: pointer
+            cursor: pointer;
+            box-shadow: 0 0 0 4px rgba(74,157,31,.18), 0 0 12px rgba(74,157,31,.5);
+            animation: addBtnGlow 2.4s ease-in-out infinite;
+            transition: transform .1s
+        }
+        .add-btn:active { transform: scale(.95) }
+        @keyframes addBtnGlow {
+            0%,100% { box-shadow: 0 0 0 3px rgba(74,157,31,.12), 0 0 8px rgba(74,157,31,.35); filter: brightness(1) }
+            50%     { box-shadow: 0 0 0 9px rgba(74,157,31,.05), 0 0 26px rgba(74,157,31,.85); filter: brightness(1.25) }
         }
 
         .prod-list-item {
@@ -2041,7 +2053,15 @@
           /* ความกว้าง sidebar ฝั่งซ้าย — แก้ width ตรงนี้เพื่อปรับความกว้างเมนู */
           .sidebar{width:220px;min-width:220px;flex-shrink:0;display:flex;flex-direction:column;background:var(--g9);height:100dvh;overflow-y:auto}
           .sidebar-top{padding:20px 16px 14px;border-bottom:0.5px solid rgba(255,255,255,0.1)}
-          .sidebar-store-name{font-size:16px;font-weight:700;color:#c8e89a;margin-bottom:2px}
+          /* glow ไล่สีรุ้งแบบเดียวกับโลโก้บนมือถือ (.store-name) — ใช้ keyframes logoHueGlow
+             ร่วมกัน เพราะจอใหญ่ไม่มีปัญหาเรื่อง light/dark เหมือนหน้าคลังสินค้า (sidebar
+             พื้นมืดตายตัวอยู่แล้วผ่าน var(--g9)) จึงใส่สีเดิมได้เลยโดยไม่ต้องปรับ */
+          .sidebar-store-name{
+            font-size:30px;font-weight:700;color:#c8e89a;margin-bottom:2px;
+            text-shadow: 0 0 14px rgba(255,0,200,0.85), 0 0 32px rgba(0,200,255,0.4);
+            cursor:pointer;
+            animation: logoHueGlow 6s linear infinite;
+          }
           .sidebar-sub{font-size:10px;color:#7aaa3a}
           /* ช่องค้นหาต้นไม้ + ปุ่มเปิด Google Sheet — เวอร์ชัน sidebar ของปุ่มที่อยู่ใน
              topbar บนมือถือ (topbar ทั้งแถบถูกซ่อนที่ breakpoint นี้ ดู .topbar{display:none}) */
@@ -2301,23 +2321,39 @@
 }
 .tab i { transition: filter .2s !important; }
 
-/* ── active tab default (no store): ขาว glow ── */
+/* ── active tab default (no store): ขาว glow กระพริบจังหวะเดียวกับปุ่มเลือกร้าน (2.4s)
+   หมายเหตุ: text-shadow/box-shadow ต้องไม่มี !important ไม่งั้น @keyframes ขยับค่าไม่ได้
+   (!important ชนะ animation เสมอตาม CSS cascade) ── */
 .tab.active {
   background: rgba(255,255,255,0.11) !important;
   color: #ffffff !important;
-  text-shadow:
-    0 0 12px rgba(255,255,255,0.9),
-    0 0 28px rgba(255,255,255,0.4),
-    0 0 48px rgba(255,255,255,0.15) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.28),
-    0 0 16px rgba(255,255,255,0.08) !important;
+  animation: navActiveBlink 2.4s ease-in-out infinite;
 }
 .tab.active i {
   filter: drop-shadow(0 0 6px rgba(255,255,255,0.8)) !important;
 }
 
 /* ── tab bar คงขาว glow ทุกโหมด ไม่เปลี่ยนตามร้าน ── */
+
+/* ── sidebar (จอใหญ่): เมนูที่กำลังเลือกอยู่ glow กระพริบแบบเดียวกับ tab bar มือถือ ── */
+.sb-btn.active {
+  background: rgba(255,255,255,0.13) !important;
+  color: #c8e89a !important;
+  animation: navActiveBlink 2.4s ease-in-out infinite;
+}
+.sb-btn.active i {
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.8)) !important;
+}
+@keyframes navActiveBlink {
+  0%, 100% {
+    text-shadow: 0 0 12px rgba(255,255,255,0.9), 0 0 28px rgba(255,255,255,0.4), 0 0 48px rgba(255,255,255,0.15);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 0 16px rgba(255,255,255,0.08);
+  }
+  50% {
+    text-shadow: 0 0 22px rgba(255,255,255,1), 0 0 42px rgba(255,255,255,0.65), 0 0 66px rgba(255,255,255,0.3);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 0 28px rgba(255,255,255,0.2);
+  }
+}
 
 /* ── 7. TOPBAR: glass ── */
 .topbar {
@@ -2358,6 +2394,18 @@
 .form-inp:focus {
   border-color: rgba(255,255,255,0.35) !important;
   box-shadow: 0 0 0 3px rgba(255,255,255,0.06) !important;
+}
+/* ช่องกรอกจำนวนสต็อกหน้าร้านฟ้า/แม่ — ใส่สีค้างไว้ตลอด (ไม่ใช่แค่ตอน focus)
+   ให้แยกออกจากกันเด่นๆ ด้วยสีตรงกับป้ายชื่อร้านด้านบนช่อง */
+#f-stock-fah {
+  background: rgba(109,191,161,0.12) !important;
+  border-color: rgba(109,191,161,0.35) !important;
+  color: #88DBBD !important;
+}
+#f-stock-mom {
+  background: rgba(255,176,204,0.12) !important;
+  border-color: rgba(255,176,204,0.35) !important;
+  color: #FFB0CC !important;
 }
 [data-store="fah"] .form-inp:focus {
   border-color: rgba(109,191,161,0.5) !important;

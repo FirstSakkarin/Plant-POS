@@ -34,7 +34,7 @@
   <!-- Topbar -->
   <div class="topbar">
     <div class="topbar-row">
-      <div id="topbar-brand"><div class="store-name">TreeSiri</div><div class="topbar-sub">ขาย · รายงาน · คลังต้นไม้ · ลูกค้า</div></div>
+      <div id="topbar-brand"><div class="store-name" onclick="gotoScreen('pos')" title="ไปหน้าขาย">TreeSiri</div></div>
       <input type="text" id="topbar-search-input" class="topbar-search-input" placeholder="ค้นหาต้นไม้..." oninput="renderProds()">
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
         <button class="topbar-icon-btn" id="topbar-search-btn" onclick="toggleTopbarSearch()"><i class="ti ti-search"></i></button>
@@ -54,8 +54,7 @@
   <!-- Sidebar (tablet/desktop only) -->
   <nav class="sidebar" id="app-sidebar">
     <div class="sidebar-top">
-      <div class="sidebar-store-name" id="sb-store-name">TreeSiri</div>
-      <div class="sidebar-sub">ขาย · รายงาน · คลังต้นไม้ · ลูกค้า</div>
+      <div class="sidebar-store-name" id="sb-store-name" onclick="gotoScreen('pos')" title="ไปหน้าขาย">TreeSiri</div>
       <div class="sidebar-search-row">
         <input type="text" id="sidebar-search-input" class="sidebar-search-input" placeholder="ค้นหาต้นไม้..." oninput="renderProds()">
         <a class="sheet-pill" href="https://docs.google.com/spreadsheets/d/1c_t89oC0p5setOKKu2vuPbkVb_NXPCJ8jh_O9pP4s-o" target="_blank" title="เปิด Google Sheet"><i class="ti ti-table-filled"></i></a>
@@ -287,7 +286,7 @@
     <div class="sheet-title" id="prod-form-title">เพิ่มสินค้าใหม่</div>
     <div class="form-lbl">ชื่อต้นไม้ *</div>
     <input class="form-inp" id="f-name" type="text" placeholder="เช่น มอนสเตร่า">
-    <div class="form-lbl">Lot / แหล่งที่มา</div>
+    <div class="form-lbl">Lot / แหล่งที่มา *</div>
     <div class="inp-with-btn">
       <input class="form-inp" id="f-lot" type="text" placeholder="เช่น Lot A, สวนอ.สมชาย, 15/1/68">
       <button type="button" class="inp-cal-btn" onclick="openLotDatePicker()" title="เลือกวันที่"><i class="ti ti-calendar"></i></button>

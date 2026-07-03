@@ -33,6 +33,7 @@ let selectedCust=null, editingCustId=null, viewingCustId=null;
 let imgTabMode="upload", imgBase64="", imgUrlValue="";
 let dashFrom=null, dashTo=null;
 let profitFrom=null, profitTo=null;
+let profitBreakdownCollapsed=true; // หน้ารายงาน: "แยกตามสินค้า" ย่อไว้เป็นค่าเริ่มต้น
 let _custPickerFromModal=false;
 
 // Per-item Fah% overrides during checkout (rowId -> fahPct 0-100)
@@ -1140,6 +1141,7 @@ async function saveProduct(){
   defaultPct=Math.max(0,Math.min(100,defaultPct));
   const costOwner=document.getElementById("f-cost-owner")?.value||"แม่";
   if(!name){toast("❌ กรุณากรอกชื่อต้นไม้");return;}
+  if(!lot){toast("❌ กรุณากรอก Lot/แหล่งที่มา");return;}
   if(stockFah+stockMom>stock){
     toast(`❌ สต็อกหน้าร้าน (ฟ้า ${stockFah} + แม่ ${stockMom} = ${stockFah+stockMom}) เกินสต็อกรวม (${stock}) — แก้ให้รวมกันไม่เกินสต็อกรวมก่อนบันทึก`);
     return;
@@ -1294,6 +1296,10 @@ function setProfitPreset(preset,btn){
   }
   renderProfit();
 }
+function toggleProfitBreakdown(){
+  profitBreakdownCollapsed=!profitBreakdownCollapsed;
+  renderProfit();
+}
 function renderProfit(){
   // ถ้าโหมดกำหนดเอง อ่านค่าจาก input ก่อนเสมอ
   if(document.getElementById("profit-custom-range")?.style.display==="flex"){
@@ -1445,8 +1451,11 @@ function renderProfit(){
       <div class="profit-line" data-accent="profit"><span class="p-lbl">กำไรสุทธิ</span><span class="p-val" style="color:${netProfit>=0?"#F2C05A":"var(--r6)"}">฿${Math.round(netProfit).toLocaleString()}</span></div>
     </div>
     ${sorted.length?`<div class="profit-block">
-      <div class="profit-block-title"><i class="ti ti-list" style="color:var(--m);font-size:16px"></i> แยกตามสินค้า</div>
-      ${sorted.map(x=>{
+      <div class="profit-block-title" style="justify-content:space-between;cursor:pointer" onclick="toggleProfitBreakdown()">
+        <span style="display:flex;align-items:center;gap:6px"><i class="ti ti-list" style="color:var(--m);font-size:16px"></i> แยกตามสินค้า <span style="font-size:10px;color:var(--faint);font-weight:400">(${sorted.length})</span></span>
+        <i class="ti ${profitBreakdownCollapsed?"ti-chevron-down":"ti-chevron-up"}" style="font-size:18px;color:var(--faint)"></i>
+      </div>
+      ${profitBreakdownCollapsed?"":sorted.map(x=>{
         const itemProfit=x.rev-x.cost;
         return`
         <div class="profit-line">
@@ -1496,15 +1505,15 @@ function renderHistory(){
       :isMomCard
       ?"border-left:4px solid #FFB0CC;background:linear-gradient(135deg,#fef0f6 0%,var(--card) 60%)"
       :"";
-    return divider+`<div class="sale-card" style="${cardStyle}">
+    return divider+`<div class="sale-card" style="${cardStyle}" onclick="openReceipt(sales[${i}])" title="แตะเพื่อดูรายละเอียดบิล">
       <div class="sale-hdr"><span class="sale-date"><i class="ti ti-clock" style="font-size:10px"></i> ${ds}${storeTag}</span><span class="sale-badge">${s.itemCount} รายการ</span></div>
       <div class="sale-items-txt">${s.custName?`👤 ${s.custName} · `:""}${s.items.map(x=>`${x.emoji||"🌿"}${x.name}×${x.qty}`).join(" · ")}${discTxt?` · ${discTxt}`:""}</div>
       <div class="sale-foot">
         <div class="sale-total">฿${Math.round(s.total).toLocaleString()}</div>
         <div style="display:flex;gap:5px">
-          <button class="sale-print-btn" onclick="openReceipt(sales[${i}])" title="ออกบิล / พิมพ์"><i class="ti ti-printer"></i></button>
-          <button class="sale-print-btn" onclick="openSaleEdit(${i})" title="แก้ไข" style="color:var(--g7)"><i class="ti ti-edit"></i></button>
-          <button class="sale-print-btn" onclick="openSaleDel(${i})" title="ลบ" style="color:var(--r6)"><i class="ti ti-trash"></i></button>
+          <button class="sale-print-btn" onclick="event.stopPropagation();openReceipt(sales[${i}])" title="ออกบิล / พิมพ์"><i class="ti ti-printer"></i></button>
+          <button class="sale-print-btn" onclick="event.stopPropagation();openSaleEdit(${i})" title="แก้ไข" style="color:var(--g7)"><i class="ti ti-edit"></i></button>
+          <button class="sale-print-btn" onclick="event.stopPropagation();openSaleDel(${i})" title="ลบ" style="color:var(--r6)"><i class="ti ti-trash"></i></button>
         </div>
       </div>
     </div>`}).join("");

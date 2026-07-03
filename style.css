@@ -2086,6 +2086,14 @@
           .sidebar{width:240px}                                       /* sidebar กว้างขึ้นอีกนิด */
           .prod-grid{grid-template-columns:repeat(4,minmax(0,1fr))}    /* การ์ดสินค้า 4 คอลัมน์ */
         }
+        /* จอกว้างมากๆ (จอคอมพิวเตอร์ใหญ่) — เพิ่มคอลัมน์การ์ดสินค้าหน้าขายอีก
+           ไม่งั้นการ์ดจะกว้างเวอร์เกินไปเวลาจอกว้างมาก */
+        @media(min-width:1440px){
+          .prod-grid{grid-template-columns:repeat(5,minmax(0,1fr))}    /* การ์ดสินค้า 5 คอลัมน์ */
+        }
+        @media(min-width:1800px){
+          .prod-grid{grid-template-columns:repeat(6,minmax(0,1fr))}    /* การ์ดสินค้า 6 คอลัมน์ */
+        }
         
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    SIDEBAR  (desktop/tablet เท่านั้น)

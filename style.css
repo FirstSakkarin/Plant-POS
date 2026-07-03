@@ -668,12 +668,18 @@
             .plist-row.nested { margin-left: 0 }
             .plist-row .drag-handle { display: none }
             .plist-thumb {
+                /* ไม่ตั้ง height:100% เฉยๆ เพราะ grid row สูงอัตโนมัติตามเนื้อหา — ถ้าไม่มี
+                   aspect-ratio กำกับ รูปจริง (ที่มักเป็นแนวตั้ง) จะดึงความสูงตามสัดส่วนภาพ
+                   จริงแทน ทำให้ทั้งการ์ดสูงเกินจริงและรูปเพี้ยนเป็นสี่เหลี่ยมผืนผ้ายาว —
+                   ล็อกเป็นสี่เหลี่ยมจัตุรัสและไม่ให้เกิน 200px ไปเลย */
                 grid-area: thumb;
-                grid-row: 1 / 6; /* สูงเต็มจนชิดแถวปุ่มด้านล่างพอดี ไม่ใช่แค่แถวราคา */
+                grid-row: 1 / 6; /* สูงเต็มจนชิดแถวปุ่มด้านล่าง แต่ไม่เกิน max-height ด้านล่าง */
                 width: 100%;
-                height: 100%;
-                min-height: 120px;
-                align-self: stretch
+                max-width: 200px;
+                height: auto; /* override .plist-thumb{height:86px} ของมือถือ ไม่งั้น aspect-ratio ทำงานไม่ได้ */
+                aspect-ratio: 1 / 1;
+                max-height: 200px;
+                align-self: start
             }
             .plist-name, .plist-meta, .plist-stockbits, .plist-qty {
                 justify-self: end;

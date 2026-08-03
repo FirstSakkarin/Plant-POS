@@ -1,0 +1,2775 @@
+/* ════════════════════════════════════════════════════
+   style.css — TreeSiri POS
+   แก้ไขไฟล์นี้เพื่อปรับสี / ขนาด / layout
+   Ctrl+F หา section: VARIABLES  TOPBAR  SIDEBAR
+   PRODUCT GRID  CART  MODALS  PROFIT  RESPONSIVE
+
+   ── คู่มือแก้ไขด่วน (Quick Edit Guide) ──────────────
+   • แก้ "สีหลักของธีม" (เขียว/น้ำตาล/แดง)
+       → ไปที่ section VARIABLES (:root) ด้านล่าง
+         แก้ค่า --g* (เขียว) --a* (ส้ม/น้ำตาล) --r* (แดง)
+   • แก้ "ขนาดตัวอักษร (Font size)"
+       → หาคำว่า font-size: ในแต่ละ class
+         เช่น .store-name, .pcard-name, .total-amt
+   • แก้ "ขนาดไอคอน (Icon)"
+       → หาคำว่า ".tab i" หรือ ".sbox i" (คลาสที่ลงท้ายด้วย i)
+         (ไอคอนใช้ font จาก Tabler Icons ปรับด้วย font-size)
+   • แก้ "ขนาด/มุมกล่อง (Box / Card / Border-radius)"
+       → ปรับ padding, width, height, border-radius
+         ค่ามุมกล่องมาตรฐานอยู่ใน --rad, --rad-lg, --rad-xl
+   • แก้ "ขนาดปุ่ม/พื้นที่กดบนมือถือ"
+       → ดู section TOUCH-FRIENDLY SIZES ท้ายไฟล์
+   • แก้ "Layout สำหรับแท็บเล็ต/จอใหญ่"
+       → ดู section RESPONSIVE — TABLET / IPAD
+════════════════════════════════════════════════════ */
+
+/* รีเซ็ตค่าพื้นฐานของทุก element ให้เริ่มจาก 0 เหมือนกันทุกเบราว์เซอร์ */
+* {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent
+        }
+
+        html, body {
+            height: 100%;
+            background: #111;
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif
+        }
+
+        /* ── ตัวแปรสี/ขนาดหลักของทั้งแอป ──
+           ถ้าอยากเปลี่ยน "สีธีม" ของแอป ให้แก้ค่าตรงนี้
+           แล้วทุกที่ที่เรียกใช้ var(--xxx) จะเปลี่ยนตามทันที */
+:root {
+    /* สี accent หลัก — ค่า default (ขาว) ใช้บนหน้าที่ยังไม่ได้เลือกร้าน
+       เมื่อ data-store="fah" → teal, data-store="mom" → ชมพู (override ด้านล่าง) */
+    --g9: #111111; /* topbar bg default (dark) */
+    --g8: rgba(255,255,255,0.6); /* accent เข้ม default */
+    --g7: rgba(255,255,255,0.88); /* accent หลัก default (ขาว) */
+    --g6: rgba(255,255,255,0.4); /* accent สำรอง */
+    --g3: rgba(255,255,255,0.25); /* ขอบ active */
+    --g2: rgba(255,255,255,0.1);  /* bg active */
+    --g1: rgba(255,255,255,0.05); /* bg badge */
+    /* โทนส้ม/น้ำตาล (ใช้กับส่วนลด, แต้มสะสม, สถานะ Fah-individual) */
+    --a8: #633806; /* น้ำตาลเข้ม: ตัวหนังสือในป้ายสีส้ม */
+    --a6: #BA7517; /* น้ำตาลกลาง: ตัวเลขส่วนลด/แต้มสะสม */
+    --a3: #EF9F27; /* ส้มสด: ขอบของป้ายที่ถูกเลือก, จุดสถานะกำลังซิงค์ */
+    --a1: #FAEEDA; /* ส้มพาสเทล: พื้นหลังป้ายแต้ม/ป้ายส่วนลด */
+    /* โทนเหลือง (ใช้บอกว่าแบ่ง Fah/แม่ คนละ 50%) */
+    --y7: #a37a00; /* เหลืองเข้ม: ตัวหนังสือ Fah 50% */
+    /* โทนชมพู (ใช้กับส่วนของ "แม่" ในหน้ารายงานกำไร) */
+    --p8: #9d1f5c; /* ชมพูเข้ม: ตัวเลขสำคัญของแม่ */
+    --p7: #FC1CA6; /* ชมพูกลาง: ตัวหนังสือ/ราคาของแม่ */
+    --p3: #f48fb1; /* ชมพูอ่อน: ขอบป้ายของแม่ */
+    --p1: #fce4ec; /* ชมพูพาสเทล: พื้นหลังป้าย/การ์ดของแม่ */
+    /* โทนแดง (ใช้กับการแจ้งเตือน/ลบ/สต็อกต่ำ/error) */
+    --r7: #7a1f1f; /* แดงเข้มสุด (สำรอง) */
+    --r6: #A32D2D; /* แดงกลาง: ปุ่มลบ, สต็อกต่ำ, จุด sync error */
+    --r1: #FCEBEB; /* แดงพาสเทล: พื้นหลังกล่องแจ้งเตือน error */
+    /* สีพื้นหลัง / ตัวหนังสือทั่วไป (จะสลับเป็นโทนมืดอัตโนมัติถ้าเครื่องตั้ง Dark Mode) */
+    --bg: #fff; /* พื้นหลังหลัก (การ์ด, modal) */
+    --bg2: #f7f7f5; /* พื้นหลังรอง (ช่องค้นหา, input, ปุ่มเล็ก) */
+    --bg3: #efefec; /* พื้นหลังเข้มกว่ารองอีกขั้น (ปุ่มที่ disabled) */
+    --t: #1a1a1a; /* สีตัวหนังสือหลัก (เข้มสุด) */
+    --m: #666; /* สีตัวหนังสือรอง (label, ข้อความรายละเอียด) */
+    --faint: #999; /* สีตัวหนังสือจางสุด (placeholder, ไอคอนเทา) */
+    --bd: rgba(0,0,0,0.1); /* สีเส้นขอบบางๆ ทั่วไป */
+    --bds: rgba(0,0,0,0.2); /* สีเส้นขอบที่เข้มขึ้นอีกนิด (ปุ่ม secondary) */
+    /* ขนาดมุมโค้งของกล่อง (border-radius) ใช้ร่วมกันทั้งแอปเพื่อความสม่ำเสมอ */
+    --rad: 10px; /* มุมโค้งมาตรฐาน: input, ช่องค้นหา, ปุ่มทั่วไป */
+    --rad-lg: 14px; /* มุมโค้งใหญ่: การ์ดสินค้า, การ์ดลูกค้า, ปุ่มหลัก */
+    --rad-xl: 20px; /* มุมโค้งใหญ่สุด: ขอบบนของ modal/sheet ที่เด้งขึ้นจากล่าง */
+}
+
+        @media(prefers-color-scheme:dark) {
+            :root {
+                --bg: #1c1c1e;
+                --bg2: #2c2c2e;
+                --bg3: #3a3a3c;
+                --t: #f2f2f7;
+                --m: #adadb0;
+                --faint: #636366;
+                --bd: rgba(255,255,255,0.1);
+                --bds: rgba(255,255,255,0.2)
+            }
+        }
+
+/* ══ STORE THEME ══════════════════════════════════════
+   [data-store="fah"] → teal (#88DBBD palette)
+   [data-store="mom"] → soft pink (#FFB0CC palette)
+════════════════════════════════════════════════════════ */
+[data-store="fah"] {
+  --g7: #88DBBD;                  /* teal อ่อน: text/accent */
+  --g8: #54967E;                  /* teal เข้ม: ปุ่ม primary */
+  --g9: #0d2520;                  /* teal เข้มสุด: topbar bg */
+  --g3: rgba(109,191,161,0.35);
+  --g2: rgba(109,191,161,0.18);
+  --g1: rgba(109,191,161,0.08);
+}
+[data-store="mom"] {
+  --g7: #FFB0CC;                  /* ชมพูอ่อน: text/accent */
+  --g8: #C0607E;                  /* ชมพูเข้ม: ปุ่ม primary */
+  --g9: #2a0f1a;                  /* topbar/sidebar → dark rose */
+  --g3: rgba(255,176,204,0.35);
+  --g2: rgba(255,176,204,0.18);
+  --g1: rgba(255,176,204,0.08);
+}
+/* topbar bg เปลี่ยนตาม store */
+[data-store="fah"] .topbar { background: var(--g9); }
+[data-store="mom"] .topbar { background: var(--g9); }
+/* store-name glow เปลี่ยนตามร้าน */
+[data-store="fah"] .store-name {
+  color: #88DBBD;
+  text-shadow: 0 0 14px rgba(109,191,161,0.9), 0 0 32px rgba(109,191,161,0.4);
+}
+[data-store="mom"] .store-name {
+  color: #FFB0CC;
+  text-shadow: 0 0 14px rgba(255,176,204,0.9), 0 0 32px rgba(255,176,204,0.4);
+}
+/* topbar search input */
+.topbar-search-input {
+  flex: 1;
+  background: rgba(255,255,255,0.09);
+  border: 0.5px solid rgba(255,255,255,0.18);
+  border-radius: 11px;
+  padding: 8px 14px;
+  color: #fff;
+  font-size: 15px;
+  font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+  outline: none;
+  display: none;
+}
+.topbar-search-input::placeholder { color: rgba(255,255,255,0.35); }
+/* topbar icon button (search toggle) */
+.topbar-icon-btn {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 0.5px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  transition: .15s;
+  flex-shrink: 0;
+}
+.topbar-icon-btn:active { background: rgba(255,255,255,0.15); }
+[data-store="fah"] #pos-fah.active,
+[data-store="mom"] #pos-mom.active { border-color:var(--g7); background:var(--g1); color:var(--g7); }
+/* transition สีเวลาสลับร้าน */
+:root { transition: --g7 .2s, --g8 .2s, --g9 .2s; }
+
+        .app {
+            max-width: 430px;
+            margin: 0 auto;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+            position: relative;
+            overflow: hidden
+        }
+        /* Topbar */
+        .topbar {
+            background: var(--g9);
+            padding: 12px 16px;
+            padding-top: max(env(safe-area-inset-top,0px),12px);
+            flex-shrink: 0;
+            border-bottom: 2.5px solid transparent;
+            transition: background .25s, border-color .25s
+        }
+        /* เส้นสีบอกร้านที่ใต้ topbar */
+        [data-store="fah"] .topbar { border-bottom-color: var(--g7) }
+        [data-store="mom"] .topbar { border-bottom-color: var(--g7) }
+
+        .topbar-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between
+        }
+
+        .store-name {
+            font-size: 34px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 14px rgba(255,0,200,0.85), 0 0 32px rgba(0,200,255,0.4);
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            /* glow ไล่สีรุ้งวนไปเรื่อยๆ — หมุน hue ของสี glow (ตัวอักษรยังคงเป็นสีขาวเหมือนเดิม
+               เพราะ hue-rotate ไม่มีผลกับสีขาว/เทาที่ไม่มี hue) */
+            animation: logoHueGlow 6s linear infinite;
+        }
+        @keyframes logoHueGlow {
+            from { filter: hue-rotate(0deg); }
+            to   { filter: hue-rotate(360deg); }
+        }
+
+        .topbar-sub {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 1px
+        }
+
+        .sheet-pill {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            color: #7aaa3a;
+            font-size: 15px;
+            text-decoration: none;
+            flex-shrink: 0
+        }
+
+        .sheet-pill:hover { background: rgba(255,255,255,0.18) }
+
+        .sync-pill {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: #7aaa3a;
+            background: rgba(255,255,255,0.1);
+            padding: 5px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            border: none
+        }
+
+        .sdot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #5ec430;
+            flex-shrink: 0
+        }
+
+            .sdot.spin {
+                background: var(--a3);
+                animation: blink .5s infinite
+            }
+
+            .sdot.err {
+                background: var(--r6);
+                animation: none
+            }
+
+        @keyframes blink {
+            0%,100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .3
+            }
+        }
+        /* Tabs */
+        /* แถบเมนูด้านล่าง — ทรงพิล (rounded pill) ลอยเหนือขอบจอ */
+        .tab-bar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #fff;
+            border-radius: 30px;
+            padding: 6px;
+            box-shadow: 0 4px 16px rgba(0,0,0,.12);
+            border: 0.5px solid var(--bd);
+            /* ลอยติดด้านล่างสุดของจอเสมอ (มือถือ) ไม่เลื่อนตามเนื้อหา */
+            position: absolute;
+            left: 10px;
+            right: 10px;
+            bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+            z-index: 20
+        }
+
+        /* ปุ่มแท็บเมนูด้านล่าง (ขาย/รายงาน/คลังต้นไม้/ลูกค้า)
+           ปกติ = แสดงแค่ไอคอน, แท็บที่ถูกเลือก (.active) = ขยาย+มีพื้นพิล+โชว์ชื่อ */
+        .tab {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 11px 0;
+            border-radius: 24px;
+            font-size: 12px;      /* ขนาดตัวอักษรชื่อแท็บ (โชว์เฉพาะแท็บที่ active) */
+            font-weight: 600;
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+            color: var(--faint);
+            cursor: pointer;
+            border: none;
+            background: none;
+            transition: background .15s, color .15s, flex .15s
+        }
+
+            .tab i {
+                font-size: 20px   /* ขนาดไอคอนแท็บ (ค่านี้ถูก override ใน TOUCH SIZES ด้านล่าง) */
+            }
+
+            .tab span {
+                display: none     /* ชื่อแท็บ — ซ่อนไว้ จะโชว์เมื่อ .active เท่านั้น */
+            }
+
+            /* แท็บที่กำลังเลือกอยู่ — ขยายกว้างขึ้น มีพื้นเขียวอ่อน + โชว์ชื่อ */
+            .tab.active {
+                flex: 1.7;
+                background: var(--g2);
+                color: var(--g8);
+                font-weight: 700
+            }
+
+                .tab.active i {
+                    font-size: 19px
+                }
+
+                .tab.active span {
+                    display: inline
+                }
+        /* Screens */
+        .screens {
+            flex: 1;
+            overflow: hidden;
+            position: relative
+        }
+
+        .screen {
+            position: absolute;
+            inset: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            display: none;
+            flex-direction: column;
+            /* เผื่อพื้นที่ด้านล่างให้เนื้อหา (รวมปุ่มชำระเงิน) ไม่โดน tab-bar ลอยบัง
+               padding ตรงนี้อยู่ "ภายใน" พื้นที่เลื่อนของ .screen เอง จึงดันปุ่มขึ้นมาเหนือ tab-bar จริงๆ */
+            padding-bottom: 78px
+        }
+
+            .screen.active {
+                display: flex
+            }
+        /* ── POS ── */
+        .pos-wrap {
+            display: flex;
+            flex-direction: column;
+            height: 100%
+        }
+
+        .search-row {
+            padding: 9px 12px;
+            border-bottom: 0.5px solid var(--bd);
+            flex-shrink: 0
+        }
+
+        .sbox {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--bg2);
+            border-radius: var(--rad);
+            padding: 0 10px;
+            border: 0.5px solid var(--bd)
+        }
+
+            .sbox i {
+                font-size: 15px;
+                color: var(--faint)
+            }
+
+            .sbox input {
+                flex: 1;
+                border: none;
+                background: none;
+                font-size: 13px;
+                font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+                color: var(--t);
+                padding: 8px 0;
+                outline: none
+            }
+
+                .sbox input::placeholder {
+                    color: var(--faint)
+                }
+
+        .prod-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 12px
+        }
+
+        /* กริดการ์ดสินค้า: repeat(2,...) = แสดง 2 คอลัมน์บนมือถือ
+           ถ้าจะให้แสดง 3 คอลัมน์บนมือถือ เปลี่ยน 2 เป็น 3 / gap = ระยะห่างระหว่างการ์ด */
+        .prod-grid {
+            display: grid;
+            grid-template-columns: repeat(2,minmax(0,1fr));
+            gap: 9px
+        }
+
+        /* การ์ดสินค้า 1 ใบ — แก้ padding เพื่อปรับขนาดกล่อง, border-radius เพื่อปรับมุมโค้ง */
+        .pcard {
+            border: 0.5px solid var(--bd);
+            border-radius: var(--rad-lg);
+            padding: 10px;
+            cursor: pointer;
+            background: var(--bg);
+            transition: transform .1s
+        }
+
+            .pcard:active {
+                transform: scale(.96);
+                background: var(--g1);  /* สีพื้นหลังตอนกด */
+                border-color: var(--g3) /* สีขอบตอนกด */
+            }
+
+        /* อิโมจิ/ไอคอนต้นไม้บนการ์ด — แก้ font-size เพื่อย่อ/ขยายไอคอน */
+        .pcard-emoji {
+            font-size: 26px;
+            text-align: center;
+            margin-bottom: 5px;
+            line-height: 1
+        }
+
+        /* ชื่อสินค้าบนการ์ด */
+        .pcard-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--t);
+            line-height: 1.3
+        }
+
+        /* ราคาสินค้าบนการ์ด — สีเขียว (var(--g7)) */
+        .pcard-price {
+            font-size: 13px;
+            color: var(--g7);
+            font-weight: 600;
+            margin-top: 3px
+        }
+
+        /* จำนวนสต็อกบนการ์ด */
+        .pcard-stock {
+            font-size: 10px;
+            color: var(--faint);
+            margin-top: 1px
+        }
+
+            .pcard-stock.low {
+                color: var(--r6);
+                font-weight: 600
+            }
+
+        /* การ์ดสินค้าในหน้า "จัดการสินค้า" — เหมือน .pcard แต่เพิ่มปุ่มแก้ไข/ลบ */
+        .mcard {
+            position: relative
+        }
+
+        .mcard-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px
+        }
+
+        .mcard-btn {
+            flex: 1;
+            height: 28px;
+            border-radius: 7px;
+            border: 0.5px solid var(--bd);
+            background: var(--bg2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--m)
+        }
+
+            .mcard-btn.del {
+                color: var(--r6)
+            }
+
+        /* ── รายการสินค้าแบบแถว (คลังสินค้า) — กระชับกว่าการ์ดกริดเดิม ──
+           ใช้ CSS grid-template-areas เพราะมือถือ (แถวยาว) กับจอใหญ่ (การ์ด 2 คอลัมน์)
+           ต้องจัดวางชิ้นส่วนเดียวกัน (รูป/ชื่อ/ราคา/ต้นทุน/สต็อก/ปุ่ม) ในโครงที่ต่างกันโดย
+           สิ้นเชิง — grid-template-areas สลับผังได้ในบรรทัดเดียวต่อ breakpoint โดยไม่ต้อง
+           เปลี่ยน HTML เลย ส่วน --mix คือสีผสมฟ้า/แม่ตาม %ฟ้าจริงของแต่ละ lot (ตั้งจาก JS
+           ด้วย inline style="--mix:...") ใช้ทั้งเป็นสีขอบซ้ายและสีป้าย lot/% */
+        .plist-row {
+            display: grid;
+            grid-template-columns: 14px 86px 1fr auto auto;
+            grid-template-rows: auto auto;
+            grid-template-areas:
+                "handle thumb name price   actions"
+                "handle thumb meta stockbits actions";
+            gap: 4px 6px;
+            align-items: center;
+            padding: 8px 10px;
+            border: 0.5px solid var(--bd);
+            border-left: 4px solid var(--mix, var(--bd));
+            border-radius: var(--rad-lg);
+            margin-bottom: 7px;
+            background: var(--bg)
+        }
+        .plist-row.nested { margin-left: 10px }
+        .plist-thumb {
+            grid-area: thumb;
+            width: 86px;
+            height: 86px;
+            align-self: center;
+            border-radius: 10px;
+            object-fit: cover;
+            background: var(--bg2)
+        }
+        .plist-thumb-emoji {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px
+        }
+        .plist-name {
+            grid-area: name;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--t);
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+        .lot-tag {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--mix, var(--m));
+            background: color-mix(in srgb, var(--mix, var(--bd)) 18%, var(--bg2));
+            padding: 1px 6px;
+            border-radius: 5px
+        }
+        .fah-pct { color: var(--mix, var(--m)); font-weight: 700 }
+        .plist-price {
+            /* หน้าคลังสินค้าไม่ได้บังคับพื้นมืดเหมือนหน้าขาย (#screen-pos) จึงใช้ var(--t)
+               ที่ปรับตาม light/dark เอง แทน var(--g7) ซึ่งค่า default เป็นสีขาวโปร่งแสง
+               ออกแบบมาสำหรับพื้นมืดเท่านั้น — ถ้าใช้ตรงนี้จะกลายเป็นตัวหนังสือขาวบนพื้นขาว */
+            grid-area: price;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--t);
+            justify-self: end
+        }
+        .plist-meta {
+            grid-area: meta;
+            font-size: 10px;
+            color: var(--m);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+        .plist-meta b {
+            /* เหตุผลเดียวกับ .plist-price ด้านบน — var(--g8) สมมติพื้นมืดเสมอ */
+            color: var(--t);
+            font-weight: 600
+        }
+        .plist-stockbits {
+            grid-area: stockbits;
+            font-size: 10px;
+            color: var(--faint);
+            display: flex;
+            gap: 7px;
+            justify-self: end;
+            font-variant-numeric: tabular-nums
+        }
+        .plist-stockbits .low {
+            color: var(--r6);
+            font-weight: 700
+        }
+        .plist-qty {
+            grid-area: qty;
+            display: none; /* เฉพาะจอใหญ่ ดู @media ด้านล่าง */
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--t);
+            justify-self: end;
+            font-variant-numeric: tabular-nums
+        }
+        .plist-qty small {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--m);
+            margin-left: 2px
+        }
+        .plist-actions {
+            grid-area: actions;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            align-self: center
+        }
+        .plist-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 0.5px solid var(--bd);
+            background: var(--bg2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--m)
+        }
+        .plist-btn.del {
+            color: var(--r6)
+        }
+        .plist-grp-hdr {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin: 10px 0 6px;
+            padding: 0 2px
+        }
+        .plist-grp-hdr:first-child { margin-top: 0 }
+        /* Lot ที่สต็อกหมดสนิท (สวน+ฟ้า+แม่=0) — จางลงแต่ไม่ซ่อน ยังกดแก้ไขเพิ่มสต็อก
+           กลับมาใช้ lot เดิมได้ ปุ่ม actions ไม่โดนจางด้วย เพื่อให้เห็นชัดว่ายังกดได้ */
+        .plist-row.sold-out > *:not(.plist-actions) { opacity: .5 }
+        .plist-row.sold-out .plist-thumb img { filter: grayscale(70%) }
+        .sold-out-badge {
+            font-size: 9.5px;
+            font-weight: 700;
+            color: var(--r6);
+            background: color-mix(in srgb, var(--r6) 14%, var(--bg2));
+            padding: 1px 5px;
+            border-radius: 5px;
+            white-space: nowrap
+        }
+        /* .drag-handle เดิมออกแบบมาให้ position:absolute ลอยที่มุมการ์ดสูง —
+           ในแถวเตี้ยแบบนี้ไม่มีที่ว่างให้ลอยแบบนั้น เลยขอ override ให้เป็น
+           ไอคอนแคบๆ อยู่ในแนว grid ปกติทางซ้ายสุดของแถวแทน */
+        .plist-row .drag-handle {
+            grid-area: handle;
+            position: static;
+            width: 14px;
+            align-self: stretch;
+            display: flex;
+            align-items: center;
+            font-size: 14px
+        }
+
+        /* ── จอใหญ่ (แท็บเล็ต/เดสก์ท็อป): เปลี่ยนจากแถวยาวเป็นการ์ด 2 คอลัมน์
+           รูปขยายใหญ่ฝั่งซ้าย สูงเต็มจนถึงแถวปุ่มด้านล่าง, ข้อมูล (ราคา/lot/%ฟ้า/ทุน/
+           สต็อก/จำนวน) ชิดขวาเรียงเป็นคอลัมน์ ── */
+        @media (min-width: 768px) {
+            #prod-list {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0,1fr));
+                gap: 10px;
+                align-content: start
+            }
+            .plist-grp-hdr { grid-column: 1 / -1 }
+            .plist-row {
+                grid-template-columns: 1.3fr 1fr;
+                grid-template-rows: auto auto auto auto auto;
+                grid-template-areas:
+                    "thumb price"
+                    "thumb name"
+                    "thumb meta"
+                    "thumb stockbits"
+                    "thumb qty"
+                    "actions actions";
+                gap: 4px 10px;
+                margin-bottom: 0;
+                align-items: start
+            }
+            .plist-row.nested { margin-left: 0 }
+            .plist-row .drag-handle { display: none }
+            .plist-thumb {
+                /* ไม่ตั้ง height:100% เฉยๆ เพราะ grid row สูงอัตโนมัติตามเนื้อหา — ถ้าไม่มี
+                   aspect-ratio กำกับ รูปจริง (ที่มักเป็นแนวตั้ง) จะดึงความสูงตามสัดส่วนภาพ
+                   จริงแทน ทำให้ทั้งการ์ดสูงเกินจริงและรูปเพี้ยนเป็นสี่เหลี่ยมผืนผ้ายาว —
+                   ล็อกเป็นสี่เหลี่ยมจัตุรัสและไม่ให้เกิน 200px ไปเลย */
+                grid-area: thumb;
+                grid-row: 1 / 6; /* สูงเต็มจนชิดแถวปุ่มด้านล่าง แต่ไม่เกิน max-height ด้านล่าง */
+                width: 100%;
+                max-width: 200px;
+                height: auto; /* override .plist-thumb{height:86px} ของมือถือ ไม่งั้น aspect-ratio ทำงานไม่ได้ */
+                aspect-ratio: 1 / 1;
+                max-height: 200px;
+                align-self: start
+            }
+            .plist-name, .plist-meta, .plist-stockbits, .plist-qty {
+                justify-self: end;
+                text-align: right
+            }
+            .plist-price { font-size: 19px; font-weight: 800; justify-self: end }
+            .plist-qty {
+                display: flex;
+                align-items: baseline;
+                border-top: 0.5px solid var(--bd);
+                padding-top: 4px;
+                margin-top: 4px
+            }
+            .plist-stockbits { justify-content: flex-end }
+            .plist-actions {
+                grid-area: actions;
+                flex-direction: row;
+                align-self: auto;
+                margin-top: 6px
+            }
+            .plist-actions .plist-btn { flex: 1 }
+        }
+
+        /* Cart */
+        .cart-panel {
+            flex-shrink: 0;
+            border-top: 0.5px solid var(--bd);
+            padding: 10px 12px;
+            padding-bottom: max(12px,env(safe-area-inset-bottom,0px))
+        }
+
+        .cart-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 7px;
+            gap: 8px
+        }
+        /* Drag handle — แถบจับที่เด่นชัด สำหรับซ่อน/แสดงตะกร้า */
+        .cart-drag-handle {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 5px; padding: 10px 0 6px;
+            cursor: pointer; user-select: none;
+            transition: opacity .15s
+        }
+        .cart-drag-handle:active { opacity: .6 }
+        .cart-drag-bar {
+            width: 44px; height: 4px; border-radius: 2px;
+            background: rgba(255,255,255,0.3);
+            transition: background .15s, width .15s
+        }
+        .cart-drag-handle:active .cart-drag-bar { background: rgba(255,255,255,0.6); width: 52px }
+        .cart-drag-lbl {
+            font-size: 10px; font-weight: 600; letter-spacing: .5px;
+            color: rgba(255,255,255,0.3); text-transform: uppercase
+        }
+        /* ซ่อนตะกร้า */
+        .cart-collapsed .cart-scroll,
+        .cart-collapsed .disc-row,
+        .cart-collapsed .total-row,
+        .cart-collapsed .cust-sel-bar { display: none !important }
+        .cart-collapsed { padding-bottom: 4px }
+        .cart-collapsed .cart-hdr { margin-bottom: 0 }
+        .cart-collapsed .cart-drag-bar { background: rgba(255,255,255,0.18) }
+
+        .cart-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--t)
+        }
+
+        .clear-btn {
+            font-size: 11px;
+            color: var(--faint);
+            cursor: pointer;
+            border: none;
+            background: none;
+            text-decoration: underline;
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif
+        }
+
+        .cart-scroll {
+            max-height: 120px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            margin-bottom: 8px
+        }
+
+        .cart-empty {
+            text-align: center;
+            color: var(--faint);
+            font-size: 12px;
+            padding: 12px 0
+        }
+
+        .crow {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 0;
+            border-bottom: 0.5px solid var(--bd)
+        }
+
+            .crow:last-child {
+                border-bottom: none
+            }
+
+        .crow-emoji {
+            font-size: 14px;
+            flex-shrink: 0
+        }
+
+        .crow-name {
+            flex: 1;
+            font-size: 12px;
+            color: var(--t);
+            line-height: 1.2
+        }
+
+        .crow-price-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 1px;
+            cursor: pointer
+        }
+
+        .crow-price {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--g7)
+        }
+
+        .crow-disc {
+            font-size: 10px;
+            color: var(--a6)
+        }
+
+        .qty-ctrl {
+            display: flex;
+            align-items: center;
+            gap: 3px
+        }
+
+        .qbtn {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 0.5px solid var(--bd);
+            background: var(--bg2);
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--t);
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif
+        }
+
+        .qnum {
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 14px;
+            text-align: center;
+            color: var(--t)
+        }
+        /* Discount row */
+        .disc-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-top: 0.5px solid var(--bd);
+            margin-bottom: 4px
+        }
+
+        .disc-lbl {
+            font-size: 12px;
+            color: var(--m);
+            flex: 1
+        }
+
+        .disc-tabs {
+            display: flex;
+            gap: 4px
+        }
+
+        .disc-tab {
+            padding: 3px 9px;
+            border-radius: 12px;
+            font-size: 11px;
+            cursor: pointer;
+            border: 0.5px solid var(--bd);
+            background: var(--bg2);
+            color: var(--m);
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif
+        }
+
+            .disc-tab.active {
+                background: var(--a1);
+                color: var(--a8);
+                border-color: var(--a3);
+                font-weight: 600
+            }
+
+        .disc-input {
+            width: 72px;
+            padding: 4px 8px;
+            border-radius: 8px;
+            border: 0.5px solid var(--bd);
+            background: var(--bg2);
+            font-size: 13px;
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+            color: var(--t);
+            text-align: center;
+            outline: none
+        }
+
+            .disc-input:focus {
+                border-color: var(--g7)
+            }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px
+        }
+
+        .total-lbl {
+            font-size: 13px;
+            color: var(--m)
+        }
+
+        .total-right {
+            text-align: right
+        }
+
+        .total-orig {
+            font-size: 11px;
+            color: var(--faint);
+            text-decoration: line-through
+        }
+
+        /* ตัวเลขยอดรวมสุทธิ — ตัวใหญ่สีเขียวเข้ม */
+        .total-amt {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--g8);
+            letter-spacing: -.5px
+        }
+
+        /* ปุ่ม "ชำระเงิน" สีเขียวเข้มเต็มความกว้าง */
+        .pay-btn {
+            width: 100%;
+            padding: 10px;          /* ขนาดกล่องปุ่ม (ความหนา) */
+            background: var(--g8);  /* สีพื้นปุ่ม */
+            color: #d4edaa;         /* สีตัวอักษร/ไอคอนในปุ่ม */
+            border: none;
+            border-radius: var(--rad-lg); /* มุมโค้งของปุ่ม */
+            font-size: 15px;        /* ขนาดตัวอักษร */
+            font-weight: 600;
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform .1s
+        }
+
+            .pay-btn:active {
+                transform: scale(.98)
+            }
+
+            .pay-btn:disabled {
+                background: var(--bg3);
+                color: var(--faint);
+                cursor: not-allowed;
+                transform: none
+            }
+        /* ── DASHBOARD ── */
+        .dash-wrap {
+            padding: 14px
+        }
+
+        .dash-hdr {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 12px
+        }
+
+            .dash-hdr select {
+                flex: 1;
+                padding: 8px 10px;
+                border-radius: var(--rad);
+                border: 0.5px solid var(--bd);
+                background: var(--bg2);
+                font-size: 13px;
+                font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+                color: var(--t);
+                outline: none
+            }
+
+        .section-lbl {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--m);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin: 12px 0 7px
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(2,minmax(0,1fr));
+            gap: 8px
+        }
+
+        /* 3 กล่องเล็กในแถวเดียว (ต้นไม้/บิล/ส่วนลด) */
+        .metric-trio {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(3,minmax(0,1fr));
+            gap: 8px
+        }
+        /* 4 กล่องเล็กในแถวเดียว */
+        .metric-quad {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(4,minmax(0,1fr));
+            gap: 6px
+        }
+
+        .metric {
+            background: var(--bg2);
+            border-radius: var(--rad-lg);
+            padding: 11px
+        }
+
+        .metric-lbl {
+            font-size: 11px;
+            color: var(--m);
+            margin-bottom: 4px
+        }
+
+        .metric-val {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--t);
+            letter-spacing: -.5px
+        }
+
+        .metric-sub {
+            font-size: 11px;
+            margin-top: 2px
+        }
+
+        .up {
+            color: var(--g7)
+        }
+
+        .down {
+            color: var(--r6)
+        }
+
+        .neu {
+            color: var(--faint)
+        }
+
+        .chart-wrap {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            margin-bottom: 4px
+        }
+
+        .top-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 0;
+            border-bottom: 0.5px solid var(--bd)
+        }
+
+            .top-item:last-child {
+                border-bottom: none
+            }
+
+        .top-rank {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--g1);
+            color: var(--g8);
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0
+        }
+
+        .top-emoji {
+            font-size: 17px;
+            flex-shrink: 0
+        }
+
+        .top-name {
+            flex: 1;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--t)
+        }
+
+        .top-qty {
+            font-size: 11px;
+            color: var(--m)
+        }
+
+        .top-rev {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--g7);
+            min-width: 60px;
+            text-align: right
+        }
+        /* ── HISTORY ── */
+        .hist-wrap {
+            padding: 12px
+        }
+
+        .today-cards {
+            display: grid;
+            grid-template-columns: repeat(2,minmax(0,1fr));
+            gap: 8px;
+            margin-bottom: 12px
+        }
+
+        .sale-card {
+            border: 0.5px solid var(--bd);
+            border-radius: var(--rad-lg);
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: var(--bg);
+            cursor: pointer;
+            transition: transform .1s
+        }
+        .sale-card:active { transform: scale(.98) }
+
+        .sale-hdr {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3px
+        }
+
+        .sale-date {
+            font-size: 11px;
+            color: var(--m)
+        }
+
+        .sale-badge {
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 10px;
+            background: var(--g1);
+            color: var(--g8);
+            font-weight: 600
+        }
+
+        .sale-items-txt {
+            font-size: 11px;
+            color: var(--m);
+            margin-bottom: 4px
+        }
+
+        .sale-cust-line {
+            font-size: 11px;
+            color: var(--m);
+            margin-bottom: 4px
+        }
+
+        .sale-items-grid {
+            display: grid;
+            grid-template-columns: minmax(0,1fr) auto auto;
+            column-gap: 10px;
+            row-gap: 3px;
+            align-items: baseline
+        }
+
+        .sale-item-row {
+            display: contents
+        }
+
+        .sale-item-name {
+            font-weight: 700;
+            font-size: 12.5px;
+            color: var(--t);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .sale-item-price {
+            font-size: 11px;
+            color: var(--m);
+            white-space: nowrap;
+            text-align: right
+        }
+
+        .sale-item-qty {
+            font-weight: 700;
+            font-size: 12.5px;
+            color: var(--g8);
+            white-space: nowrap;
+            text-align: right
+        }
+
+        .sale-disc-line {
+            font-size: 11px;
+            color: var(--m);
+            margin-top: 4px
+        }
+
+        .sale-total {
+            text-align: right;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--g8)
+        }
+
+        /* แถวล่างของ sale-card: ยอดรวม + ปุ่มพิมพ์ใบเสร็จ */
+        .sale-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 2px
+        }
+
+        .sale-print-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: var(--g1);
+            color: var(--g8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: pointer;
+            flex-shrink: 0
+        }
+
+        /* ── ใบเสร็จ (Receipt) — แสดงใน popup และใช้พิมพ์ ── */
+        .receipt {
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+            background: #fff;
+            border: 1px dashed var(--bd);
+            border-radius: var(--rad);
+            padding: 16px;
+            font-size: 12px;
+            color: #000;
+            max-width: 300px;
+            margin: 0 auto
+        }
+
+        .r-store {
+            text-align: center;
+            font-size: 17px;
+            font-weight: 700
+        }
+
+        .r-sub {
+            text-align: center;
+            font-size: 11px;
+            color: var(--m);
+            margin-bottom: 2px
+        }
+
+        .r-meta {
+            text-align: center;
+            font-size: 10px;
+            color: var(--m);
+            margin-bottom: 8px
+        }
+
+        .r-line {
+            border: none;
+            border-top: 1px dashed var(--bd);
+            margin: 8px 0
+        }
+
+        .r-item {
+            margin-bottom: 4px
+        }
+
+        .r-item-name {
+            font-size: 11px
+        }
+
+        .r-item-line {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--m)
+        }
+
+        .r-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin: 2px 0
+        }
+
+        .r-total {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--g8);
+            margin-top: 4px
+        }
+
+        .r-foot {
+            text-align: center;
+            font-size: 11px;
+            color: var(--m);
+            margin-top: 12px
+        }
+
+        /* พิมพ์ใบเสร็จ — แสดงเฉพาะ #receipt-body ตอนสั่งพิมพ์ */
+        @media print {
+            body * {
+                visibility: hidden
+            }
+
+            #receipt-body, #receipt-body * {
+                visibility: visible
+            }
+
+            #receipt-body {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                border: none
+            }
+        }
+        /* ── MANAGE ── */
+        .manage-wrap {
+            padding: 12px
+        }
+
+        .manage-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px
+        }
+
+        .manage-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--t)
+        }
+
+        .add-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 7px 13px;
+            background: linear-gradient(135deg,#6fcf3f,#3d8a14);
+            color: #fff;
+            border: none;
+            border-radius: var(--rad);
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+            cursor: pointer;
+            box-shadow: 0 0 0 4px rgba(74,157,31,.18), 0 0 12px rgba(74,157,31,.5);
+            animation: addBtnGlow 2.4s ease-in-out infinite;
+            transition: transform .1s
+        }
+        .add-btn:active { transform: scale(.95) }
+        @keyframes addBtnGlow {
+            0%,100% { box-shadow: 0 0 0 3px rgba(74,157,31,.12), 0 0 8px rgba(74,157,31,.35); filter: brightness(1) }
+            50%     { box-shadow: 0 0 0 9px rgba(74,157,31,.05), 0 0 26px rgba(74,157,31,.85); filter: brightness(1.25) }
+        }
+
+        .prod-list-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border: 0.5px solid var(--bd);
+            border-radius: var(--rad-lg);
+            margin-bottom: 8px;
+            background: var(--bg)
+        }
+
+        .pli-emoji {
+            font-size: 24px;
+            flex-shrink: 0
+        }
+
+        .pli-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .pli-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--t)
+        }
+
+        .pli-meta {
+            font-size: 11px;
+            color: var(--m);
+            margin-top: 2px
+        }
+
+        .pli-actions {
+            display: flex;
+            gap: 6px
+        }
+
+        .pli-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 0.5px solid var(--bd);
+            background: var(--bg2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--m)
+        }
+
+            .pli-btn.del {
+                color: var(--r6)
+            }
+        /* ── MODALS ── */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: flex-end;
+            z-index: 200
+        }
+
+            .overlay.show {
+                display: flex
+            }
+
+        .sheet {
+            background: var(--bg);
+            width: 100%;
+            border-radius: var(--rad-xl) var(--rad-xl) 0 0;
+            padding: 20px;
+            padding-bottom: max(20px,env(safe-area-inset-bottom,0px));
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transition: transform .25s ease
+        }
+
+        .sheet-handle {
+            width: 36px;
+            height: 4px;
+            background: var(--bd);
+            border-radius: 2px;
+            margin: 0 auto 16px;
+            cursor: grab;
+            touch-action: none
+        }
+
+        /* ปุ่มปิด (X) มุมบนขวาของ popup — กดแล้วเท่ากับกดยกเลิก */
+        .sheet-close {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg2);
+            color: var(--m);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 1
+        }
+
+        .sheet-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--t);
+            margin-bottom: 14px
+        }
+
+        .form-lbl {
+            font-size: 12px;
+            color: var(--m);
+            margin-bottom: 4px;
+            margin-top: 10px
+        }
+
+            .form-lbl:first-of-type {
+                margin-top: 0
+            }
+
+        .form-inp {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: var(--rad);
+            border: 0.5px solid var(--bd);
+            background: var(--bg2);
+            font-size: 14px;
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+            color: var(--t);
+            outline: none
+        }
+
+            .form-inp:focus {
+                border-color: var(--g7)
+            }
+
+        /* ปุ่มลัด (เช่น ปฏิทิน) ท้ายกล่อง input — .inp-with-btn ครอบ input ไว้เพื่อวางปุ่ม
+           ลอยชิดขอบขวาใน input เดียวกัน แทนที่จะเป็นปุ่มแยกข้างนอก */
+        .inp-with-btn { position: relative }
+        .inp-with-btn .form-inp { padding-right: 40px }
+        .inp-cal-btn {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            border: none;
+            background: var(--bg3);
+            color: var(--m);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 15px
+        }
+        .inp-cal-btn:active { background: var(--g1); color: var(--g8) }
+
+        /* กล่องอัปโหลดรูปสินค้า — กำหนดขนาดคงที่ ไม่ให้รูปที่เลือกมาแสดงเต็มขนาดไฟล์จนล้นจอ */
+        .img-upload-area {
+            width: 100%;
+            height: 160px;
+            border-radius: var(--rad);
+            border: 1px dashed var(--bd);
+            background: var(--bg2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            cursor: pointer
+        }
+
+            .img-preview {
+                width: 100%;
+                height: 100%;
+                object-fit: contain   /* ย่อรูปให้พอดีกล่อง คงสัดส่วน ไม่ครอป/ไม่ล้น */
+            }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8,1fr);
+            gap: 6px;
+            margin-top: 4px
+        }
+
+        .emoji-opt {
+            font-size: 22px;
+            text-align: center;
+            padding: 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 0.5px solid transparent
+        }
+
+            .emoji-opt.selected {
+                background: var(--g1);
+                border-color: var(--g3)
+            }
+
+        .sheet-btns {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px
+        }
+
+        .btn-secondary {
+            flex: 1;
+            padding: 12px;
+            border: 0.5px solid var(--bds);
+            background: var(--bg);
+            border-radius: var(--rad-lg);
+            font-size: 14px;
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+            color: var(--t);
+            cursor: pointer;
+            font-weight: 500
+        }
+
+        .btn-primary {
+            flex: 2;
+            padding: 12px;
+            background: var(--g8);
+            color: #d4edaa;
+            border: none;
+            border-radius: var(--rad-lg);
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+            cursor: pointer
+        }
+
+            .btn-primary:disabled {
+                background: var(--bg3);
+                color: var(--faint);
+                cursor: not-allowed
+            }
+        /* Pay modal */
+        .modal-total-box {
+            background: var(--g1);
+            border-radius: var(--rad);
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px
+        }
+
+        .modal-total-lbl {
+            font-size: 13px;
+            color: var(--g8);
+            font-weight: 500
+        }
+
+        .modal-total-val {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--g8)
+        }
+
+        .change-box {
+            text-align: center;
+            padding: 8px;
+            border-radius: var(--rad);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .change-ok {
+            background: var(--g1);
+            color: var(--g8)
+        }
+
+        .change-err {
+            background: var(--r1);
+            color: var(--r6)
+        }
+        /* Per-item price edit modal */
+        .price-edit-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px
+        }
+
+        .pei-row {
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .pei-emoji {
+            font-size: 18px
+        }
+
+        .pei-name {
+            flex: 1;
+            font-size: 13px;
+            color: var(--t)
+        }
+
+        .pei-inp {
+            width: 80px;
+            padding: 7px 8px;
+            border-radius: 8px;
+            border: 0.5px solid var(--bd);
+            background: var(--bg2);
+            font-size: 13px;
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+            color: var(--t);
+            text-align: right;
+            outline: none
+        }
+
+            .pei-inp:focus {
+                border-color: var(--g7)
+            }
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(16px);
+            background: rgba(30,58,8,0.95);
+            color: #d4edaa;
+            padding: 10px 18px;
+            border-radius: 24px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+            z-index: 300;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity .2s,transform .2s;
+            pointer-events: none
+        }
+
+            .toast.show {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0)
+            }
+
+        .empty-state {
+            text-align: center;
+            padding: 32px 16px;
+            color: var(--faint)
+        }
+
+            .empty-state i {
+                font-size: 36px;
+                margin-bottom: 8px;
+                display: block;
+                color: var(--g3)
+            }
+
+            .empty-state p {
+                font-size: 13px
+            }
+
+        .spin-icon {
+            animation: rotating 1s linear infinite
+        }
+
+        @keyframes rotating {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .preset-btn {
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 0.5px solid var(--bd);
+            background: var(--bg);
+            color: var(--m);
+            font-size: 12px;
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+            cursor: pointer
+        }
+
+            .preset-btn.active {
+                background: var(--g1);
+                color: var(--g8);
+                border-color: var(--g3);
+                font-weight: 600
+            }
+
+        .pcard-empty {
+            opacity: .45;
+            pointer-events: none;
+        }
+
+        .pcard-multi {
+            cursor: default
+        }
+
+        .lot-chips-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 4px
+        }
+
+        .lot-chip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 9px;
+            border-radius: 8px;
+            background: var(--g1);
+            border: 0.5px solid var(--g3);
+            cursor: pointer;
+            transition: background .1s
+        }
+
+            .lot-chip:active {
+                background: var(--g2)
+            }
+
+        .lot-chip-empty {
+            background: var(--bg3);
+            border-color: var(--bd);
+            cursor: not-allowed;
+            opacity: .6
+        }
+
+        .lot-chip-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--g8)
+        }
+
+        .lot-chip-stock {
+            font-size: 10px;
+            color: var(--g7)
+        }
+
+            .lot-chip-stock.low {
+                color: var(--a6);
+                font-weight: 600
+            }
+
+            .lot-chip-stock.out {
+                color: var(--r6)
+            }
+
+        /* ── CUSTOMERS ── */
+        .cust-wrap {
+            padding: 12px
+        }
+
+        .cust-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px
+        }
+
+        .cust-search {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--bg2);
+            border-radius: var(--rad);
+            padding: 0 10px;
+            border: 0.5px solid var(--bd);
+            margin-bottom: 10px
+        }
+
+            .cust-search i {
+                font-size: 15px;
+                color: var(--faint)
+            }
+
+            .cust-search input {
+                flex: 1;
+                border: none;
+                background: none;
+                font-size: 13px;
+                font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+                color: var(--t);
+                padding: 8px 0;
+                outline: none
+            }
+
+        .cust-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border: 0.5px solid var(--bd);
+            border-radius: var(--rad-lg);
+            margin-bottom: 8px;
+            background: var(--bg)
+        }
+
+        .cust-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--g1);
+            color: var(--g8);
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0
+        }
+
+        .cust-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .cust-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--t)
+        }
+
+        .cust-meta {
+            font-size: 11px;
+            color: var(--m);
+            margin-top: 2px
+        }
+
+        .cust-points {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--a6);
+            background: var(--a1);
+            padding: 3px 8px;
+            border-radius: 10px;
+            white-space: nowrap
+        }
+        /* Customer selector on POS */
+        /* ── POS store selector ── */
+        .pos-store-sel {
+            padding: 10px 12px 8px;
+            border-bottom: 0.5px solid var(--bd);
+            background: var(--bg);
+            flex-shrink: 0
+        }
+
+        .pos-store-lbl {
+            font-size: 10px;
+            color: var(--m);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .4px
+        }
+
+        .cust-sel-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0 8px;
+            flex-shrink: 0
+        }
+
+        .cust-sel-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 10px;
+            border-radius: var(--rad);
+            border: 0.5px solid var(--bd);
+            background: var(--bg2);
+            cursor: pointer;
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+            font-size: 12px;
+            color: var(--m)
+        }
+
+            .cust-sel-btn.selected {
+                border-color: var(--g3);
+                background: var(--g1);
+                color: var(--g8)
+            }
+
+            .cust-sel-btn i {
+                font-size: 16px
+            }
+
+        .cust-clear-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 0.5px solid var(--bd);
+            background: var(--bg2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--m)
+        }
+        /* Customer history sheet */
+        .cust-hist-item {
+            padding: 8px 0;
+            border-bottom: 0.5px solid var(--bd)
+        }
+
+            .cust-hist-item:last-child {
+                border-bottom: none
+            }
+
+        .cust-hist-date {
+            font-size: 11px;
+            color: var(--m);
+            margin-bottom: 2px
+        }
+
+        .cust-hist-items {
+            font-size: 12px;
+            color: var(--t)
+        }
+
+        .cust-hist-total {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--g8);
+            text-align: right;
+            margin-top: 2px
+        }
+        /* Date range picker */
+        .date-range-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+            flex-wrap: wrap
+        }
+
+        .date-inp {
+            flex: 1;
+            min-width: 110px;
+            padding: 8px 10px;
+            border-radius: var(--rad);
+            border: 0.5px solid var(--bd);
+            background: var(--bg2);
+            font-size: 13px;
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+            color: var(--t);
+            outline: none
+        }
+
+            .date-inp:focus {
+                border-color: var(--g7)
+            }
+
+        .date-sep {
+            font-size: 12px;
+            color: var(--m);
+            flex-shrink: 0
+        }
+
+        .date-presets {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 12px
+        }
+
+        .preset-btn {
+            padding: 4px 11px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+            cursor: pointer;
+            border: 0.5px solid var(--bd);
+            background: var(--bg);
+            color: var(--m);
+            white-space: nowrap
+        }
+
+            .preset-btn.active {
+                background: var(--g1);
+                color: var(--g8);
+                border-color: var(--g3);
+                font-weight: 600
+            }
+    
+        
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   RESPONSIVE — TABLET / IPAD
+   แก้ขนาด sidebar, grid columns, font สำหรับ tablet
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ── TABLET / IPAD RESPONSIVE ── */
+        /* จอตั้งแต่ 768px ขึ้นไป (แท็บเล็ต): ซ่อนแถบบนมือถือ เปลี่ยนเป็น sidebar ด้านซ้าย
+           และปรับกริดสินค้า/เมตริกให้แสดงหลายคอลัมน์มากขึ้น */
+        @media(min-width:768px){
+          html,body{background:var(--bg3)}
+          .app{max-width:100%;flex-direction:row}
+          .topbar{display:none}
+          .tab-bar{display:none}
+          .mobile-store-sw{display:none}
+          /* ความกว้าง sidebar ฝั่งซ้าย — แก้ width ตรงนี้เพื่อปรับความกว้างเมนู */
+          .sidebar{width:220px;min-width:220px;flex-shrink:0;display:flex;flex-direction:column;background:var(--g9);height:100dvh;overflow-y:auto}
+          .sidebar-top{padding:20px 16px 14px;border-bottom:0.5px solid rgba(255,255,255,0.1)}
+          /* glow ไล่สีรุ้งแบบเดียวกับโลโก้บนมือถือ (.store-name) — ใช้ keyframes logoHueGlow
+             ร่วมกัน เพราะจอใหญ่ไม่มีปัญหาเรื่อง light/dark เหมือนหน้าคลังสินค้า (sidebar
+             พื้นมืดตายตัวอยู่แล้วผ่าน var(--g9)) จึงใส่สีเดิมได้เลยโดยไม่ต้องปรับ */
+          .sidebar-store-name{
+            font-size:30px;font-weight:700;color:#c8e89a;margin-bottom:2px;
+            text-shadow: 0 0 14px rgba(255,0,200,0.85), 0 0 32px rgba(0,200,255,0.4);
+            cursor:pointer;
+            animation: logoHueGlow 6s linear infinite;
+          }
+          .sidebar-sub{font-size:10px;color:#7aaa3a}
+          /* ช่องค้นหาต้นไม้ + ปุ่มเปิด Google Sheet — เวอร์ชัน sidebar ของปุ่มที่อยู่ใน
+             topbar บนมือถือ (topbar ทั้งแถบถูกซ่อนที่ breakpoint นี้ ดู .topbar{display:none}) */
+          .sidebar-search-row{display:flex;align-items:center;gap:6px;margin-top:10px}
+          .sidebar-search-input{flex:1;min-width:0;background:rgba(255,255,255,0.09);border:0.5px solid rgba(255,255,255,0.18);border-radius:9px;padding:7px 10px;color:#fff;font-size:12px;font-family:'Sukhumvit Set','Prompt','Sarabun',sans-serif;outline:none}
+          .sidebar-search-input::placeholder{color:rgba(255,255,255,0.35)}
+          .sidebar-nav{padding:8px;flex:1}
+          .sb-btn{display:flex;align-items:center;gap:10px;width:100%;padding:12px 12px;border-radius:10px;border:none;background:none;font-size:13px;font-family:'Sukhumvit Set','Prompt','Sarabun',sans-serif;color:rgba(255,255,255,0.55);cursor:pointer;text-align:left;margin-bottom:2px;transition:.15s}
+          .sb-btn i{font-size:20px;flex-shrink:0}
+          .sb-btn.active{background:rgba(255,255,255,0.13);color:#c8e89a}
+          .sb-btn:hover:not(.active){background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.85)}
+          .sidebar-foot{padding:10px}
+          .sidebar-sync-btn{display:flex;align-items:center;gap:7px;width:100%;padding:10px 12px;border-radius:10px;border:none;background:rgba(255,255,255,0.08);color:#7aaa3a;font-size:12px;font-family:'Sukhumvit Set','Prompt','Sarabun',sans-serif;cursor:pointer;margin-bottom:8px}
+          .screens{flex:1;overflow:hidden}
+          .prod-grid{grid-template-columns:repeat(3,minmax(0,1fr))}   /* การ์ดสินค้า 3 คอลัมน์บนแท็บเล็ต */
+          .metric-grid{grid-template-columns:repeat(4,minmax(0,1fr))} /* กล่องสรุปยอด (dashboard) 4 คอลัมน์ */
+          .today-cards{grid-template-columns:repeat(4,minmax(0,1fr))} /* กล่องสรุปยอดวันนี้ (history) 4 คอลัมน์ */
+          .overlay{position:fixed}
+        }
+        /* จอใหญ่ตั้งแต่ 1024px (เดสก์ท็อป/ไอแพดแนวนอน) */
+        @media(min-width:1024px){
+          .sidebar{width:240px}                                       /* sidebar กว้างขึ้นอีกนิด */
+          .prod-grid{grid-template-columns:repeat(4,minmax(0,1fr))}    /* การ์ดสินค้า 4 คอลัมน์ */
+        }
+        /* จอกว้างมากๆ (จอคอมพิวเตอร์ใหญ่) — เพิ่มคอลัมน์การ์ดสินค้าหน้าขายอีก
+           ไม่งั้นการ์ดจะกว้างเวอร์เกินไปเวลาจอกว้างมาก */
+        @media(min-width:1440px){
+          .prod-grid{grid-template-columns:repeat(5,minmax(0,1fr))}    /* การ์ดสินค้า 5 คอลัมน์ */
+        }
+        @media(min-width:1800px){
+          .prod-grid{grid-template-columns:repeat(6,minmax(0,1fr))}    /* การ์ดสินค้า 6 คอลัมน์ */
+        }
+        
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SIDEBAR  (desktop/tablet เท่านั้น)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ── SIDEBAR (hidden mobile) ── */
+        @media(max-width:767px){
+          .sidebar{display:none}
+        }
+        /* ── STORE SWITCHER (mobile bar) ── */
+        .mobile-store-sw{display:flex;gap:6px;padding:7px 12px;background:var(--g9);border-bottom:0.5px solid rgba(255,255,255,0.1);flex-shrink:0}
+        /* ── STORE TAB ── */
+        .store-tab{flex:1;padding:7px 8px;border-radius:8px;border:none;font-size:12px;font-weight:600;font-family:'Sukhumvit Set','Prompt','Sarabun',sans-serif;cursor:pointer;transition:.15s;color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.07)}
+        .store-tab.snp.active{background:#7a5500;color:#ffd97a}
+        .store-tab.ts.active{background:rgba(61,122,20,0.9);color:#d4edaa}
+        
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PROFIT TYPE BUTTONS & BADGES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ── PROFIT TYPE ── */
+        .pt-btn{flex:1;padding:10px 6px;border-radius:9px;border:0.5px solid var(--bd);background:var(--bg2);font-size:12px;font-family:'Sukhumvit Set','Prompt','Sarabun',sans-serif;cursor:pointer;color:var(--m);display:flex;align-items:center;justify-content:center;gap:5px;font-weight:500;transition:.12s}
+        .pt-btn.shared.active{background:#e8f0fe;color:#3c5aa6;border-color:#7c9ee8;font-weight:700}
+        .pt-btn.individual.active{background:var(--a1);color:var(--a8);border-color:var(--a3);font-weight:700}
+        .ss-btn{flex:1;padding:9px 4px;border-radius:8px;border:0.5px solid var(--bd);background:var(--bg2);font-size:11px;font-family:'Sukhumvit Set','Prompt','Sarabun',sans-serif;cursor:pointer;color:var(--m);font-weight:500;transition:.12s}
+        .ss-btn.active{border-color:var(--g3);background:var(--g1);color:var(--g8);font-weight:700}
+        /* ร้านแม่ = ชมพู override */
+        #pos-mom.active{border-color:#FFB0CC;background:rgba(255,176,204,0.1);color:#FFB0CC}
+        /* ── PROFIT BADGE ── */
+        .pbadge{display:inline-flex;align-items:center;font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600;margin-top:2px;line-height:1.4}
+        .pb-shared{background:#e8f0fe;color:#3c5aa6}
+        .pb-individual{background:var(--a1);color:var(--a8)}
+        
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PROFIT SCREEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ── PROFIT SCREEN ── */
+        .profit-block{background:var(--bg2);border-radius:var(--rad-lg);padding:14px;margin-bottom:10px;border:0.5px solid var(--bd)}
+        .profit-block-title{font-size:13px;font-weight:700;color:var(--t);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+        .profit-line{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--bd);font-size:13px}
+        .profit-line:last-child{border-bottom:none;font-weight:700;font-size:14px;padding-top:8px}
+        .p-lbl{color:var(--m)}
+        .p-val{font-weight:600;color:var(--t)}
+        .pv-snp{color:#FFB0CC}.pv-ts{color:#88DBBD}
+        
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   TOUCH-FRIENDLY SIZES
+   ปรับ padding/font ตรงนี้เพื่อ accessibility
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ── TOUCH SIZES ──
+   ปรับขนาดปุ่ม/ไอคอน/การ์ดให้กดง่ายขึ้นบนมือถือ (override ค่าด้านบน) */
+        .qbtn{width:28px;height:28px;font-size:16px}
+        .pay-btn{padding:11px;font-size:14px}
+        .tab:not(.active) i{font-size:22px}
+        .pcard{min-height:120px}
+        .pli-btn{width:36px;height:36px;font-size:17px}
+        .add-btn{padding:9px 14px;font-size:13px}
+
+/* ══════════════════════════════════════════════════════════════
+   LIQUID GLASS THEME
+   ใช้ dark gradient background + translucent glass surfaces
+   glass = rgba bg + white border highlight + backdrop-filter blur
+══════════════════════════════════════════════════════════════ */
+
+/* ── 1. POS SCREEN: dark gradient background ── */
+#screen-pos {
+  background: radial-gradient(ellipse at 25% 0%, #121212 0%, #080808 40%, #030303 100%) !important;
+}
+[data-store="fah"] #screen-pos {
+  background: radial-gradient(ellipse at 25% 0%, #0f2820 0%, #081a12 40%, #020d08 100%) !important;
+}
+[data-store="mom"] #screen-pos {
+  background: radial-gradient(ellipse at 25% 0%, #2a0f1a 0%, #180610 40%, #0c0208 100%) !important;
+}
+
+/* ── 2. PRODUCT CARDS: glass ── */
+.pcard {
+  background: rgba(255,255,255,0.06) !important;
+  border: 0.5px solid rgba(255,255,255,0.14) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 12px rgba(0,0,0,0.25) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.pcard:active {
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.3) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 0 12px rgba(255,255,255,0.05) !important;
+}
+[data-store="fah"] .pcard:active {
+  background: rgba(109,191,161,0.14) !important;
+  border-color: rgba(109,191,161,0.35) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 0 12px rgba(109,191,161,0.12) !important;
+}
+[data-store="mom"] .pcard:active {
+  background: rgba(255,176,204,0.14) !important;
+  border-color: rgba(255,176,204,0.35) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 0 12px rgba(255,176,204,0.12) !important;
+}
+.pcard-name { color: rgba(255,255,255,0.8) !important; }
+.pcard-stock { color: rgba(255,255,255,0.35) !important; }
+.pcard-stock.low { color: #ff7b7b !important; }
+.pcard-group-hdr { color: rgba(255,255,255,0.3) !important; }
+
+/* ── 3. SEARCH ROW + STORE SELECTOR: glass ── */
+.search-row {
+  background: rgba(0,0,0,0.15) !important;
+  border-bottom: 0.5px solid rgba(255,255,255,0.07) !important;
+}
+.pos-store-sel {
+  background: rgba(0,0,0,0.12) !important;
+  border-bottom: 0.5px solid rgba(255,255,255,0.07) !important;
+}
+.sbox {
+  background: rgba(255,255,255,0.07) !important;
+  border: 0.5px solid rgba(255,255,255,0.12) !important;
+}
+.sbox i { color: rgba(255,255,255,0.35) !important; }
+#s-input, .sbox input {
+  color: rgba(255,255,255,0.85) !important;
+}
+#s-input::placeholder, .sbox input::placeholder {
+  color: rgba(255,255,255,0.25) !important;
+}
+
+/* ── 4. STORE SELECTOR BUTTONS: glass ── */
+.ss-btn {
+  background: rgba(255,255,255,0.05) !important;
+  border: 0.5px solid rgba(255,255,255,0.1) !important;
+  color: rgba(255,255,255,0.4) !important;
+}
+/* Pre-color store buttons even before selection
+   หมายเหตุ: box-shadow/text-shadow ตรงนี้ตั้งใจไม่ใส่ !important เพื่อให้ @keyframes
+   ด้านล่าง (fahGlowPulse/momGlowPulse) แก้ไขค่าได้จริง — !important จะชนะ animation
+   เสมอตาม CSS cascade ทำให้ glow ไม่ขยับเลยถ้าใส่ !important ไว้ */
+#pos-fah {
+  color: #88DBBD !important;
+  border-color: rgba(109,191,161,0.3) !important;
+  animation: fahGlowPulse 2.4s ease-in-out infinite;
+}
+#pos-mom {
+  color: #FFB0CC !important;
+  border-color: rgba(255,176,204,0.3) !important;
+  animation: momGlowPulse 2.4s ease-in-out infinite;
+}
+@keyframes fahGlowPulse {
+  0%,100% { box-shadow: 0 0 10px rgba(109,191,161,0.15), inset 0 1px 0 rgba(109,191,161,0.1); text-shadow: 0 0 10px rgba(109,191,161,0.5); }
+  50%     { box-shadow: 0 0 22px rgba(109,191,161,0.45), inset 0 1px 0 rgba(109,191,161,0.15); text-shadow: 0 0 16px rgba(109,191,161,0.85); }
+}
+@keyframes momGlowPulse {
+  0%,100% { box-shadow: 0 0 10px rgba(255,176,204,0.15), inset 0 1px 0 rgba(255,176,204,0.1); text-shadow: 0 0 10px rgba(255,176,204,0.5); }
+  50%     { box-shadow: 0 0 22px rgba(255,176,204,0.45), inset 0 1px 0 rgba(255,176,204,0.15); text-shadow: 0 0 16px rgba(255,176,204,0.85); }
+}
+.ss-btn.active, #pos-fah.active {
+  background: rgba(109,191,161,0.14) !important;
+  border-color: rgba(109,191,161,0.5) !important;
+  color: #88DBBD !important;
+  animation: fahGlowPulseActive 2s ease-in-out infinite;
+}
+#pos-mom.active {
+  background: rgba(255,176,204,0.14) !important;
+  border-color: rgba(255,176,204,0.5) !important;
+  color: #FFB0CC !important;
+  animation: momGlowPulseActive 2s ease-in-out infinite;
+}
+@keyframes fahGlowPulseActive {
+  0%,100% { box-shadow: 0 0 18px rgba(109,191,161,0.35), 0 0 6px rgba(109,191,161,0.2), inset 0 1px 0 rgba(255,255,255,0.15); text-shadow: 0 0 12px rgba(109,191,161,0.8), 0 0 24px rgba(109,191,161,0.3); }
+  50%     { box-shadow: 0 0 30px rgba(109,191,161,0.6), 0 0 10px rgba(109,191,161,0.3), inset 0 1px 0 rgba(255,255,255,0.2); text-shadow: 0 0 18px rgba(109,191,161,1), 0 0 34px rgba(109,191,161,0.5); }
+}
+@keyframes momGlowPulseActive {
+  0%,100% { box-shadow: 0 0 18px rgba(255,176,204,0.35), 0 0 6px rgba(255,176,204,0.2), inset 0 1px 0 rgba(255,255,255,0.15); text-shadow: 0 0 12px rgba(255,176,204,0.8), 0 0 24px rgba(255,176,204,0.3); }
+  50%     { box-shadow: 0 0 30px rgba(255,176,204,0.6), 0 0 10px rgba(255,176,204,0.3), inset 0 1px 0 rgba(255,255,255,0.2); text-shadow: 0 0 18px rgba(255,176,204,1), 0 0 34px rgba(255,176,204,0.5); }
+  text-shadow: 0 0 12px rgba(255,176,204,0.8), 0 0 24px rgba(255,176,204,0.3) !important;
+}
+.pos-store-lbl { color: rgba(255,255,255,0.3) !important; }
+
+/* ── 5. CART PANEL: glass dark ── */
+.cart-panel {
+  background: rgba(0,0,0,0.3) !important;
+  border-top: 0.5px solid rgba(255,255,255,0.1) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.cart-hdr .cart-title { color: rgba(255,255,255,0.7) !important; }
+.cart-empty { color: rgba(255,255,255,0.3) !important; }
+.cart-item { border-bottom-color: rgba(255,255,255,0.06) !important; }
+.ci-name { color: rgba(255,255,255,0.85) !important; }
+.ci-price { color: rgba(255,255,255,0.45) !important; }
+.ci-custom { color: rgba(255,255,255,0.45) !important; }
+.cart-total-row .cart-total-lbl { color: rgba(255,255,255,0.45) !important; }
+.cart-total { color: var(--g7) !important; }
+[data-store="mom"] .cart-total { color: #FFB0CC !important; }
+.disc-row label { color: rgba(255,255,255,0.45) !important; }
+#disc-val, .disc-row input {
+  background: rgba(255,255,255,0.07) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: rgba(255,255,255,0.9) !important;
+}
+.pay-btn {
+  background: linear-gradient(150deg,rgba(255,255,255,0.1),rgba(255,255,255,0.04)) !important;
+  color: rgba(255,255,255,0.9) !important;
+  border: none !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 6px 18px rgba(0,0,0,0.2) !important;
+}
+[data-store="fah"] .pay-btn:not(:disabled) {
+  background: linear-gradient(150deg,#88DBBD,#54967E) !important;
+  color: #0a2218 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 8px 24px rgba(109,191,161,0.4), 0 0 40px rgba(109,191,161,0.15) !important;
+  text-shadow: 0 0 10px rgba(255,255,255,0.3) !important;
+}
+[data-store="mom"] .pay-btn:not(:disabled) {
+  background: linear-gradient(150deg,#FFB0CC,#C0607E) !important;
+  color: #2a0f1a !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 8px 24px rgba(255,176,204,0.4), 0 0 40px rgba(255,176,204,0.15) !important;
+  text-shadow: 0 0 10px rgba(255,255,255,0.3) !important;
+}
+
+/* ── 6. TAB BAR: floating glass pill ── */
+.tab-bar {
+  background: rgba(10,10,10,0.65) !important;
+  border: 0.5px solid rgba(255,255,255,0.18) !important;
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    0 0 0 0.5px rgba(255,255,255,0.06) !important;
+  backdrop-filter: blur(36px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(200%) !important;
+}
+
+/* ── inactive tabs: ขาวหม่นมีแสงสลัว ── */
+.tab {
+  color: rgba(255,255,255,0.38) !important;
+  background: none !important;
+  text-shadow: 0 0 8px rgba(255,255,255,0.1) !important;
+  transition: color .2s, background .2s, box-shadow .2s, text-shadow .2s !important;
+}
+.tab i { transition: filter .2s !important; }
+
+/* ── active tab default (no store): ขาว glow กระพริบจังหวะเดียวกับปุ่มเลือกร้าน (2.4s)
+   หมายเหตุ: text-shadow/box-shadow ต้องไม่มี !important ไม่งั้น @keyframes ขยับค่าไม่ได้
+   (!important ชนะ animation เสมอตาม CSS cascade) ── */
+.tab.active {
+  background: rgba(255,255,255,0.11) !important;
+  color: #ffffff !important;
+  animation: navActiveBlink 2.4s ease-in-out infinite;
+}
+.tab.active i {
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.8)) !important;
+}
+
+/* ── tab bar คงขาว glow ทุกโหมด ไม่เปลี่ยนตามร้าน ── */
+
+/* ── sidebar (จอใหญ่): เมนูที่กำลังเลือกอยู่ glow กระพริบแบบเดียวกับ tab bar มือถือ ── */
+.sb-btn.active {
+  background: rgba(255,255,255,0.13) !important;
+  color: #c8e89a !important;
+  animation: navActiveBlink 2.4s ease-in-out infinite;
+}
+.sb-btn.active i {
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.8)) !important;
+}
+@keyframes navActiveBlink {
+  0%, 100% {
+    text-shadow: 0 0 12px rgba(255,255,255,0.9), 0 0 28px rgba(255,255,255,0.4), 0 0 48px rgba(255,255,255,0.15);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 0 16px rgba(255,255,255,0.08);
+  }
+  50% {
+    text-shadow: 0 0 22px rgba(255,255,255,1), 0 0 42px rgba(255,255,255,0.65), 0 0 66px rgba(255,255,255,0.3);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 0 28px rgba(255,255,255,0.2);
+  }
+}
+
+/* ── 7. TOPBAR: glass ── */
+.topbar {
+  backdrop-filter: blur(24px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+}
+
+/* ── 8. ALL SHEETS/OVERLAYS: glass dark ── */
+.sheet {
+  background: rgba(5,12,3,0.88) !important;
+  backdrop-filter: blur(36px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(150%) !important;
+  border-top: 0.5px solid rgba(255,255,255,0.12) !important;
+}
+.sheet::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 12%; right: 12%;
+  height: 0.5px;
+  background: linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent);
+  pointer-events: none;
+}
+[data-store="mom"] .sheet { background: rgba(18,5,12,0.9) !important; }
+.sheet-handle { background: rgba(255,255,255,0.15) !important; }
+.sheet-title { color: rgba(255,255,255,0.92) !important; }
+.sheet-close {
+  background: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: rgba(255,255,255,0.6) !important;
+}
+.form-lbl { color: rgba(255,255,255,0.45) !important; }
+.form-inp {
+  background: rgba(255,255,255,0.07) !important;
+  border: 0.5px solid rgba(255,255,255,0.12) !important;
+  color: rgba(255,255,255,0.9) !important;
+}
+.form-inp::placeholder { color: rgba(255,255,255,0.25) !important; }
+.form-inp:focus {
+  border-color: rgba(255,255,255,0.35) !important;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.06) !important;
+}
+/* ช่องกรอกจำนวนสต็อกหน้าร้านฟ้า/แม่ — ใส่สีค้างไว้ตลอด (ไม่ใช่แค่ตอน focus)
+   ให้แยกออกจากกันเด่นๆ ด้วยสีตรงกับป้ายชื่อร้านด้านบนช่อง */
+#f-stock-fah {
+  background: rgba(109,191,161,0.12) !important;
+  border-color: rgba(109,191,161,0.35) !important;
+  color: #88DBBD !important;
+}
+#f-stock-mom {
+  background: rgba(255,176,204,0.12) !important;
+  border-color: rgba(255,176,204,0.35) !important;
+  color: #FFB0CC !important;
+}
+[data-store="fah"] .form-inp:focus {
+  border-color: rgba(109,191,161,0.5) !important;
+  box-shadow: 0 0 0 3px rgba(109,191,161,0.08) !important;
+}
+[data-store="mom"] .form-inp:focus {
+  border-color: rgba(255,176,204,0.5) !important;
+  box-shadow: 0 0 0 3px rgba(255,176,204,0.08) !important;
+}
+.modal-total-box {
+  background: rgba(255,255,255,0.06) !important;
+  border: 0.5px solid rgba(255,255,255,0.1) !important;
+}
+.modal-total-lbl { color: rgba(255,255,255,0.45) !important; }
+.modal-total-val { color: var(--g7) !important; }
+[data-store="mom"] .modal-total-val { color: #FFB0CC !important; }
+.change-box { color: rgba(255,255,255,0.7) !important; }
+.change-ok { color: var(--g7) !important; }
+[data-store="mom"] .change-ok { color: #FFB0CC !important; }
+.change-err { color: #ff7b7b !important; }
+
+/* ── 9. BUTTONS: gradient glass ── */
+.btn-primary {
+  background: linear-gradient(148deg,rgba(255,255,255,0.14),rgba(255,255,255,0.07)) !important;
+  color: rgba(255,255,255,0.9) !important;
+  border: 0.5px solid rgba(255,255,255,0.2) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 4px 14px rgba(0,0,0,0.3) !important;
+  font-weight: 700 !important;
+}
+.btn-primary:disabled {
+  background: rgba(255,255,255,0.08) !important;
+  color: rgba(255,255,255,0.25) !important;
+  box-shadow: none !important;
+}
+[data-store="fah"] .btn-primary:not(:disabled) {
+  background: linear-gradient(148deg,rgba(136,219,189,0.92),rgba(84,150,126,0.88)) !important;
+  color: #0a2218 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 4px 14px rgba(0,0,0,0.3) !important;
+}
+[data-store="mom"] .btn-primary:not(:disabled) {
+  background: linear-gradient(148deg,rgba(255,176,204,0.92),rgba(192,96,126,0.88)) !important;
+  color: #2a0f1a !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 4px 14px rgba(0,0,0,0.3) !important;
+}
+.btn-secondary {
+  background: rgba(255,255,255,0.07) !important;
+  border: 0.5px solid rgba(255,255,255,0.14) !important;
+  color: rgba(255,255,255,0.6) !important;
+}
+#pay-ok:not(:disabled) {
+  background: linear-gradient(148deg,rgba(255,255,255,0.12),rgba(255,255,255,0.05)) !important;
+  color: rgba(255,255,255,0.9) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 6px 20px rgba(0,0,0,0.2) !important;
+}
+[data-store="fah"] #pay-ok:not(:disabled) {
+  background: linear-gradient(148deg,#88DBBD,#54967E) !important;
+  color: #0a2218 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 6px 20px rgba(109,191,161,0.28) !important;
+}
+[data-store="mom"] #pay-ok:not(:disabled) {
+  background: linear-gradient(148deg,#FFB0CC,#C0607E) !important;
+  color: #2a0f1a !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 6px 20px rgba(255,176,204,0.28) !important;
+}
+
+/* ── 10. PAY OVERLAY HEADER TEXT ── */
+#pay-store-header { text-shadow: 0 0 16px currentColor; }
+#pay-summary { color: rgba(255,255,255,0.4) !important; }
+
+/* ── 11. CUSTOMER SELECTOR (ในตะกร้า + ใน pay overlay) ── */
+.cust-sel-btn {
+  background: rgba(255,255,255,0.06) !important;
+  border: 0.5px solid rgba(255,255,255,0.12) !important;
+  color: rgba(255,255,255,0.55) !important;
+}
+.cust-clear-btn {
+  background: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: rgba(255,255,255,0.45) !important;
+}
+.pts-preview {
+  background: rgba(255,193,7,0.1) !important;
+  border-color: rgba(255,193,7,0.25) !important;
+  color: rgba(255,193,7,0.85) !important;
+}
+
+/* ── 12. METRIC CARDS (report): subtle glass ──
+   หน้า "รายงาน" ไม่ได้บังคับพื้นหลังมืดเหมือน #screen-pos (ดู "LIQUID GLASS
+   THEME" ด้านบน) จึงต้องใช้ var(--bg2)/var(--t) ที่สลับตาม prefers-color-scheme
+   เอง ถ้า hardcode เป็น rgba(255,255,255,..) จะกลายเป็นตัวหนังสือขาวบนพื้นขาว
+   มองไม่เห็นเลยเวลาเปิดในโหมด Light */
+.metric {
+  background: var(--bg2) !important;
+  border: 0.5px solid var(--bd) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08) !important;
+}
+.metric-lbl { color: var(--m) !important; }
+.metric-val { color: var(--t) !important; }
+.metric-sub { color: var(--faint) !important; }
+
+/* ── 12b. METRIC CARDS: store accent tint ── */
+/* ร้านฟ้า (teal) */
+.metric[data-accent="fah"] {
+  background: rgba(109,191,161,0.10) !important;
+  border-color: rgba(109,191,161,0.28) !important;
+  box-shadow: inset 0 1px 0 rgba(136,219,189,0.18), 0 2px 8px rgba(0,0,0,0.22) !important;
+}
+.metric[data-accent="fah"] .metric-lbl { color: rgba(136,219,189,0.65) !important; }
+.metric[data-accent="fah"] .metric-val { color: #88DBBD !important; }
+
+/* ร้านแม่ (soft pink) */
+.metric[data-accent="mom"] {
+  background: rgba(255,176,204,0.10) !important;
+  border-color: rgba(255,176,204,0.28) !important;
+  box-shadow: inset 0 1px 0 rgba(255,176,204,0.18), 0 2px 8px rgba(0,0,0,0.22) !important;
+}
+.metric[data-accent="mom"] .metric-lbl { color: rgba(255,176,204,0.65) !important; }
+.metric[data-accent="mom"] .metric-val { color: #FFB0CC !important; }
+
+/* ยอดรวม (white/neutral) */
+.metric[data-accent="total"] {
+  background: var(--bg3) !important;
+  border-color: var(--bds) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.13), 0 2px 8px rgba(0,0,0,0.08) !important;
+}
+.metric[data-accent="total"] .metric-lbl { color: var(--m) !important; }
+.metric[data-accent="total"] .metric-val { color: var(--t) !important; }
+
+/* ── 12b-2. METRIC + PROFIT-LINE: กำไรสุทธิ → golden ── */
+.metric[data-accent="profit"] {
+  background: rgba(242,192,90,0.10) !important;
+  border-color: rgba(242,192,90,0.30) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,216,120,0.22),
+    0 0 18px rgba(242,192,90,0.10),
+    0 2px 8px rgba(0,0,0,0.22) !important;
+}
+.metric[data-accent="profit"] .metric-lbl { color: rgba(255,210,100,0.65) !important; }
+.metric[data-accent="profit"] .metric-val { color: #F2C05A !important; }
+
+.profit-line[data-accent="profit"] {
+  border-left: 2px solid rgba(242,192,90,0.65);
+  padding-left: 8px;
+}
+.profit-line[data-accent="profit"] .p-lbl { color: rgba(255,210,100,0.8) !important; }
+
+/* ── 12c. PROFIT-LINE: store accent left-border ── */
+.profit-line[data-accent="fah"] {
+  border-left: 2px solid rgba(109,191,161,0.6);
+  padding-left: 8px;
+}
+.profit-line[data-accent="fah"] .p-lbl { color: rgba(136,219,189,0.8) !important; }
+.profit-line[data-accent="fah"] .p-val { color: #88DBBD !important; }
+
+.profit-line[data-accent="mom"] {
+  border-left: 2px solid rgba(255,176,204,0.6);
+  padding-left: 8px;
+}
+.profit-line[data-accent="mom"] .p-lbl { color: rgba(255,176,204,0.8) !important; }
+.profit-line[data-accent="mom"] .p-val { color: #FFB0CC !important; }
+
+/* ── Date divider ── */
+.date-divider {
+  display: flex; align-items: center; gap: 8px;
+  margin: 14px 0 8px; font-size: 11px; font-weight: 600;
+  color: rgba(255,255,255,0.38); letter-spacing: .3px;
+}
+.date-divider::before, .date-divider::after {
+  content: ''; flex: 1; height: 0.5px;
+  background: rgba(255,255,255,0.1);
+}
+/* ── Extra cost tags (in pay overlay) ── */
+.extra-cost-tag {
+  display: flex; align-items: center; gap: 4px;
+  padding: 5px 10px; border-radius: 20px;
+  background: rgba(255,255,255,0.07); border: 0.5px solid rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.65); font-size: 12px;
+  font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+  cursor: pointer; transition: .15s;
+}
+.extra-cost-tag:active { background: rgba(255,255,255,0.14); }
+/* Extra cost entry row */
+.extra-cost-row {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+}
+.extra-cost-row-lbl {
+  flex: 1; font-size: 12px; color: rgba(255,255,255,0.6);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.extra-cost-remove {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(255,255,255,0.07); border: none;
+  color: rgba(255,255,255,0.45); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+}
+/* ── 13. SALE CARDS (history): glass ── */
+.sale-card {
+  background: rgba(255,255,255,0.05) !important;
+  border: 0.5px solid rgba(255,255,255,0.1) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.07) !important;
+}
+.sale-hdr { border-bottom-color: rgba(255,255,255,0.07) !important; }
+.sale-date { color: rgba(255,255,255,0.4) !important; }
+.sale-badge {
+  background: rgba(255,255,255,0.08) !important;
+  color: rgba(255,255,255,0.5) !important;
+}
+.sale-items-txt { color: rgba(255,255,255,0.45) !important; }
+.sale-cust-line { color: rgba(255,255,255,0.45) !important; }
+.sale-disc-line { color: rgba(255,255,255,0.45) !important; }
+.sale-item-name { color: rgba(255,255,255,0.9) !important; }
+.sale-item-price { color: rgba(255,255,255,0.4) !important; }
+.sale-item-qty { color: #6ee7b7 !important; }
+.sale-foot { border-top-color: rgba(255,255,255,0.07) !important; }
+.sale-print-btn {
+  background: rgba(255,255,255,0.07) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: rgba(255,255,255,0.5) !important;
+}
+
+/* ── 14. PROFIT DATE PICKER: glass ── */
+.pt-btn {
+  background: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: rgba(255,255,255,0.5) !important;
+}
+.pt-btn.active {
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.3) !important;
+  color: rgba(255,255,255,0.9) !important;
+}
+[data-store="fah"] .pt-btn.active {
+  background: rgba(109,191,161,0.14) !important;
+  border-color: rgba(109,191,161,0.35) !important;
+  color: #88DBBD !important;
+}
+[data-store="mom"] .pt-btn.active {
+  background: rgba(255,176,204,0.14) !important;
+  border-color: rgba(255,176,204,0.35) !important;
+  color: #FFB0CC !important;
+}
+/* ปุ่ม "ต้นทุนของใคร" ในฟอร์มสินค้า (เปิดจากหน้าคลังสินค้า ไม่ใช่หน้าขาย จึงไม่มี
+   data-store ให้ยึดสีตามด้านบน) — ผูกสีตาม id ของปุ่มเองแทน เพื่อให้ทุนแม่ชมพู/
+   ทุนฟ้าเขียวมิ้นท์เสมอ ไม่ว่าจะเปิดฟอร์มจากที่ไหนหรือกำลังเลือกร้านไหนอยู่ก็ตาม */
+#co-mom.active {
+  background: rgba(255,176,204,0.14) !important;
+  border-color: rgba(255,176,204,0.35) !important;
+  color: #FFB0CC !important;
+}
+#co-fah.active {
+  background: rgba(109,191,161,0.14) !important;
+  border-color: rgba(109,191,161,0.35) !important;
+  color: #88DBBD !important;
+}
+#co-joint.active {
+  background: rgba(214,179,58,0.14) !important;
+  border-color: rgba(214,179,58,0.35) !important;
+  color: #d6b34a !important;
+}
+
+/* ── 15. QBTN (quantity buttons in cart): glass ── */
+.qbtn {
+  background: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: rgba(255,255,255,0.7) !important;
+}
+
+/* ── 16. DRAG-TO-REORDER ── */
+.sort-ghost {
+  opacity: 0.25;
+  transform: scale(0.95);
+  border: 1.5px dashed rgba(255,255,255,0.4) !important;
+  background: rgba(255,255,255,0.04) !important;
+}
+[data-store="fah"] .sort-ghost { border-color: #88DBBD !important; background: rgba(109,191,161,0.06) !important; }
+[data-store="mom"] .sort-ghost { border-color: #FFB0CC !important; background: rgba(255,176,204,0.06) !important; }
+.sort-chosen {
+  box-shadow: 0 12px 36px rgba(0,0,0,0.45), 0 0 0 1.5px var(--g7) !important;
+  transform: scale(1.04);
+  z-index: 99;
+}
+[data-store="fah"] .sort-chosen { box-shadow: 0 12px 36px rgba(0,0,0,0.45), 0 0 0 1.5px #88DBBD !important; }
+[data-store="mom"] .sort-chosen { box-shadow: 0 12px 36px rgba(0,0,0,0.45), 0 0 0 1.5px #FFB0CC !important; }
+.sort-drag { opacity: 0.92; }
+/* Drag handle icon (หน้าจัดการสินค้า) */
+.drag-handle {
+  position: absolute;
+  top: 7px; right: 7px;
+  font-size: 15px;
+  color: rgba(255,255,255,0.2);
+  cursor: grab;
+  touch-action: none;
+  line-height: 1;
+  padding: 2px;
+}
+.drag-handle:active { cursor: grabbing; color: var(--g7); }
+[data-store="fah"] .drag-handle:active { color: #88DBBD; }
+[data-store="mom"] .drag-handle:active { color: #FFB0CC; }
+.mcard { position: relative; }
+
+/* ── 17. TOAST ── */
+.toast {
+  background: rgba(10,20,8,0.9) !important;
+  border: 0.5px solid rgba(255,255,255,0.14) !important;
+  color: rgba(255,255,255,0.9) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 8px 24px rgba(0,0,0,0.4) !important;
+}
+
+    

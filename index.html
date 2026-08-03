@@ -1,0 +1,520 @@
+<!--
+  ════════════════════════════════════════════════════
+  index.html — TreeSiri POS
+  โครงสร้างหน้าเว็บทั้งหมด แบ่งเป็น:
+   1) <head>  — โหลดฟอนต์ (Sarabun), ไอคอน (Tabler Icons), Chart.js, style.css
+   2) .app    — ตัวแอปหลัก: topbar, แท็บเมนู, sidebar (จอใหญ่), หน้าจอต่างๆ (.screen)
+   3) .overlay/.sheet — popup ต่างๆ ที่เด้งขึ้นจากด้านล่าง (modal)
+  ── แก้ "ไอคอน" ของปุ่ม/แท็บ ให้แก้ class="ti ti-xxx" (ชื่อไอคอนจาก Tabler Icons)
+  ── แก้ "ข้อความ" บนปุ่ม/หัวข้อ แก้ตรงข้อความภาษาไทยได้เลย
+  ── แก้ "สี/ขนาด" ให้ไปแก้ใน style.css (ดูคู่มือด้านบนของไฟล์นั้น)
+  ════════════════════════════════════════════════════
+-->
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>TreeSiri </title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="TreeSiri">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-row">
+      <div id="topbar-brand"><div class="store-name" onclick="gotoScreen('pos')" title="ไปหน้าขาย">TreeSiri</div></div>
+      <input type="text" id="topbar-search-input" class="topbar-search-input" placeholder="ค้นหาต้นไม้..." oninput="renderProds()">
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <button class="topbar-icon-btn" id="topbar-search-btn" onclick="toggleTopbarSearch()"><i class="ti ti-search"></i></button>
+        <a class="sheet-pill" href="https://docs.google.com/spreadsheets/d/1c_t89oC0p5setOKKu2vuPbkVb_NXPCJ8jh_O9pP4s-o" target="_blank" title="เปิด Google Sheet"><i class="ti ti-table-filled"></i></a>
+        <span id="q-badge" style="display:none;align-items:center;font-size:11px;font-weight:700;padding:4px 8px;border-radius:20px;background:rgba(255,176,90,0.2);color:#ffb05a;border:1px solid rgba(255,176,90,0.35);cursor:default"></span>
+        <button class="sync-pill" onclick="syncAll()"><span class="sdot" id="sdot"></span><span id="slbl">Sync</span></button>
+      </div>
+    </div>
+  </div>
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab active" onclick="gotoScreen('pos',this)"><i class="ti ti-basket"></i><span>ขาย</span></button>
+    <button class="tab" onclick="gotoScreen('report',this)"><i class="ti ti-chart-bar"></i><span>รายงาน</span></button>
+    <button class="tab" onclick="gotoScreen('manage',this)"><i class="ti ti-plant"></i><span>คลังต้นไม้</span></button>
+    <button class="tab" onclick="gotoScreen('customers',this)"><i class="ti ti-users"></i><span>ลูกค้า</span></button>
+  </div>
+  <!-- Sidebar (tablet/desktop only) -->
+  <nav class="sidebar" id="app-sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-store-name" id="sb-store-name" onclick="gotoScreen('pos')" title="ไปหน้าขาย">TreeSiri</div>
+      <div class="sidebar-search-row">
+        <input type="text" id="sidebar-search-input" class="sidebar-search-input" placeholder="ค้นหาต้นไม้..." oninput="renderProds()">
+        <a class="sheet-pill" href="https://docs.google.com/spreadsheets/d/1c_t89oC0p5setOKKu2vuPbkVb_NXPCJ8jh_O9pP4s-o" target="_blank" title="เปิด Google Sheet"><i class="ti ti-table-filled"></i></a>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <button class="sb-btn active" onclick="gotoScreen('pos',this)"><i class="ti ti-basket"></i>ขาย</button>
+      <button class="sb-btn" onclick="gotoScreen('report',this)"><i class="ti ti-chart-bar"></i>รายงาน</button>
+      <button class="sb-btn" onclick="gotoScreen('manage',this)"><i class="ti ti-plant"></i>คลังต้นไม้</button>
+      <button class="sb-btn" onclick="gotoScreen('customers',this)"><i class="ti ti-users"></i>ลูกค้า</button>
+    </div>
+    <div class="sidebar-foot">
+      <button class="rexp-add-btn" style="width:100%;justify-content:center;margin-bottom:8px" onclick="openReportExpenseModal()"><i class="ti ti-plus" style="font-size:13px;font-weight:300"></i> ค่าใช้จ่าย</button>
+      <button class="sidebar-sync-btn" onclick="syncAll()"><span class="sdot" id="sdot2"></span> <span id="slbl2">Sync</span></button>
+    </div>
+  </nav>
+  <div class="screens">
+    <!-- POS -->
+    <div id="screen-pos" class="screen active">
+      <div class="pos-wrap">
+        <!-- เลือกร้านก่อนขาย -->
+        <div class="pos-store-sel">
+          <div style="display:flex;gap:8px">
+            <button class="ss-btn" id="pos-fah" style="flex:1" onclick="selectPosStore('fah',this)">🩵 ร้านฟ้า</button>
+            <button class="ss-btn" id="pos-mom" style="flex:1" onclick="selectPosStore('mom',this)">🩷 ร้านแม่</button>
+          </div>
+        </div>
+        <div class="prod-area"><div class="prod-grid" id="prod-grid"></div></div>
+        <div class="cart-panel">
+          <div class="cart-drag-handle" id="cart-drag-handle" onclick="toggleCart()">
+            <div class="cart-drag-bar"></div>
+            <span class="cart-drag-lbl">ตะกร้า <span id="cart-count-handle"></span></span>
+          </div>
+          <div class="cart-hdr">
+            <span class="cart-title"><i class="ti ti-shopping-cart" style="font-size:14px;vertical-align:-2px"></i> ตะกร้า (<span id="cart-count">0</span>)</span>
+            <button class="clear-btn" onclick="clearCart()">ล้างทั้งหมด</button>
+          </div>
+          <div class="cart-scroll" id="cart-items"><div class="cart-empty">เลือกต้นไม้ด้านบน</div></div>
+          <!-- Discount row -->
+          <div class="disc-row">
+            <span class="disc-lbl">ส่วนลดบิลนี้</span>
+            <div class="disc-tabs">
+              <button class="disc-tab active" onclick="setDiscMode('baht',this)">฿</button>
+              <button class="disc-tab" onclick="setDiscMode('pct',this)">%</button>
+            </div>
+            <input class="disc-input" type="number" id="disc-val" value="0" min="0" oninput="renderTotal()" placeholder="0" inputmode="decimal">
+            <span id="disc-unit" style="font-size:12px;color:var(--m)">บาท</span>
+          </div>
+          <div class="total-row">
+            <span class="total-lbl">ยอดรวม</span>
+            <div class="total-right">
+              <div class="total-orig" id="total-orig"></div>
+              <div class="total-amt" id="total-amt">฿0</div>
+            </div>
+          </div>
+          <!-- Customer selector — ย้ายเข้าตะกร้า -->
+          <div class="cust-sel-bar">
+            <button class="cust-sel-btn" id="cust-sel-btn" onclick="openCustPicker()">
+              <i class="ti ti-user"></i><span id="cust-sel-label">เลือกลูกค้า (ไม่บังคับ)</span>
+            </button>
+            <div class="cust-clear-btn" id="cust-clear" onclick="clearSelectedCust()" style="display:none" title="ยกเลิก"><i class="ti ti-x" style="font-size:14px"></i></div>
+          </div>
+          <button class="pay-btn" id="pay-btn" onclick="openPay()" disabled><i class="ti ti-cash" style="font-size:19px"></i> ชำระเงิน</button>
+        </div>
+      </div>
+    </div>
+    <!-- รายงาน (สรุป + ประวัติ + กำไร) -->
+    <div id="screen-report" class="screen">
+      <div class="dash-wrap">
+        <!-- ── ภาพรวมยอดขาย ── -->
+        <div class="section-lbl" style="margin-top:0"><i class="ti ti-coin" style="font-size:16px;vertical-align:-2px;color:var(--g7)"></i> ภาพรวมยอดขาย</div>
+        <div class="date-presets" id="profit-presets">
+          <button class="preset-btn active" onclick="setProfitPreset('today',this)">วันนี้</button>
+          <button class="preset-btn" onclick="setProfitPreset('7d',this)">7 วัน</button>
+          <button class="preset-btn" onclick="setProfitPreset('30d',this)">30 วัน</button>
+          <button class="preset-btn" onclick="setProfitPreset('mtd',this)">เดือนนี้</button>
+          <button class="preset-btn" onclick="setProfitPreset('1y',this)">1 ปี</button>
+          <button class="preset-btn" onclick="setProfitPreset('custom',this)">กำหนดเอง</button>
+        </div>
+        <div class="date-range-wrap" id="profit-custom-range" style="display:none">
+          <input class="date-inp" type="date" id="profit-date-from" onchange="renderProfit()">
+          <span class="date-sep">ถึง</span>
+          <input class="date-inp" type="date" id="profit-date-to" onchange="renderProfit()">
+        </div>
+        <div class="metric-grid" id="profit-metrics" style="margin-bottom:12px"></div>
+        <div id="profit-breakdown"></div>
+
+        <div class="section-lbl">ประวัติการขายวันนี้</div>
+        <div class="today-cards" id="today-cards"></div>
+        <div id="hist-list"></div>
+      </div>
+    </div>
+    <!-- Manage -->
+    <div id="screen-manage" class="screen">
+      <div class="manage-wrap">
+        <div class="manage-hdr">
+          <span class="manage-title">จัดการสินค้า</span>
+          <button class="add-btn" onclick="openProductForm()"><i class="ti ti-plus" style="font-size:15px"></i> เพิ่มสินค้า</button>
+        </div>
+        <div class="cust-search">
+          <i class="ti ti-search"></i>
+          <input type="text" id="manage-search-inp" placeholder="ค้นหาชื่อ / Lot..." oninput="renderProdList()">
+        </div>
+        <div id="prod-list"></div>
+      </div>
+    </div>
+    <!-- Customers -->
+    <div id="screen-customers" class="screen">
+      <div class="cust-wrap">
+        <div class="cust-hdr">
+          <span class="manage-title">ลูกค้า</span>
+          <button class="add-btn" onclick="openCustForm()"><i class="ti ti-user-plus" style="font-size:15px"></i> เพิ่มลูกค้า</button>
+        </div>
+        <div class="cust-search">
+          <i class="ti ti-search"></i>
+          <input type="text" id="cust-search-inp" placeholder="ค้นหาชื่อ / เบอร์..." oninput="renderCustList()">
+        </div>
+        <div id="cust-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ POPUP: หน้าต่างชำระเงิน (กดปุ่ม "ชำระเงิน" เพื่อเปิด) ════ -->
+<div class="overlay" id="pay-overlay" data-close="closePay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closePay()"><i class="ti ti-x"></i></button>
+    <!-- Header ชำระเงิน + ชื่อร้านโดดเด่น -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--m);margin-bottom:3px">ชำระเงิน</div>
+      <div id="pay-store-header" style="font-size:20px;font-weight:800;letter-spacing:-.3px"></div>
+    </div>
+    <div id="pay-summary" style="font-size:12px;color:var(--m);margin-bottom:8px;line-height:1.6"></div>
+    <!-- Customer selector inside modal -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <button class="cust-sel-btn" id="modal-cust-btn" onclick="openCustPickerFromModal()" style="flex:1">
+        <i class="ti ti-user"></i><span id="modal-cust-label">เลือกลูกค้า (ไม่บังคับ)</span>
+      </button>
+      <div class="cust-clear-btn" id="modal-cust-clear" onclick="clearSelectedCust()" style="display:none" title="ยกเลิก"><i class="ti ti-x" style="font-size:14px"></i></div>
+    </div>
+    <div class="pts-preview" id="pts-preview" style="display:none">
+      <i class="ti ti-star"></i>
+      <span id="pts-preview-text"></span>
+    </div>
+    <!-- % กำไรต่อรายการ -->
+    <div id="pay-profit-splits" style="margin-bottom:10px"></div>
+    <!-- ต้นทุนอื่นๆ -->
+    <div class="form-lbl" style="margin-top:4px">ต้นทุนอื่นๆ <span style="font-weight:400;color:var(--faint)">(หักจากกำไร ไม่บวกยอดลูกค้า)</span></div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+      <button class="extra-cost-tag" onclick="addExtraCost('ค่าขนส่ง')"><i class="ti ti-truck" style="font-size:12px"></i> ค่าขนส่ง</button>
+      <button class="extra-cost-tag" onclick="addExtraCost('ค่าฝากขาย')"><i class="ti ti-building-store" style="font-size:12px"></i> ค่าฝากขาย</button>
+      <button class="extra-cost-tag" onclick="addExtraCost('อื่นๆ')"><i class="ti ti-plus" style="font-size:12px"></i> อื่นๆ</button>
+    </div>
+    <div id="extra-costs-list"></div>
+    <div class="modal-total-box">
+      <span class="modal-total-lbl">ยอดสุทธิ</span>
+      <span class="modal-total-val" id="pay-total">฿0</span>
+    </div>
+    <div class="form-lbl">รับเงิน (บาท)</div>
+    <input class="form-inp" type="number" id="recv-inp" placeholder="0.00" oninput="calcChange()" inputmode="decimal" style="font-size:18px;font-weight:600;margin-bottom:8px">
+    <div class="change-box" id="change-box"></div>
+    <div class="sheet-btns">
+      <button class="btn-secondary" onclick="closePay()">ยกเลิก</button>
+      <button class="btn-primary" id="pay-ok" onclick="confirmSale()" disabled>ยืนยันการขาย</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ POPUP: แก้ไขราคาต้นไม้ในตะกร้า ════ -->
+<div class="overlay" id="price-edit-overlay" data-close="closePriceEdit">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closePriceEdit()"><i class="ti ti-x"></i></button>
+    <div class="sheet-title" id="pe-title">แก้ราคา</div>
+    <div class="form-lbl">ราคาที่จะขาย (บาท/ต้น)</div>
+    <input class="form-inp" id="pe-price-inp" type="number" min="0" inputmode="decimal" placeholder="0" style="font-size:22px;font-weight:700;margin-bottom:6px" oninput="renderPriceEditPreview()">
+    <button type="button" id="pe-reset-btn" onclick="resetPriceEdit()" style="background:none;border:none;color:var(--g8);font-size:12px;font-weight:600;cursor:pointer;padding:0;margin-bottom:14px;display:flex;align-items:center;gap:4px">
+      <i class="ti ti-rotate" style="font-size:14px"></i> รีเซ็ตเป็นราคาปกติ (฿<span id="pe-orig-price">0</span>)
+    </button>
+    <div style="font-size:12px;color:var(--m);margin-bottom:16px;background:var(--bg2);border-radius:8px;padding:8px 10px">
+      ยอดรวมรายการนี้ (<span id="pe-qty">1</span> ต้น) — <b id="pe-line-total" style="color:var(--t)">฿0</b>
+    </div>
+    <div class="sheet-btns">
+      <button class="btn-secondary" onclick="closePriceEdit()">ยกเลิก</button>
+      <button class="btn-primary" onclick="savePriceEdit()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ POPUP: แก้ไขประวัติการขาย ════ -->
+<div class="overlay" id="sale-edit-overlay" data-close="closeSaleEdit">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeSaleEdit()"><i class="ti ti-x"></i></button>
+    <div class="sheet-title">แก้ไขประวัติการขาย</div>
+    <div id="sale-edit-items" style="font-size:12px;color:var(--m);line-height:1.7;margin-bottom:12px;padding:8px 10px;background:var(--bg2);border-radius:8px"></div>
+    <div class="form-lbl">ชื่อลูกค้า</div>
+    <input class="form-inp" id="se-cust" placeholder="ไม่บังคับ" style="margin-bottom:10px">
+    <div class="form-lbl">ส่วนลด (฿)</div>
+    <input class="form-inp" id="se-discount" type="number" min="0" inputmode="decimal" value="0" style="margin-bottom:8px">
+    <div style="font-size:11px;color:var(--m);margin-bottom:16px">⚠️ หากต้องการแก้รายการสินค้า ให้ลบบิลนี้แล้วบันทึกใหม่</div>
+    <div class="sheet-btns">
+      <button class="btn-secondary" onclick="closeSaleEdit()">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveSaleEdit()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ POPUP: ยืนยันลบประวัติการขาย ════ -->
+<div class="overlay" id="sale-del-overlay" data-close="closeSaleDel">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" style="color:var(--r6)"><i class="ti ti-trash" style="font-size:16px;vertical-align:-2px"></i> ลบประวัติการขาย</div>
+    <div id="sale-del-info" style="font-size:13px;color:var(--m);margin-bottom:20px;line-height:1.7;padding:10px;background:var(--bg2);border-radius:8px"></div>
+    <div style="font-size:12px;color:var(--r6);margin-bottom:16px">⚠️ ไม่สามารถเรียกคืนได้ และจะถูกลบออกจาก Google Sheet ด้วย</div>
+    <div class="sheet-btns">
+      <button class="btn-secondary" onclick="closeSaleDel()">ยกเลิก</button>
+      <button class="btn-primary" id="sale-del-ok" style="background:var(--r6);border-color:var(--r6)" onclick="confirmDeleteSale()">ลบ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ POPUP: ฟอร์มเพิ่ม/แก้ไขสินค้า (ชื่อ, ราคา, สต็อก, emoji, รูป) ════ -->
+<div class="overlay" id="prod-overlay" data-close="closeProdForm">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeProdForm()"><i class="ti ti-x"></i></button>
+    <div class="sheet-title" id="prod-form-title">เพิ่มสินค้าใหม่</div>
+    <div class="form-lbl">ชื่อต้นไม้ *</div>
+    <input class="form-inp" id="f-name" type="text" placeholder="เช่น มอนสเตร่า">
+    <div class="form-lbl">Lot / แหล่งที่มา *</div>
+    <div class="inp-with-btn">
+      <input class="form-inp" id="f-lot" type="text" placeholder="เช่น Lot A, สวนอ.สมชาย, 15/1/68">
+      <button type="button" class="inp-cal-btn" onclick="openLotDatePicker()" title="เลือกวันที่"><i class="ti ti-calendar"></i></button>
+      <input type="date" id="f-lot-date-hidden" tabindex="-1" onchange="applyLotDate(this.value)" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px">
+    </div>
+    <div class="form-lbl">ราคาปกติ (บาท) *</div>
+    <input class="form-inp" id="f-price" type="number" placeholder="0" inputmode="decimal">
+    <div class="form-lbl">ราคาต้นทุน (บาท/ต้น) — ถ้าไม่มีต้นทุนให้ใส่ 0</div>
+    <input class="form-inp" id="f-cost" type="number" placeholder="0" value="0" inputmode="decimal">
+    <div class="form-lbl">ต้นทุนของใคร</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button class="pt-btn active" id="co-mom" onclick="setCostOwner('แม่',this)" style="flex:1">🩷 ทุนแม่</button>
+      <button class="pt-btn" id="co-fah" onclick="setCostOwner('ฟ้า',this)" style="flex:1">🩵 ทุนฟ้า</button>
+      <button class="pt-btn" id="co-joint" onclick="setCostOwner('ร่วม',this)" style="flex:1">🤝 ทุนร่วม</button>
+    </div>
+    <input type="hidden" id="f-cost-owner" value="แม่">
+    <div class="form-lbl">จำนวนสต็อกรวม</div>
+    <input class="form-inp" id="f-stock" type="number" placeholder="0" inputmode="numeric" oninput="updateStockBreakdownHint()">
+    <div class="form-lbl">จำนวนที่อยู่หน้าร้าน (เป็นส่วนหนึ่งของสต็อกรวม)</div>
+    <div style="display:flex;gap:8px;margin-bottom:4px">
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--m);margin-bottom:3px">🩵 ร้านฟ้า</div>
+        <input class="form-inp" id="f-stock-fah" type="number" placeholder="0" inputmode="numeric" oninput="updateStockBreakdownHint(true)">
+      </div>
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--m);margin-bottom:3px">🩷 ร้านแม่</div>
+        <input class="form-inp" id="f-stock-mom" type="number" placeholder="0" inputmode="numeric" oninput="updateStockBreakdownHint(true)">
+      </div>
+    </div>
+    <div id="stock-breakdown-hint" style="font-size:11px;color:var(--faint);margin-bottom:8px">🏡 เหลือในสวน: 0 ต้น</div>
+    <div class="form-lbl">% Fah เริ่มต้น (ค่าเริ่มต้นตอนขาย แก้ได้ในบิล)</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div style="display:flex;gap:6px;flex:1">
+        <button class="pt-btn shared active" id="pt-50" data-pct="50" onclick="setDefaultPct(50,this)"><i class="ti ti-users" style="font-size:13px"></i> 50%</button>
+        <button class="pt-btn individual" id="pt-100" data-pct="100" onclick="setDefaultPct(100,this)"><i class="ti ti-user" style="font-size:13px"></i> 100%</button>
+        <button class="pt-btn" id="pt-0" data-pct="0" onclick="setDefaultPct(0,this)" style="background:var(--bg2)"><i class="ti ti-minus" style="font-size:13px"></i> 0%</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px">
+        <span style="font-size:12px;color:var(--m)">หรือ</span>
+        <input class="form-inp" id="f-default-pct" type="number" min="0" max="100" value="50" inputmode="numeric" style="width:64px;padding:7px 8px;font-size:14px;font-weight:600" oninput="syncDefaultPctBtns(this.value)">
+        <span style="font-size:12px;color:var(--m)">%</span>
+      </div>
+    </div>
+<div class="form-lbl">รูปภาพต้นไม้</div>
+    <div class="img-tabs">
+      <button class="img-tab active" onclick="setImgTab('upload',this)"><i class="ti ti-upload" style="font-size:13px"></i> อัปโหลด</button>
+      <button class="img-tab" onclick="setImgTab('url',this)"><i class="ti ti-link" style="font-size:13px"></i> URL รูป</button>
+    </div>
+    <div id="img-upload-area" class="img-upload-area" onclick="document.getElementById('f-img-file').click()">
+      <img id="img-preview" class="img-preview" style="display:none">
+      <div id="img-upload-hint"><i class="ti ti-photo" style="font-size:24px;color:var(--faint)"></i><div style="font-size:12px;color:var(--faint);margin-top:4px">แตะเพื่อเลือกรูป</div></div>
+      <input type="file" id="f-img-file" accept="image/*" style="display:none" onchange="handleImgUpload(event)">
+    </div>
+    <input class="form-inp" id="f-img-url" type="url" placeholder="https://..." style="display:none;margin-top:6px" oninput="previewImgUrl()">
+    <div class="form-lbl" style="margin-top:10px">Emoji (ไอคอนสำรอง)</div>
+    <div class="emoji-grid" id="emoji-grid"></div>
+    <input class="form-inp" id="f-emoji" type="text" placeholder="หรือพิมพ์ emoji เอง" style="margin-top:8px;font-size:18px" maxlength="4">
+    <div class="sheet-btns">
+      <button class="btn-secondary" onclick="closeProdForm()">ยกเลิก</button>
+      <button class="btn-primary" id="prod-save-btn" onclick="saveProduct()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ POPUP: ย้ายสต็อก (สวน / ร้านฟ้า / ร้านแม่) ════ -->
+<div class="overlay" id="transfer-overlay" data-close="closeTransferModal">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeTransferModal()"><i class="ti ti-x"></i></button>
+    <div class="sheet-title">ย้ายสต็อก</div>
+    <p style="font-size:13px;color:var(--m);margin-bottom:10px" id="transfer-name"></p>
+    <div id="transfer-current" style="font-size:12px;color:var(--m);margin-bottom:12px;line-height:1.6"></div>
+    <div class="form-lbl">จาก</div>
+    <select class="form-inp" id="tr-from">
+      <option value="garden">🏡 สวน</option>
+      <option value="fah">🩵 ร้านฟ้า</option>
+      <option value="mom">🩷 ร้านแม่</option>
+    </select>
+    <div class="form-lbl">ไปยัง</div>
+    <select class="form-inp" id="tr-to">
+      <option value="fah">🩵 ร้านฟ้า</option>
+      <option value="mom">🩷 ร้านแม่</option>
+      <option value="garden">🏡 สวน</option>
+    </select>
+    <div class="form-lbl">จำนวน (ต้น)</div>
+    <input class="form-inp" id="tr-qty" type="number" placeholder="0" inputmode="numeric" min="1">
+    <div class="sheet-btns">
+      <button class="btn-secondary" onclick="closeTransferModal()">ยกเลิก</button>
+      <button class="btn-primary" onclick="confirmTransfer()">ย้ายสต็อก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ POPUP: ยืนยันการลบสินค้า ════ -->
+<div class="overlay" id="del-overlay" data-close="closeDelModal">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeDelModal()"><i class="ti ti-x"></i></button>
+    <div class="sheet-title">ลบสินค้า</div>
+    <p style="font-size:14px;color:var(--m);margin-bottom:16px">ยืนยันลบ "<span id="del-name" style="color:var(--t);font-weight:600"></span>" ออกจากระบบและ Google Sheet?</p>
+    <div class="sheet-btns">
+      <button class="btn-secondary" onclick="closeDelModal()">ยกเลิก</button>
+      <button class="btn-primary" style="background:var(--r6)" onclick="confirmDelete()">ลบเลย</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ POPUP: ฟอร์มเพิ่ม/แก้ไขลูกค้า ════ -->
+<div class="overlay" id="cust-form-overlay" data-close="closeCustForm">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeCustForm()"><i class="ti ti-x"></i></button>
+    <div class="sheet-title" id="cust-form-title">เพิ่มลูกค้าใหม่</div>
+    <div class="form-lbl">ชื่อ / ชื่อเล่น *</div>
+    <input class="form-inp" id="cf-name" type="text" placeholder="เช่น คุณสมชาย">
+    <div class="form-lbl">เบอร์โทรศัพท์</div>
+    <input class="form-inp" id="cf-phone" type="tel" placeholder="08x-xxx-xxxx" inputmode="tel">
+    <div class="form-lbl">แต้มสะสม</div>
+    <input class="form-inp" id="cf-points" type="number" placeholder="0" value="0" inputmode="numeric">
+    <div class="form-lbl">หมายเหตุ</div>
+    <input class="form-inp" id="cf-note" type="text" placeholder="เช่น ชอบต้นไม้ในร่ม">
+    <div class="sheet-btns">
+      <button class="btn-secondary" onclick="closeCustForm()">ยกเลิก</button>
+      <button class="btn-primary" id="cust-save-btn" onclick="saveCustomer()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ POPUP: เลือกลูกค้า (สำหรับผูกกับบิลขาย) ════ -->
+<div class="overlay" id="cust-picker-overlay" data-close="closeCustPicker">
+  <div class="sheet" style="max-height:80vh">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeCustPicker()"><i class="ti ti-x"></i></button>
+    <div class="sheet-title">เลือกลูกค้า</div>
+    <div class="cust-search" style="margin-bottom:10px"><i class="ti ti-search"></i><input type="text" id="picker-search" placeholder="ค้นหา..." oninput="renderPickerList()"></div>
+    <div id="picker-list" style="max-height:50vh;overflow-y:auto"></div>
+    <div class="sheet-btns" style="margin-top:12px">
+      <button class="btn-secondary" onclick="closeCustPicker()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ POPUP: ประวัติการซื้อของลูกค้า ════ -->
+<div class="overlay" id="cust-hist-overlay" data-close="closeCustHist">
+  <div class="sheet" style="max-height:85vh">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeCustHist()"><i class="ti ti-x"></i></button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div class="sheet-title" style="margin-bottom:2px" id="cust-hist-name">ประวัติการซื้อ</div>
+        <div style="font-size:12px;color:var(--m)" id="cust-hist-meta"></div>
+      </div>
+      <span id="cust-hist-points" class="cust-points"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px" id="cust-hist-stats"></div>
+    <div style="font-size:12px;font-weight:600;color:var(--m);margin-bottom:8px">ประวัติการสั่งซื้อ</div>
+    <div id="cust-hist-list" style="max-height:40vh;overflow-y:auto"></div>
+    <div class="sheet-btns" style="margin-top:12px">
+      <button class="btn-secondary" onclick="closeCustHist()">ปิด</button>
+      <button class="btn-primary" onclick="selectCustFromHist()">เลือกลูกค้านี้</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ POPUP: ใบเสร็จ / ออกบิล (พิมพ์ได้) ════ -->
+<div class="overlay" id="receipt-overlay" data-close="closeReceipt">
+  <div class="sheet" style="max-height:90vh">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeReceipt()"><i class="ti ti-x"></i></button>
+    <div class="sheet-title">ใบเสร็จ</div>
+    <div id="receipt-body" class="receipt"></div>
+    <div class="sheet-btns">
+      <button class="btn-secondary" onclick="closeReceipt()">ปิด</button>
+      <button class="btn-primary" onclick="printReceiptNow()"><i class="ti ti-printer"></i> พิมพ์ใบเสร็จ</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- POPUP: ค่าใช้จ่ายอื่นๆ (รายงาน) -->
+<div class="overlay" id="report-exp-overlay" data-close="closeReportExpenseModal">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeReportExpenseModal()"><i class="ti ti-x"></i></button>
+    <div class="sheet-title">ค่าใช้จ่ายอื่นๆ</div>
+    <div class="form-lbl">ชื่อค่าใช้จ่าย</div>
+    <input class="form-inp" id="rexp-name" type="text" placeholder="เช่น ค่าปุ๋ย, ค่าขนส่ง" style="margin-bottom:10px">
+    <div class="form-lbl">จำนวนเงิน (บาท)</div>
+    <input class="form-inp" id="rexp-amt" type="number" placeholder="0" inputmode="decimal" style="margin-bottom:10px">
+    <div class="form-lbl">หักจากใคร</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button class="pt-btn active" id="rexp-owner-joint" onclick="setRexpOwner('ร่วม',this)" style="flex:1">🤝 คนละครึ่ง</button>
+      <button class="pt-btn" id="rexp-owner-mom" onclick="setRexpOwner('แม่',this)" style="flex:1">🩷 แม่ 100%</button>
+      <button class="pt-btn" id="rexp-owner-fah" onclick="setRexpOwner('ฟ้า',this)" style="flex:1">🩵 ฟ้า 100%</button>
+    </div>
+    <input type="hidden" id="rexp-owner" value="ร่วม">
+    <div style="font-size:12px;color:var(--m);margin-bottom:12px;background:var(--bg2);border-radius:8px;padding:8px 10px" id="rexp-owner-hint">
+      💛 หักจากกำไรของ <strong>ฟ้าและแม่ คนละครึ่ง</strong> เท่าๆ กัน
+    </div>
+    <div class="sheet-btns">
+      <button class="btn-secondary" onclick="closeReportExpenseModal()">ยกเลิก</button>
+      <button class="btn-primary" onclick="addReportExpense()">เพิ่ม</button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ปุ่ม "+ ค่าใช้จ่าย" — ย้ายจากปุ่มลอย (FAB) เดิมมาไว้ในหัวข้อ "สรุปกำไร" แทน
+   (เลื่อนจอไปพร้อมเนื้อหา ไม่ลอยทับหน้าจออีกต่อไป) แต่ยังคงสีทอง + glow/pulse เดิมไว้ */
+.rexp-add-btn{
+  display:flex;align-items:center;gap:5px;flex-shrink:0;
+  padding:7px 13px;border-radius:var(--rad);border:none;cursor:pointer;
+  background:linear-gradient(135deg,#f5c842,#e8a800);
+  color:#fff;font-size:12px;font-weight:700;
+  font-family:'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+  box-shadow:0 0 0 4px rgba(245,200,66,.15),0 0 12px rgba(245,200,66,.45);
+  animation:fabPulse 2.4s ease-in-out infinite;
+  transition:transform .15s,box-shadow .15s;
+}
+.rexp-add-btn:active{transform:scale(.93);}
+@keyframes fabPulse{
+  0%,100%{box-shadow:0 0 0 4px rgba(245,200,66,.15),0 0 12px rgba(245,200,66,.45);}
+  50%{box-shadow:0 0 0 7px rgba(245,200,66,.08),0 0 20px rgba(245,200,66,.6);}
+}
+</style>
+
+<script src="app.js?v=3" defer></script>
+
+</body>
+</html>

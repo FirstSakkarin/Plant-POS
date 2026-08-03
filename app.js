@@ -1512,7 +1512,11 @@ function renderHistory(){
       :"";
     return divider+`<div class="sale-card" style="${cardStyle}" onclick="openReceipt(sales[${i}])" title="แตะเพื่อดูรายละเอียดบิล">
       <div class="sale-hdr"><span class="sale-date"><i class="ti ti-clock" style="font-size:10px"></i> ${ds}${storeTag}</span><span class="sale-badge">${s.itemCount} รายการ</span></div>
-      <div class="sale-items-txt">${s.custName?`👤 ${s.custName} · `:""}${s.items.map(x=>`${x.emoji||"🌿"}${x.name}×${x.qty}`).join(" · ")}${discTxt?` · ${discTxt}`:""}</div>
+      <div class="sale-items-txt">${s.custName?`👤 ${s.custName} · `:""}${s.items.map(x=>{
+        const prod=findProductForItem(x);
+        const cleanName=prod?prod.name:(x.name||"").replace(/\s*\([^)]*\)\s*$/,"");
+        return`<span class="sale-item"><span class="sale-item-name">${x.emoji||"🌿"}${cleanName}</span> <span class="sale-item-qty">×${x.qty}</span></span>`;
+      }).join(" · ")}${discTxt?` · ${discTxt}`:""}</div>
       <div class="sale-foot">
         <div class="sale-total">฿${Math.round(s.total).toLocaleString()}</div>
         <div style="display:flex;gap:5px">

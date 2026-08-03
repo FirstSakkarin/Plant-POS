@@ -9,7 +9,11 @@
       "Bash(cp __TRACKED_VAR__/AR_Facetracking/AR_FaceTracking.18.toe AR_FaceTracking.toe)",
       "Bash(grep -vE \"^#|^$\")",
       "Bash(grep -vE \"^[[:space:]]*#|^[[:space:]]*$\")",
-      "Bash(MEM=\"/Users/1st/.claude/projects/-Users-1st-SynologyDrive-Macbook-M1Max-TreeSiri-GitHub-Plant-POS/memory\" *)"
+      "Bash(MEM=\"/Users/1st/.claude/projects/-Users-1st-SynologyDrive-Macbook-M1Max-TreeSiri-GitHub-Plant-POS/memory\" *)",
+      "Bash(awk 'NR>=2500 && NR<=2615 && /@media|\\\\.dark|prefers-color-scheme|^}/' style.css)",
+      "Bash(awk 'NR<2614 && /@media/{line=NR\": \"$0} END{print line}' style.css)",
+      "Bash(node --check app.js)",
+      "Bash(node -e ' *)"
     ]
   }
 }

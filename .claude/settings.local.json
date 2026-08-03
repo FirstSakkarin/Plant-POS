@@ -13,7 +13,8 @@
       "Bash(awk 'NR>=2500 && NR<=2615 && /@media|\\\\.dark|prefers-color-scheme|^}/' style.css)",
       "Bash(awk 'NR<2614 && /@media/{line=NR\": \"$0} END{print line}' style.css)",
       "Bash(node --check app.js)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(awk 'NR==2500,NR==2520' style.css)"
     ]
   }
 }

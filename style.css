@@ -1170,20 +1170,55 @@
         .sale-items-txt {
             font-size: 11px;
             color: var(--m);
-            margin-bottom: 4px;
-            line-height: 1.7
+            margin-bottom: 4px
+        }
+
+        .sale-cust-line {
+            font-size: 11px;
+            color: var(--m);
+            margin-bottom: 4px
+        }
+
+        .sale-items-grid {
+            display: grid;
+            grid-template-columns: minmax(0,1fr) auto auto;
+            column-gap: 10px;
+            row-gap: 3px;
+            align-items: baseline
+        }
+
+        .sale-item-row {
+            display: contents
         }
 
         .sale-item-name {
             font-weight: 700;
             font-size: 12.5px;
-            color: var(--t)
+            color: var(--t);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .sale-item-price {
+            font-size: 11px;
+            color: var(--m);
+            white-space: nowrap;
+            text-align: right
         }
 
         .sale-item-qty {
             font-weight: 700;
             font-size: 12.5px;
-            color: var(--g8)
+            color: var(--g8);
+            white-space: nowrap;
+            text-align: right
+        }
+
+        .sale-disc-line {
+            font-size: 11px;
+            color: var(--m);
+            margin-top: 4px
         }
 
         .sale-total {
@@ -2635,7 +2670,10 @@
   color: rgba(255,255,255,0.5) !important;
 }
 .sale-items-txt { color: rgba(255,255,255,0.45) !important; }
+.sale-cust-line { color: rgba(255,255,255,0.45) !important; }
+.sale-disc-line { color: rgba(255,255,255,0.45) !important; }
 .sale-item-name { color: rgba(255,255,255,0.9) !important; }
+.sale-item-price { color: rgba(255,255,255,0.4) !important; }
 .sale-item-qty { color: #6ee7b7 !important; }
 .sale-foot { border-top-color: rgba(255,255,255,0.07) !important; }
 .sale-print-btn {

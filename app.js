@@ -190,8 +190,14 @@ async function syncAll(){
 // stockFah/stockMom = จำนวนต้นที่อยู่หน้าร้านฟ้า/ร้านแม่ (เป็นส่วนหนึ่งของ stock รวม ไม่ใช่แยกต่างหาก)
 // cost = ราคาต้นทุนต่อต้น (บาท) — ใส่ 0 ได้ถ้าไม่มีต้นทุน ใช้คำนวณกำไร/ต้นทุนรวมในหน้ารายงาน
 // costOwner = "แม่" | "ฟ้า" | "ร่วม" — ใครออกต้นทุน (default = "แม่")
+// เบอร์โทรจาก Sheet อาจเสียเลข 0 นำหน้า (Sheets แปลงเป็นตัวเลข) → เติมกลับให้
+function normPhone(v){
+  const d=String(v??"").replace(/\D/g,"");
+  if(!d)return "";
+  return (d.length===9||d.length===8)&&d[0]!=="0"?"0"+d:d;
+}
 async function loadProducts(){
-  const rows=await sheetGet("Products!A2:L");
+  const rows=await sheetGet("Products!A2:N");
   products=rows.map((r,i)=>({
     row:i+2,
     sortOrder:parseInt(r[0])||9999,
@@ -202,7 +208,9 @@ async function loadProducts(){
     stockMom:parseInt(r[7])||0,
     emoji:r[8]||"🌿",imgUrl:r[9]||"",
     defaultPct:parseFloat(r[10])>=0?parseFloat(r[10]):50,
-    costOwner:r[11]||"แม่"
+    costOwner:r[11]||"แม่",
+    phone:normPhone(r[12]),      // M = เบอร์โทรแหล่งที่มา (จดไว้เฉยๆ)
+    buyPrice:parseFloat(r[13])||0 // N = ราคาซื้อ (จดไว้เฉยๆ ไม่ใช้คำนวณ)
   })).filter(p=>p.name);
   // เรียงตาม sortOrder ก่อนวาด
   products.sort((a,b)=>(a.sortOrder||9999)-(b.sortOrder||9999));
@@ -1077,6 +1085,8 @@ function openProductForm(rowId=null){
   document.getElementById("prod-form-title").textContent=rowId?"แก้ไขสินค้า":"เพิ่มสินค้าใหม่";
   document.getElementById("f-name").value=p?.name||"";
   document.getElementById("f-lot").value=p?.lot||"";
+  document.getElementById("f-phone").value=p?.phone||"";
+  document.getElementById("f-buy-price").value=p?.buyPrice||"";
   document.getElementById("f-price").value=p?.price||"";
   document.getElementById("f-cost").value=p?.cost||0;
   document.getElementById("f-stock").value=p?.stock??"";
@@ -1136,6 +1146,8 @@ async function saveProduct(){
   const existingP=editingProductId!==null?products.find(p=>p.row===editingProductId):products.find(p=>p.name===name);
   const price=parseFloat(document.getElementById("f-price").value)||0;
   const cost=parseFloat(document.getElementById("f-cost").value)||0;
+  const phone=document.getElementById("f-phone").value.replace(/\D/g,"");
+  const buyPrice=parseFloat(document.getElementById("f-buy-price").value)||0;
   const stock=parseInt(document.getElementById("f-stock").value)||0;
   const stockFah=parseInt(document.getElementById("f-stock-fah").value)||0;
   const stockMom=parseInt(document.getElementById("f-stock-mom").value)||0;
@@ -1164,11 +1176,11 @@ async function saveProduct(){
     const savedImgUrl=finalImgUrl;
     if(editingProductId!==null){
       const row=editingProductId;
-      await scriptPost({action:"updateProduct",row,name,lot,price,cost,stock,emoji,imgUrl:savedImgUrl,defaultPct,stockFah,stockMom,costOwner});
+      await scriptPost({action:"updateProduct",row,name,lot,price,cost,stock,emoji,imgUrl:savedImgUrl,defaultPct,stockFah,stockMom,costOwner,phone,buyPrice});
       const idx=products.findIndex(p=>p.row===row);
-      if(idx>=0)products[idx]={...products[idx],name,lot,price,cost,stock,emoji,imgUrl:savedImgUrl,defaultPct,stockFah,stockMom,costOwner};
+      if(idx>=0)products[idx]={...products[idx],name,lot,price,cost,stock,emoji,imgUrl:savedImgUrl,defaultPct,stockFah,stockMom,costOwner,phone,buyPrice};
     }else{
-      await scriptPost({action:"addProduct",name,lot,price,cost,stock,emoji,imgUrl:savedImgUrl,defaultPct,stockFah,stockMom,costOwner});
+      await scriptPost({action:"addProduct",name,lot,price,cost,stock,emoji,imgUrl:savedImgUrl,defaultPct,stockFah,stockMom,costOwner,phone,buyPrice});
       await loadProducts();
     }
     renderProds();renderProdList();closeProdForm();

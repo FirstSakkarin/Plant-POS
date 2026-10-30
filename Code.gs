@@ -62,8 +62,9 @@ function jsonOut(obj) {
 
 /* ───────────────────────────────────────────────
    PRODUCTS  (ชีต "Products", คอลัมน์ A-L)
-   A sortOrder | B ชื่อ | C lots | D ราคาต้นทุน | E ราคา | F สต็อกรวม
+   A sortOrder | B ชื่อ | C lots | D ราคาต้นทุน | E ราคา(ขาย) | F สต็อกรวม
    G สต็อกฟ้า | H สต็อกแม่ | I emoji | J imgUrl | K %ฟ้า | L ต้นทุนของใคร
+   M เบอร์โทรแหล่งที่มา | N ราคาซื้อ (จดเฉยๆ ไม่นำไปคำนวณ)
 ─────────────────────────────────────────────── */
 function addProduct(ss, p) {
   const sheet = ss.getSheetByName("Products");
@@ -74,8 +75,10 @@ function addProduct(ss, p) {
     p.stockFah || 0, p.stockMom || 0,
     p.emoji || "🌿", p.imgUrl || "",
     p.defaultPct ?? 50,
-    p.costOwner || "แม่"
+    p.costOwner || "แม่",
+    "", p.buyPrice || 0           // M เบอร์โทร (ใส่ด้านล่างเป็นข้อความ), N ราคาซื้อ
   ]);
+  setPhoneCell_(sheet, sheet.getLastRow(), p.phone);
   return {};
 }
 
@@ -84,15 +87,24 @@ function updateProduct(ss, p) {
   const row = parseInt(p.row);
   if (!row || row < 2) throw new Error("Invalid row: " + p.row);
   // คอลัมน์ B-L (ข้ามคอลัมน์ A=sortOrder ซึ่งจัดการแยกโดย updateSortOrder)
-  sheet.getRange(row, 2, 1, 11).setValues([[
+  sheet.getRange(row, 2, 1, 13).setValues([[
     p.name || "", p.lot || "",
     p.cost || 0, p.price || 0, p.stock || 0,
     p.stockFah || 0, p.stockMom || 0,
     p.emoji || "🌿", p.imgUrl || "",
     p.defaultPct ?? 50,
-    p.costOwner || "แม่"
+    p.costOwner || "แม่",
+    "", p.buyPrice || 0           // M เบอร์โทร, N ราคาซื้อ
   ]]);
+  setPhoneCell_(sheet, row, p.phone);
   return {};
+}
+
+// เบอร์โทร (คอลัมน์ M) — เก็บเป็นข้อความ เพื่อไม่ให้เลข 0 นำหน้าหาย
+function setPhoneCell_(sheet, row, phone) {
+  const c = sheet.getRange(row, 13);
+  c.setNumberFormat("@");
+  c.setValue(String(phone || ""));
 }
 
 function deleteProduct(ss, p) {

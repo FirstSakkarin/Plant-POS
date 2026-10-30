@@ -292,7 +292,11 @@
       <button type="button" class="inp-cal-btn" onclick="openLotDatePicker()" title="เลือกวันที่"><i class="ti ti-calendar"></i></button>
       <input type="date" id="f-lot-date-hidden" tabindex="-1" onchange="applyLotDate(this.value)" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px">
     </div>
-    <div class="form-lbl">ราคาปกติ (บาท) *</div>
+    <div class="form-lbl">เบอร์โทรศัพท์ (แหล่งที่มา)</div>
+    <input class="form-inp" id="f-phone" type="tel" placeholder="เช่น 0812345678" inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+    <div class="form-lbl">ราคาซื้อ (บาท/ต้น) — จดไว้เฉยๆ ไม่นำไปคำนวณ</div>
+    <input class="form-inp" id="f-buy-price" type="number" placeholder="0" inputmode="decimal">
+    <div class="form-lbl">ราคาขาย (บาท) *</div>
     <input class="form-inp" id="f-price" type="number" placeholder="0" inputmode="decimal">
     <div class="form-lbl">ราคาต้นทุน (บาท/ต้น) — ถ้าไม่มีต้นทุนให้ใส่ 0</div>
     <input class="form-inp" id="f-cost" type="number" placeholder="0" value="0" inputmode="decimal">

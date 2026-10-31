@@ -27,7 +27,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="TreeSiri">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 <div class="app">
@@ -152,7 +152,10 @@
       <div class="manage-wrap">
         <div class="manage-hdr">
           <span class="manage-title">จัดการสินค้า</span>
-          <button class="add-btn" onclick="openProductForm()"><i class="ti ti-plus" style="font-size:15px"></i> เพิ่มสินค้า</button>
+          <div class="manage-acts">
+            <button class="reorder-btn" onclick="openReorder()"><i class="ti ti-arrows-sort" style="font-size:16px"></i> จัดเรียง</button>
+            <button class="add-btn" onclick="openProductForm()"><i class="ti ti-plus" style="font-size:15px"></i> เพิ่มสินค้า</button>
+          </div>
         </div>
         <div class="cust-search">
           <i class="ti ti-search"></i>
@@ -275,6 +278,23 @@
       <button class="btn-secondary" onclick="closeSaleDel()">ยกเลิก</button>
       <button class="btn-primary" id="sale-del-ok" style="background:var(--r6);border-color:var(--r6)" onclick="confirmDeleteSale()">ลบ</button>
     </div>
+  </div>
+</div>
+
+<!-- ════ POPUP: จัดเรียงลำดับต้นไม้ (ลำดับเดียวกับหน้าขาย) ════ -->
+<div class="overlay" id="reorder-overlay" data-close="closeReorder">
+  <div class="sheet reorder-sheet">
+    <div class="sheet-handle"></div>
+    <div class="reorder-head">
+      <div>
+        <div class="sheet-title" style="margin-bottom:2px">จัดเรียงต้นไม้</div>
+        <div class="reorder-sub">ลำดับนี้ใช้ทั้งหน้าขายและคลังต้นไม้</div>
+      </div>
+      <button class="reorder-done" onclick="closeReorder()">เสร็จ</button>
+    </div>
+    <div class="reorder-note"><i class="ti ti-info-circle"></i><span>ลากที่ปุ่มจับ หรือกดลูกศรเพื่อย้าย — ต้นไม้ชนิดเดียวกันที่มีหลาย Lot จะย้ายไปด้วยกัน และบันทึกลำดับให้อัตโนมัติ</span></div>
+    <div id="reorder-list"></div>
+    <div id="reorder-status" class="reorder-status"></div>
   </div>
 </div>
 
@@ -518,7 +538,7 @@
 }
 </style>
 
-<script src="app.js?v=3" defer></script>
+<script src="app.js?v=4" defer></script>
 
 </body>
 </html>

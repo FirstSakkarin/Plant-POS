@@ -1036,6 +1036,153 @@ async function saveSortOrder(source){
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   REORDER MODE — จัดเรียงต้นไม้ทีละชนิด (ทุก Lot ย้ายไปด้วยกัน)
+   ลำดับเก็บใน sortOrder (คอลัมน์ A) ชุดเดิม → หน้าขายและคลังต้นไม้ตรงกัน
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+let _reorderGroups=[];      // ชื่อต้นไม้ตามลำดับที่แสดง
+let _reorderSortable=null;
+let _reorderSaveT=null;
+let _reorderFlash=null;     // ชื่อที่เพิ่งย้าย (ไฮไลต์ชั่วคราว)
+let _reorderDirty=false;    // มีลำดับที่ยังไม่ได้ส่งขึ้น Sheet
+let _reorderBase={};        // row → pos ที่บันทึกขึ้น Sheet ล่าสุด (ส่งเฉพาะแถวที่เปลี่ยน)
+
+function rEsc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+function buildReorderGroups(){
+  const sorted=[...products].sort((a,b)=>sortKey(a)-sortKey(b));
+  const seen=new Set(),names=[];
+  sorted.forEach(p=>{if(!seen.has(p.name)){seen.add(p.name);names.push(p.name);}});
+  return names;
+}
+
+function openReorder(){
+  _reorderGroups=buildReorderGroups();
+  _reorderBase={};
+  products.forEach(p=>{_reorderBase[p.row]=p.sortOrder;});
+  _reorderFlash=null;_reorderDirty=false;
+  setReorderStatus("");
+  renderReorder();
+  document.getElementById("reorder-overlay").classList.add("show");
+}
+
+function closeReorder(){
+  document.getElementById("reorder-overlay").classList.remove("show");
+  if(_reorderSortable){_reorderSortable.destroy();_reorderSortable=null;}
+  flushReorderSave();
+  renderProds();renderProdList();
+}
+
+function renderReorder(){
+  const el=document.getElementById("reorder-list");
+  const n=_reorderGroups.length;
+  if(!n){el.innerHTML=`<div style="text-align:center;color:var(--faint);font-size:13px;padding:32px 0">ยังไม่มีสินค้า</div>`;return;}
+  el.innerHTML=_reorderGroups.map((name,i)=>{
+    const lots=products.filter(p=>p.name===name);
+    const rep=lots[0]||{};
+    const total=lots.reduce((s,p)=>s+(p.stock||0),0);
+    const thumb=rep.imgUrl&&String(rep.imgUrl).startsWith("http")
+      ?`<div class="rord-thumb"><img src="${rEsc(rep.imgUrl)}" loading="lazy" alt="" onerror="this.style.display='none'"><span class="rord-emo">${rEsc(rep.emoji||"🌿")}</span></div>`
+      :`<div class="rord-thumb rord-thumb-emoji">${rEsc(rep.emoji||"🌿")}</div>`;
+    const first=i===0,last=i===n-1;
+    return `<div class="rord-row${_reorderFlash===name?" flash":""}" data-i="${i}">
+      <div class="rord-num">${i+1}</div>
+      <div class="rord-grip" title="ลากเพื่อจัดเรียง"><i class="ti ti-grip-vertical"></i></div>
+      ${thumb}
+      <div class="rord-info"><div class="rord-name">${rEsc(name)}</div><div class="rord-sub">${lots.length} Lot · รวม ${total} ต้น</div></div>
+      <button class="rord-btn" aria-label="ย้ายไปบนสุด" ${first?"disabled":""} onclick="reorderTop(${i})"><i class="ti ti-arrow-bar-to-up"></i></button>
+      <button class="rord-btn" aria-label="ย้ายขึ้น" ${first?"disabled":""} onclick="reorderMove(${i},-1)"><i class="ti ti-arrow-up"></i></button>
+      <button class="rord-btn" aria-label="ย้ายลง" ${last?"disabled":""} onclick="reorderMove(${i},1)"><i class="ti ti-arrow-down"></i></button>
+    </div>`;
+  }).join("");
+  if(_reorderSortable){_reorderSortable.destroy();_reorderSortable=null;}
+  if(window.Sortable){
+    _reorderSortable=Sortable.create(el,{
+      animation:180,
+      handle:".rord-grip",
+      ghostClass:"sort-ghost",
+      chosenClass:"sort-chosen",
+      dragClass:"sort-drag",
+      forceFallback:false,
+      onEnd:()=>{
+        const names=[...el.querySelectorAll(".rord-row")].map(r=>_reorderGroups[parseInt(r.dataset.i)]);
+        if(names.length!==_reorderGroups.length||names.every((nm,k)=>nm===_reorderGroups[k]))return;
+        _reorderGroups=names;
+        _reorderFlash=null;
+        renderReorder();
+        scheduleReorderSave();
+      }
+    });
+  }
+}
+
+function reorderMove(i,d){
+  const j=i+d;
+  if(j<0||j>=_reorderGroups.length)return;
+  const g=_reorderGroups.slice();
+  [g[i],g[j]]=[g[j],g[i]];
+  afterReorderChange(g,g[j]);
+}
+function reorderTop(i){
+  if(i<=0)return;
+  const g=_reorderGroups.slice();
+  const [x]=g.splice(i,1);g.unshift(x);
+  afterReorderChange(g,x);
+}
+function afterReorderChange(g,movedName){
+  _reorderGroups=g;_reorderFlash=movedName;
+  renderReorder();
+  const row=document.querySelector("#reorder-list .rord-row.flash");
+  if(row)row.scrollIntoView({block:"nearest",behavior:"smooth"});
+  scheduleReorderSave();
+}
+
+// ใส่ลำดับใหม่ให้ทุก Lot ตามลำดับชนิด (Lot ในชนิดเดียวกันคงลำดับเดิม ติดกัน)
+function applyReorderOrder(){
+  let pos=0;
+  _reorderGroups.forEach(name=>{
+    products.filter(p=>p.name===name).sort((a,b)=>sortKey(a)-sortKey(b)).forEach(p=>{p.sortOrder=pos++;});
+  });
+  products.sort((a,b)=>sortKey(a)-sortKey(b));
+  saveSortCache();
+}
+
+function setReorderStatus(state,msg){
+  const el=document.getElementById("reorder-status");
+  if(!el)return;
+  el.className="reorder-status"+(state?" "+state:"");
+  el.innerHTML=state==="saving"?`<i class="ti ti-loader-2"></i> กำลังบันทึกลำดับ…`
+    :state==="saved"?`<i class="ti ti-check"></i> บันทึกลำดับแล้ว`
+    :state==="error"?`<i class="ti ti-alert-triangle"></i> บันทึกลำดับไม่ได้: ${rEsc(msg||"")} (ลำดับในเครื่องนี้ยังใช้ได้ ลองกดย้ายอีกครั้งเพื่อบันทึกใหม่)`
+    :"";
+}
+
+function scheduleReorderSave(){
+  applyReorderOrder();
+  _reorderDirty=true;
+  setReorderStatus("saving");
+  clearTimeout(_reorderSaveT);
+  _reorderSaveT=setTimeout(flushReorderSave,700); // รอให้กดรัวๆ เสร็จก่อนค่อยส่งครั้งเดียว
+}
+
+async function flushReorderSave(){
+  clearTimeout(_reorderSaveT);
+  if(!_reorderDirty)return;
+  _reorderDirty=false;
+  // ส่งเฉพาะแถวที่ลำดับเปลี่ยนจากที่บันทึกล่าสุด (เร็วกว่าส่งทั้งชีต)
+  const order=products.filter(p=>_reorderBase[p.row]!==p.sortOrder).map(p=>({row:p.row,pos:p.sortOrder}));
+  if(!order.length){setReorderStatus("saved");return;}
+  try{
+    await scriptPost({action:"updateSortOrder",order});
+    order.forEach(o=>{_reorderBase[o.row]=o.pos;});
+    setReorderStatus("saved");
+  }catch(e){
+    _reorderDirty=true; // ครั้งหน้าลองส่งใหม่ (base ยังไม่อัปเดต)
+    setReorderStatus("error",e.message);
+    toast("⚠️ บันทึกลำดับไม่ได้: "+e.message);
+  }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    ย้ายสต็อก (สวน / ร้านฟ้า / ร้านแม่)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 let transferringRow=null;

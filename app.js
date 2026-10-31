@@ -70,7 +70,10 @@ async function scriptPost(data){
    ถ้า net ล้ม → queue รอ online กลับมาแล้ว sync เอง
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const Q_KEY="treesiri_opqueue";
-const SORT_KEY="treesiri_sortorder"; // cache ลำดับสินค้าใน localStorage
+// v2: ทิ้ง cache เก่าที่เคยจำลำดับผิด (แถว sortOrder=0 ถูกอ่านเป็น 9999 ไปอยู่ท้าย)
+const SORT_KEY="treesiri_sortorder_v2"; // cache ลำดับสินค้าใน localStorage
+// ค่า sortOrder ใช้เรียงสินค้า — 0 เป็นค่าที่ถูกต้อง (ตำแหน่งแรก) ห้ามใช้ ||9999 เพราะ 0 จะกลายเป็นท้ายสุด
+function sortKey(p){return Number.isFinite(p.sortOrder)?p.sortOrder:9999}
 
 function saveSortCache(){
   try{
@@ -200,7 +203,7 @@ async function loadProducts(){
   const rows=await sheetGet("Products!A2:N");
   products=rows.map((r,i)=>({
     row:i+2,
-    sortOrder:parseInt(r[0])||9999,
+    sortOrder:Number.isFinite(parseInt(r[0]))?parseInt(r[0]):9999,
     name:r[1]||"",lot:r[2]||"",
     cost:parseFloat(r[3])||0,
     price:parseFloat(r[4])||0,stock:parseInt(r[5])||0,
@@ -213,7 +216,7 @@ async function loadProducts(){
     buyPrice:parseFloat(r[13])||0 // N = ราคาซื้อ (จดไว้เฉยๆ ไม่ใช้คำนวณ)
   })).filter(p=>p.name);
   // เรียงตาม sortOrder ก่อนวาด
-  products.sort((a,b)=>(a.sortOrder||9999)-(b.sortOrder||9999));
+  products.sort((a,b)=>sortKey(a)-sortKey(b));
   // override ด้วย localStorage cache เผื่อ Sheets API คืนข้อมูลเก่า (cache hit)
   applySortCache();
   renderProds();renderProdList();
@@ -383,7 +386,7 @@ function renderProds(){
     const as=(a[storeKey]||0)>0?0:1;
     const bs=(b[storeKey]||0)>0?0:1;
     if(as!==bs)return as-bs;
-    return(a.sortOrder||9999)-(b.sortOrder||9999);
+    return sortKey(a)-sortKey(b);
   });
   if(!f.length){g.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--faint);font-size:13px;padding:24px">ไม่มีสินค้าที่ตรงกับคำค้นหา</div>`;return}
 
@@ -890,7 +893,7 @@ function renderProdList(){
   const el=document.getElementById("prod-list");
   if(!products.length){el.innerHTML=`<div class="empty-state"><i class="ti ti-plant"></i><p>ยังไม่มีสินค้า กด "+ เพิ่มสินค้า"</p></div>`;return}
   // เรียงก่อนเสมอ เพื่อให้ลำดับตรง แม้ array ถูก shuffle โดยสาเหตุใดก็ตาม
-  products.sort((a,b)=>(a.sortOrder||9999)-(b.sortOrder||9999));
+  products.sort((a,b)=>sortKey(a)-sortKey(b));
   // กรองตามคำค้นหา
   const rawQ=(document.getElementById("manage-search-inp")?.value||"").toLowerCase();
   const tokens=rawQ.trim().split(/\s+/).filter(Boolean);

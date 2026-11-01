@@ -308,6 +308,11 @@ async function loadSales(){
       itemsStr:b.items.map(it=>`${it.name}×${it.qty}×${it.price}×${it.fahPct}×${it.store}×${it.row||""}`).join(", ")
     };
   }).filter(s=>!isNaN(s.date.getTime())).reverse();
+  sortSalesByDate();
+}
+// เรียงบิลใหม่สุดก่อนตามวันที่ (บิลวันเดียวกันคงลำดับเดิม) — กันบิลย้อนหลังที่กรอกทีหลังไปปนกับวันนี้
+function sortSalesByDate(){
+  sales.sort((a,b)=>b.date-a.date);
 }
 
 async function loadCustomers(){
@@ -651,8 +656,46 @@ function updateFahSplit(rowId,val,inp){
    PAYMENT  — openPay, confirmSale
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 // ── PAYMENT ───────────────────────────────────────────────
+/* ── เลือกวันที่ (ขาย / ค่าใช้จ่าย) — ค่าเริ่มต้นวันนี้ ย้อนหลังได้ ไม่ให้เกินวันนี้ ── */
+function todayStr(){
+  const n=new Date(),p=x=>String(x).padStart(2,"0");
+  return n.getFullYear()+"-"+p(n.getMonth()+1)+"-"+p(n.getDate());
+}
+function fmtThaiDate(ymd){
+  const [y,m,d]=ymd.split("-").map(Number);
+  return d+" "+MONTHS[m-1]+" "+(y+543);
+}
+// ตั้งช่องวันที่เป็นวันนี้ + ห้ามเลือกอนาคต + ซ่อนแถบเตือนย้อนหลัง
+function resetDateInput(id,warnId){
+  const el=document.getElementById(id);
+  if(el){el.max=todayStr();el.value=todayStr();el.dataset.touched="";}
+  onDateInputChange(id,warnId);
+}
+// แสดงแถบเตือนเมื่อเลือกวันที่ไม่ใช่วันนี้ เพื่อกันกรอกผิดวัน
+function onDateInputChange(id,warnId){
+  const el=document.getElementById(id),w=document.getElementById(warnId);
+  if(!w)return;
+  const v=el?.value||"";
+  const back=/^\d{4}-\d{2}-\d{2}$/.test(v)&&v<todayStr();
+  w.style.display=back?"flex":"none";
+  const sp=w.querySelector("span");
+  if(sp)sp.textContent=back?"บันทึกย้อนหลัง — จะนับเป็นวันที่ "+fmtThaiDate(v)+" ไม่ใช่วันนี้":"";
+}
+// อ่านวันที่ที่เลือก (YYYY-MM-DD); ว่าง = วันนี้; เกินวันนี้ = null (ใช้ไม่ได้)
+function readPickedDate(id){
+  const el=document.getElementById(id);
+  const t=todayStr();
+  // ไม่ได้แตะช่องวันที่เลย → วันนี้ "ตอนกดบันทึก" เสมอ (กันกรณีเปิดหน้าค้างข้ามเที่ยงคืน)
+  if(!el||!el.dataset.touched)return t;
+  const v=el.value||"";
+  if(!v)return t;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(v)||v>t)return null;
+  return v;
+}
+
 function openPay(){
   payItemSplits={};
+  resetDateInput("pay-date","pay-date-warn");
   extraCosts=[];renderExtraCosts();
   const items=Object.values(cart);
   const final=getFinalTotal(),disc=getDiscount();
@@ -698,7 +741,13 @@ function calcChange(){
 async function confirmSale(){
   const items=Object.values(cart);
   const sub=getSubtotal(),disc=getDiscount(),total=getFinalTotal();
-  const now=new Date();
+  // วันที่ขาย: ใช้วันที่ที่เลือก (ค่าเริ่มต้นวันนี้) + เวลาปัจจุบัน → เวลาไม่ซ้ำกันและเรียงบิลในวันเดียวกันถูก
+  const pickedDate=readPickedDate("pay-date");
+  if(!pickedDate){toast("⚠️ วันที่ขายต้องไม่เกินวันนี้");return;}
+  const nowReal=new Date();
+  const [py,pm,pd]=pickedDate.split("-").map(Number);
+  const now=new Date(py,pm-1,pd,nowReal.getHours(),nowReal.getMinutes(),nowReal.getSeconds());
+  const isBackdated=pickedDate<todayStr();
   const btn=document.getElementById("pay-ok");
   btn.disabled=true;btn.textContent="กำลังบันทึก...";
   try{
@@ -736,7 +785,7 @@ async function confirmSale(){
     if(c){c.points=newPts;c.totalSpent=newSpent;}
     savedCust={...selectedCust,newPts,newSpent};
   }
-  sales.unshift({
+  const newSale={
     billId:dateStr,sheetRow:undefined,lastSheetRow:undefined,
     date:now,
     items:items.map(x=>({name:x.name+(x.lot?"("+x.lot+")":""),emoji:x.emoji,lot:x.lot,
@@ -747,7 +796,10 @@ async function confirmSale(){
     get store(){return this.items[0]?.store||"";},
     itemCount:items.reduce((s,x)=>s+x.qty,0),extraCosts:[...extraCosts],
     itemsStr:itemStr
-  });
+  };
+  sales.unshift(newSale);
+  // ขายย้อนหลัง → ต้องจัดบิลเข้าตำแหน่งตามวันที่ (ใหม่สุดก่อน) ไม่ใช่ขึ้นบนสุดเสมอ
+  sortSalesByDate();
 
   // ── 2. แสดง UI + ใบเสร็จทันที ──
   clearSelectedCust();
@@ -762,8 +814,9 @@ async function confirmSale(){
   delete document.documentElement.dataset.store;
   document.querySelectorAll("[id^='pos-fah'],[id^='pos-mom'],[id^='store-']").forEach(b=>b.classList.remove("active"));
   renderCart();renderProds();renderProdList();closePay();
-  openReceipt(sales[0]);
+  openReceipt(newSale);
   btn.disabled=false;btn.textContent="ยืนยันการขาย";
+  if(isBackdated) toast("🗓 บันทึกขายย้อนหลัง ลงวันที่ "+fmtThaiDate(pickedDate));
   if(savedCust) toast("✅ "+savedCust.name+" +"+custEarned+" แต้ม!");
   if(negativeWarn) toast("⚠️ สต็อกหน้าร้านติดลบ กรุณาตรวจสอบ/ย้ายสต็อก");
 
@@ -2015,6 +2068,7 @@ function openReportExpenseModal(){
   document.getElementById("rexp-name").value="";
   document.getElementById("rexp-amt").value="";
   setRexpOwner("ร่วม",document.getElementById("rexp-owner-joint"));
+  resetDateInput("rexp-date","rexp-date-warn");
   document.getElementById("report-exp-overlay").classList.add("show");
   setTimeout(()=>document.getElementById("rexp-name").focus(),120);
 }
@@ -2026,16 +2080,15 @@ async function addReportExpense(){
   const amt=parseFloat(document.getElementById("rexp-amt").value)||0;
   const owner=document.getElementById("rexp-owner")?.value||"ร่วม";
   if(!name||!amt){toast("⚠️ กรอกชื่อและจำนวนเงินด้วย");return;}
-  const now=new Date();
-  const pad=n=>String(n).padStart(2,"0");
-  const dateStr=now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate());
+  const dateStr=readPickedDate("rexp-date");
+  if(!dateStr){toast("⚠️ วันที่ต้องไม่เกินวันนี้");return;}
   closeReportExpenseModal();
   toast("⏳ กำลังบันทึก...");
   try{
     await scriptPost({action:"addExpense",date:dateStr,name,amount:amt,owner});
     await loadExpenses();
     renderProfit();
-    toast("✅ บันทึก "+name+" ฿"+amt.toLocaleString());
+    toast("✅ บันทึก "+name+" ฿"+amt.toLocaleString()+(dateStr<todayStr()?" (วันที่ "+fmtThaiDate(dateStr)+")":""));
   }catch(e){toast("❌ "+e.message);}
 }
 async function removeReportExpense(sheetRow){

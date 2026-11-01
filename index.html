@@ -27,7 +27,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="TreeSiri">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-    <link rel="stylesheet" href="style.css?v=4">
+    <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 <div class="app">
@@ -191,6 +191,13 @@
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--m);margin-bottom:3px">ชำระเงิน</div>
       <div id="pay-store-header" style="font-size:20px;font-weight:800;letter-spacing:-.3px"></div>
     </div>
+    <!-- วันที่ขาย: ค่าเริ่มต้น = วันนี้ แก้เป็นวันย้อนหลังได้ (กรณีลืมจด) -->
+    <div class="date-row">
+      <label for="pay-date" class="date-row-lbl"><i class="ti ti-calendar"></i> วันที่ขาย</label>
+      <input type="date" id="pay-date" class="date-row-inp" onchange="this.dataset.touched='1';onDateInputChange('pay-date','pay-date-warn')">
+      <button type="button" class="date-row-today" onclick="resetDateInput('pay-date','pay-date-warn')">วันนี้</button>
+    </div>
+    <div id="pay-date-warn" class="date-warn" style="display:none"><i class="ti ti-history"></i><span></span></div>
     <div id="pay-summary" style="font-size:12px;color:var(--m);margin-bottom:8px;line-height:1.6"></div>
     <!-- Customer selector inside modal -->
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
@@ -497,6 +504,12 @@
     <div class="sheet-handle"></div>
     <button class="sheet-close" onclick="closeReportExpenseModal()"><i class="ti ti-x"></i></button>
     <div class="sheet-title">ค่าใช้จ่ายอื่นๆ</div>
+    <div class="date-row">
+      <label for="rexp-date" class="date-row-lbl"><i class="ti ti-calendar"></i> วันที่</label>
+      <input type="date" id="rexp-date" class="date-row-inp" onchange="this.dataset.touched='1';onDateInputChange('rexp-date','rexp-date-warn')">
+      <button type="button" class="date-row-today" onclick="resetDateInput('rexp-date','rexp-date-warn')">วันนี้</button>
+    </div>
+    <div id="rexp-date-warn" class="date-warn" style="display:none"><i class="ti ti-history"></i><span></span></div>
     <div class="form-lbl">ชื่อค่าใช้จ่าย</div>
     <input class="form-inp" id="rexp-name" type="text" placeholder="เช่น ค่าปุ๋ย, ค่าขนส่ง" style="margin-bottom:10px">
     <div class="form-lbl">จำนวนเงิน (บาท)</div>
@@ -538,7 +551,7 @@
 }
 </style>
 
-<script src="app.js?v=4" defer></script>
+<script src="app.js?v=5" defer></script>
 
 </body>
 </html>

@@ -2855,3 +2855,26 @@
   .rord-grip { width: 30px; }
   .rord-row { gap: 6px; padding: 6px; }
 }
+
+
+/* ── DATE PICKER ROW (เลือกวันที่ขาย / ค่าใช้จ่าย — ย้อนหลังได้) ── */
+.date-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.date-row-lbl { display: flex; align-items: center; gap: 5px; flex: none; font-size: 13px; font-weight: 600; color: var(--m); }
+.date-row-inp {
+  flex: 1; min-width: 0; min-height: 44px; padding: 0 12px; box-sizing: border-box;
+  background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.16); border-radius: 12px;
+  color: rgba(255,255,255,0.92); font: 600 15px 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+  color-scheme: dark;
+}
+.date-row-today {
+  flex: none; min-height: 44px; padding: 0 14px; border-radius: 12px; cursor: pointer;
+  background: rgba(255,255,255,0.1); border: 0.5px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.9); font: 700 13px 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+}
+.date-row-today:active { transform: scale(.95); }
+.date-warn {
+  display: none; align-items: flex-start; gap: 6px; margin-bottom: 10px;
+  padding: 8px 10px; border-radius: 10px; font-size: 12px; line-height: 1.5;
+  background: rgba(245,200,66,0.12); border: 0.5px solid rgba(245,200,66,0.4); color: #f5d77a;
+}
+.date-warn .ti { font-size: 15px; margin-top: 1px; flex: none; }

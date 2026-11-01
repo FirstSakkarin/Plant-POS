@@ -854,6 +854,21 @@
             font-family: 'Sukhumvit Set','Prompt','Sarabun',sans-serif
         }
 
+        .qnum-inp {
+            width: 40px;
+            height: 28px;
+            box-sizing: border-box;
+            padding: 0 2px;
+            border: 0.5px solid var(--bd);
+            border-radius: 8px;
+            background: var(--bg2);
+            color: var(--t);
+            font: 600 14px 'Sukhumvit Set','Prompt','Sarabun',sans-serif;
+            text-align: center;
+            -moz-appearance: textfield;
+            appearance: none
+        }
+        .qnum-inp:focus { outline: none; border-color: var(--a6, #6ee7b7) }
         .qnum {
             font-size: 12px;
             font-weight: 600;

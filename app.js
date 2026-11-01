@@ -473,6 +473,38 @@ function chgQty(rowId,d){
   if(cart[rowId].qty<=0)delete cart[rowId];
   renderCart();
 }
+// ── พิมพ์จำนวนต้นในตะกร้าได้ ──
+function cartStoreStock(rowId){
+  const p=products.find(x=>x.row===rowId);
+  if(!p||!selectedSaleStore)return Infinity;
+  return selectedSaleStore==="fah"?(p.stockFah||0):(p.stockMom||0);
+}
+// ระหว่างพิม: อัปเดตจำนวน/ราคา/ยอดรวมแบบเบาๆ โดยไม่วาดตะกร้าใหม่ (เพื่อไม่ให้คีย์บอร์ดหลุด)
+function onQtyInput(inp,rowId){
+  const item=cart[rowId];if(!item)return;
+  let v=inp.value.replace(/\D/g,"").replace(/^0+(?=\d)/,"");
+  if(v!==inp.value)inp.value=v;
+  if(v==="")return;                       // ว่าง = ยังพิมไม่เสร็จ ไม่แตะค่าเดิม
+  let n=parseInt(v,10);
+  const max=cartStoreStock(rowId);
+  if(n>max){n=max;inp.value=String(n);toast("❌ เกินสต็อกของร้านนี้ ("+max+" ต้น)");}
+  if(n<1)return;                          // 0 จัดการตอนพิมเสร็จ (blur)
+  item.qty=n;
+  const row=inp.closest(".crow");
+  if(row){const pr=row.querySelector(".crow-price");if(pr)pr.textContent="฿"+(getItemPrice(item)*n).toLocaleString();}
+  const count=Object.values(cart).reduce((s,x)=>s+x.qty,0);
+  document.getElementById("cart-count").textContent=count;
+  const ch=document.getElementById("cart-count-handle");
+  if(ch)ch.textContent=count?`· ${count} รายการ`:"";
+  renderTotal();
+}
+// พิมเสร็จ (ออกจากช่อง/กด Enter): ว่าง = กลับเป็นค่าเดิม, 0 = เอาออกจากตะกร้า
+function onQtyCommit(inp,rowId){
+  const item=cart[rowId];if(!item)return;
+  const v=inp.value.replace(/\D/g,"");
+  if(v!==""&&parseInt(v,10)===0){delete cart[rowId];renderCart();return;}
+  if(v===""||parseInt(v,10)!==item.qty)renderCart();   // ว่าง/ไม่ตรงกับค่าจริง → วาดใหม่ให้กลับเป็นจำนวนจริง
+}
 function clearCart(){
   cart={};payItemSplits={};
   document.getElementById("disc-val").value="0";
@@ -513,7 +545,7 @@ function renderCart(){
       <span class="crow-name">${x.name}${x.lot?`<br><span style="font-size:9px;color:var(--a6)">${x.lot}</span>`:""}</span>
       <div class="qty-ctrl">
         <button class="qbtn" onclick="chgQty(${x.row},-1)">−</button>
-        <span class="qnum">${x.qty}</span>
+        <input class="qnum-inp" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" maxlength="4" value="${x.qty}" aria-label="จำนวนต้น" onfocus="this.select()" oninput="onQtyInput(this,${x.row})" onchange="onQtyCommit(this,${x.row})" onkeydown="if(event.key==='Enter'){this.blur()}">
         <button class="qbtn" onclick="chgQty(${x.row},1)">+</button>
       </div>
       <div class="crow-price-wrap" onclick="openPriceEdit(${x.row})" title="แตะเพื่อแก้ราคา">
